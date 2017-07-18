@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<MainButtonDefs>
+
+	<MainButtonDef>
+		<defName>DragDrop_WorkTab</defName>
+		<label>DDTest</label>
+		<description>WIP tab</description>
+		<tabWindowClass>DD_WorkTab.MainTabWindow_Work_DragAndDrop</tabWindowClass>
+		<order>25</order>
+	</MainButtonDef>
+
+</MainButtonDefs>
