@@ -62,6 +62,7 @@
     <Compile Include="DDUtilities.cs" />
     <Compile Include="DraggableObject.cs" />
     <Compile Include="DraggableWorkType.cs" />
+    <Compile Include="PrimaryTypesSurface.cs" />
     <Compile Include="WorkTypeSurface.cs" />
   </ItemGroup>
   <ItemGroup />

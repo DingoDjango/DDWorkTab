@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-//using System.Linq;
-using RimWorld;
+﻿using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -12,7 +8,7 @@ namespace DD_WorkTab
 	{
 		private DragHelper dragger = Current.Game.GetComponent<DragHelper>();
 
-		private WorkTypeSurface surfaceForPrimaryTypes = new WorkTypeSurface();
+		private PrimaryTypesSurface primarySurface = new PrimaryTypesSurface();
 
 		private static float wTypeTexWidth = DDUtilities.WorkTypeTextureSize.x;
 
@@ -82,18 +78,13 @@ namespace DD_WorkTab
 
 		public MainTabWindow_Work_DragAndDrop()
 		{
-			//Populate the main surface with indices (only needs to be done once realistically)
-			int currentMainTypePriority = 1;
-			foreach (var typeDef in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
-			{
-				DraggableWorkType primeDraggable = new DraggableWorkType(this.surfaceForPrimaryTypes, typeDef, currentMainTypePriority);
-				primeDraggable.isPrimaryType = true;
-				surfaceForPrimaryTypes.AddOrUpdateChild(primeDraggable);
-
-				currentMainTypePriority++;
-			}
-
 			Current.Game.playSettings.useWorkPriorities = true;
+
+			//On startup: enforce priorities for all pawns
+			foreach (Pawn p in PawnsFinder.AllMaps_SpawnedPawnsInFaction(Faction.OfPlayer))
+			{
+				DDUtilities.RefreshPawnPriorities(p);
+			}
 		}
 
 		public override Vector2 RequestedTabSize
@@ -108,14 +99,7 @@ namespace DD_WorkTab
 		{
 			base.PreOpen();
 
-			Current.Game.playSettings.useWorkPriorities = true; //Just in case?
-
 			this.scrollPosition = Vector2.zero; //Temporary for testing, might be necessary
-
-			foreach (var p in Find.VisibleMap.mapPawns.FreeColonists)
-			{
-				DDUtilities.RefreshPawnPriorities(p);
-			}
 		}
 
 		public override void DoWindowContents(Rect inRect)
@@ -123,35 +107,18 @@ namespace DD_WorkTab
 			base.DoWindowContents(inRect);
 			GUI.color = Color.white;
 
+			#region MainWorkTypes
 			Rect mainTypesRect = new Rect(inRect.x + spaceForPawnName + spaceForButtons, inRect.y, inRect.width, listItemHeight);
 
-			#region MainWorkTypes
-			Vector2 mainTypesPositionSetter = new Vector2(mainTypesRect.x + 10f + (wTypeTexWidth / 2f), mainTypesRect.center.y);
+			this.primarySurface.currentListRect = mainTypesRect;
 
-			foreach (var mainWorkType in this.surfaceForPrimaryTypes.childrenSortedByPriority)
-			{
-				if (!mainWorkType.IsDragging)
-				{
-					mainWorkType.position = mainTypesPositionSetter;
-				}
-
-				//Static texture setter (always draw main work types even if dragging)
-				Vector2 primaryPosition = mainTypesPositionSetter;
-				Rect drawRect = DDUtilities.RectOnVector(primaryPosition, DDUtilities.WorkTypeTextureSize);
-				GUI.DrawTexture(drawRect, DDUtilities.TextureFromModFolder(mainWorkType.def));
-				Widgets.DrawHighlightIfMouseover(drawRect);
-				TooltipHandler.TipRegion(drawRect, mainWorkType.def.labelShort);
-
-				//Standard OnGUI including drag controls
-				mainWorkType.OnGUI();
-
-				mainTypesPositionSetter.x += wTypeTexWidth + 10f;
-			}
+			primarySurface.OnGUI();
 			#endregion
 
 			#region ScrollingList
 			//Scrolling list - outer Rect
 			Rect outRect = new Rect(inRect.x, inRect.y + mainTypesRect.height, inRect.width, inRect.height - mainTypesRect.height);
+
 			//Scrolling list - virtual Rect
 			Rect viewRect = new Rect(inRect.x, inRect.y + mainTypesRect.height, totalRenderWidth, totalColonists * listItemHeight);
 
@@ -159,6 +126,7 @@ namespace DD_WorkTab
 
 			//Render all pawns and their surfaces
 			float currentVerticalPosition = viewRect.y;
+
 			foreach (var pawn in Find.VisibleMap.mapPawns.FreeColonists)
 			{
 				var pawnSurface = dragger.SurfaceForPawn(pawn);
@@ -177,7 +145,7 @@ namespace DD_WorkTab
 				Text.WordWrap = true; //Reset
 				#endregion
 
-				//Buttons area
+				#region Buttons
 				Rect buttonsRect = new Rect(nameRect.xMax, currentVerticalPosition, spaceForButtons, listItemHeight);
 
 				//Disable all workTypes button
@@ -205,6 +173,7 @@ namespace DD_WorkTab
 					//Todo: add prompt
 					pawnSurface.ResetToVanillaSettings();
 				}
+				#endregion
 
 				#region WorkAssignmentArea
 				Rect surfaceRect = new Rect(buttonsRect.xMax, currentVerticalPosition, viewRect.width - nameRect.width - buttonsRect.width, listItemHeight);
@@ -218,6 +187,13 @@ namespace DD_WorkTab
 
 			Widgets.EndScrollView();
 			#endregion
+		}
+
+		public override void PostClose()
+		{
+			base.PostClose();
+
+			dragger.CurrentDraggingObj.Clear();
 		}
 	}
 }

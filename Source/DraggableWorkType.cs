@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Linq;
-using RimWorld;
-using UnityEngine;
+﻿using UnityEngine;
 using Verse;
 
 namespace DD_WorkTab
@@ -18,6 +13,27 @@ namespace DD_WorkTab
 
 		public bool isPrimaryType = false;
 
+		public void OnGUI()
+		{
+			//Draw texture on draggable position
+			Rect drawRect = DDUtilities.RectOnVector(this.position, DDUtilities.WorkTypeTextureSize);
+
+			GUI.DrawTexture(drawRect, DDUtilities.TextureFromModFolder(this.def));
+
+			this.CheckForDrag(drawRect);
+
+			if (this.IsDragging)
+			{
+				var dragger = Current.Game.GetComponent<DragHelper>();
+
+				if (dragger.CurrentDraggingObj.Count == 0)
+				{
+					dragger.CurrentDraggingObj.Add(this);
+				}
+			}
+		}
+
+		#region Constructors
 		public DraggableWorkType()
 		{
 		}
@@ -40,26 +56,7 @@ namespace DD_WorkTab
 			this.def = wTypeDef;
 			this.priorityIndex = priority;
 		}
-
-		public void OnGUI()
-		{
-			//Draw texture on draggable position
-			Rect drawRect = DDUtilities.RectOnVector(this.position, DDUtilities.WorkTypeTextureSize);
-
-			GUI.DrawTexture(drawRect, DDUtilities.TextureFromModFolder(this.def));
-
-			this.CheckForDrag(drawRect);
-
-			if (this.IsDragging)
-			{
-				var dragger = Current.Game.GetComponent<DragHelper>();
-
-				if (dragger.CurrentDraggingObj.Count == 0)
-				{
-					dragger.CurrentDraggingObj.Add(this);
-				}
-			}
-		}
+		#endregion
 
 		public void ExposeData()
 		{

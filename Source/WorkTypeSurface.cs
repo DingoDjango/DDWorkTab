@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Collections.Generic;
 using System.Linq;
-using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -28,53 +25,51 @@ namespace DD_WorkTab
 		{
 			get
 			{
-				return this.children.OrderBy((DraggableWorkType child) => child.priorityIndex);
+				return this.children.OrderBy(child => child.priorityIndex);
 			}
 		}
 
 		public void AddOrUpdateChild(DraggableWorkType typeToAdd, bool isPrimary = false)
 		{
-			var existingChild = this.children.Find(child => child.def == typeToAdd.def);
-
-			if (existingChild != null)
+			//Do not accept disabled work types
+			if (this.attachedPawn != null && this.attachedPawn.story.WorkTypeIsDisabled(typeToAdd.def))
 			{
-				existingChild.position = typeToAdd.position;
-				typeToAdd = null; //Garbage collection I guess?
+				return;
 			}
 
-			else
+			//Handle primary (undisposable) work types dragged to the surface
+			if (isPrimary)
 			{
-				if (this.attachedPawn != null && this.attachedPawn.story.WorkTypeIsDisabled(typeToAdd.def))
+				DraggableWorkType existingChild = this.children.Find(child => child.def == typeToAdd.def);
+
+				//Pawn already has a priority for this work type
+				if (existingChild != null)
 				{
-					return;
+					existingChild.position = typeToAdd.position;
 				}
 
-				if (isPrimary)
+				//Pawn accepts the work type and it was not on the list
+				else
 				{
-					var newDraggable = new DraggableWorkType();
-					newDraggable.parent = this;
-					newDraggable.def = typeToAdd.def;
-					newDraggable.position = typeToAdd.position;
+					DraggableWorkType newDraggable = new DraggableWorkType(this, typeToAdd.def, -1, typeToAdd.position);
 
 					this.children.Add(newDraggable);
 				}
-
-				else
-				{
-					typeToAdd.parent = this;
-					this.children.Add(typeToAdd);
-				}
 			}
 
-			this.UpdateChildIndicesByPosition();
+			//Update priority indexes and set priority for all work types
+			this.UpdateChildIndicesByPosition(); //This will also update existing children's priorities if they were dragged around
+
+			DDUtilities.RefreshPawnPriorities(this.attachedPawn);
 		}
 
 		public void UpdateChildIndicesByPosition()
 		{
-			IEnumerable<DraggableWorkType> childrenByVectorLeftToRight = this.children.OrderBy((DraggableWorkType child) => child.position.x);
+			IEnumerable<DraggableWorkType> childrenByVectorLeftToRight = this.children.OrderBy(child => child.position.x);
 
 			int priorityByVector = 1;
-			foreach (var child in childrenByVectorLeftToRight)
+
+			foreach (DraggableWorkType child in childrenByVectorLeftToRight)
 			{
 				child.priorityIndex = priorityByVector;
 
@@ -89,6 +84,7 @@ namespace DD_WorkTab
 				this.attachedPawn.workSettings.Disable(typeToRemove.def);
 
 				this.children.Remove(typeToRemove);
+
 				typeToRemove = null;
 			}
 
@@ -98,34 +94,32 @@ namespace DD_WorkTab
 			}
 		}
 
+		//Clear children and set all work types to priority 0 (disabled)
 		public void DisableAllWork()
 		{
-			for (int i = 0; i < this.children.Count; i++)
+			for (int i = this.children.Count - 1; i >= 0; i--)
 			{
 				this.children[i] = null;
 			}
 
-			this.children = new List<DraggableWorkType>();
+			this.children.Clear();
 
 			this.attachedPawn.workSettings.DisableAll();
 		}
 
+		//DisableAllWork + re-enable available work types by their vanilla importance
 		public void ResetToVanillaSettings()
 		{
-			for (int i = 0; i < this.children.Count; i++)
-			{
-				this.children[i] = null;
-			}
-
-			this.children = new List<DraggableWorkType>();
+			this.DisableAllWork();
 
 			int priority = 1;
 
-			foreach (var workType in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
+			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
 			{
-				if (!this.attachedPawn.story.WorkTypeIsDisabled(workType))
+				if (!this.attachedPawn.story.WorkTypeIsDisabled(def))
 				{
-					DraggableWorkType newWorkTypeIndex = new DraggableWorkType(this, workType, priority);
+					DraggableWorkType newWorkTypeIndex = new DraggableWorkType(this, def, priority);
+
 					this.children.Add(newWorkTypeIndex);
 
 					priority++;
@@ -137,13 +131,13 @@ namespace DD_WorkTab
 
 		public void OnGUI()
 		{
-			var dragHelper = Current.Game.GetComponent<DragHelper>();
+			DragHelper dragger = Current.Game.GetComponent<DragHelper>();
 
 			float workTypeTextureWidth = DDUtilities.WorkTypeTextureSize.x;
 
 			Vector2 draggablePositionSetter = new Vector2(this.currentListRect.x + 10f + (workTypeTextureWidth / 2f), this.currentListRect.center.y);
 
-			foreach (var draggable in this.childrenSortedByPriority)
+			foreach (DraggableWorkType draggable in this.childrenSortedByPriority)
 			{
 				if (!draggable.IsDragging)
 				{
@@ -155,14 +149,11 @@ namespace DD_WorkTab
 				draggablePositionSetter.x += workTypeTextureWidth + 10f;
 			}
 
-			if (dragHelper.CurrentDraggingObj.Count > 0)
+			if (dragger.CurrentDraggingObj.Count > 0)
 			{
-				var curDraggingObj = dragHelper.CurrentDraggingObj[0];
-				Vector2 objectAbsolutePosition = curDraggingObj.position;
-				if (curDraggingObj.isPrimaryType)
-				{
-					objectAbsolutePosition += Find.WindowStack.WindowOfType<MainTabWindow_Work_DragAndDrop>().scrollPosition;
-				}
+				DraggableWorkType curDraggingObj = dragger.CurrentDraggingObj[0];
+
+				Vector2 objectAbsolutePosition = curDraggingObj.isPrimaryType ? curDraggingObj.position + Find.WindowStack.WindowOfType<MainTabWindow_Work_DragAndDrop>().scrollPosition : curDraggingObj.position;
 
 				#region Draw Line While Dragging
 				if (curDraggingObj.parent == this || curDraggingObj.isPrimaryType)
@@ -182,7 +173,7 @@ namespace DD_WorkTab
 
 							else
 							{
-								foreach (var child in this.childrenSortedByPriority)
+								foreach (DraggableWorkType child in this.childrenSortedByPriority)
 								{
 									if (child.position.x > objectAbsolutePosition.x)
 									{
@@ -213,32 +204,31 @@ namespace DD_WorkTab
 				{
 					if (curDraggingObj.isPrimaryType)
 					{
-						//Update draggables if a main type was dropped inside the surface
+						//Update children (main type dropped into surface)
 						if (this.currentListRect.Contains(objectAbsolutePosition))
 						{
 							this.AddOrUpdateChild(curDraggingObj, true);
 
-							DDUtilities.RefreshPawnPriorities(this.attachedPawn);
-							dragHelper.CurrentDraggingObj.Clear();
+							dragger.CurrentDraggingObj.Clear();
 						}
 					}
 
 					else if (curDraggingObj.parent == this)
 					{
-						//Nullify draggable if it was dropped outside of the surface
+						//Disable work type and nullify draggable if it was dropped outside of the surface
 						if (!this.currentListRect.Contains(objectAbsolutePosition))
 						{
 							this.RemoveChild(curDraggingObj);
-							dragHelper.CurrentDraggingObj.Clear();
+
+							dragger.CurrentDraggingObj.Clear();
 						}
 
-						//Refresh the pawn's priorities if the user re-ordered this surface's children
+						//Update children (type priority changed)
 						else
 						{
-							this.UpdateChildIndicesByPosition();
+							this.AddOrUpdateChild(curDraggingObj, false);
 
-							DDUtilities.RefreshPawnPriorities(this.attachedPawn);
-							dragHelper.CurrentDraggingObj.Clear();
+							dragger.CurrentDraggingObj.Clear();
 						}
 					}
 				}
@@ -246,8 +236,14 @@ namespace DD_WorkTab
 			}
 		}
 
+		#region Constructors
 		public WorkTypeSurface()
 		{
+		}
+
+		public WorkTypeSurface(Pawn pawn)
+		{
+			this.attachedPawn = pawn;
 		}
 
 		public WorkTypeSurface(Pawn pawn, List<DraggableWorkType> newChildren)
@@ -255,6 +251,7 @@ namespace DD_WorkTab
 			this.attachedPawn = pawn;
 			this.children = newChildren;
 		}
+		#endregion
 
 		public void ExposeData()
 		{
