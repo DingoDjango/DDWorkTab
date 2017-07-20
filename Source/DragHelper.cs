@@ -5,22 +5,22 @@ namespace DD_WorkTab
 {
 	public class DragHelper : GameComponent
 	{
-		public List<WorkTypeSurface> allWorkTypeSurfaces = new List<WorkTypeSurface>();
+		public List<WorkTypeSurface> allPawnSurfaces = new List<WorkTypeSurface>();
 
 		// This "list" is a way to temporarily reference and de-reference a DraggableWorkType
 		public List<DraggableWorkType> CurrentDraggingObj = new List<DraggableWorkType>();
 
 		public WorkTypeSurface SurfaceForPawn(Pawn pawn)
 		{
-			WorkTypeSurface surface = this.allWorkTypeSurfaces.Find(wts => wts.attachedPawn == pawn);
+			WorkTypeSurface surface = this.allPawnSurfaces.Find(wts => wts.attachedPawn == pawn);
 
 			if (surface == null)
 			{
 				surface = new WorkTypeSurface(pawn);
 
-				surface.ResetToVanillaSettings();
+				surface.ResetChildrenByVanillaPriorities();
 
-				this.allWorkTypeSurfaces.Add(surface);
+				this.allPawnSurfaces.Add(surface);
 			}
 
 			return surface;
@@ -28,7 +28,7 @@ namespace DD_WorkTab
 
 		public override void ExposeData()
 		{
-			Scribe_Collections.Look(ref this.allWorkTypeSurfaces, "allWorkTypeSurfaces", LookMode.Deep);
+			Scribe_Collections.Look(ref this.allPawnSurfaces, "allPawnSurfaces", LookMode.Deep);
 		}
 
 		//Empty constructors

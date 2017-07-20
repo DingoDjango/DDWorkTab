@@ -1,4 +1,5 @@
-﻿using RimWorld;
+﻿using System.Collections.Generic;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -18,45 +19,19 @@ namespace DD_WorkTab
 
 		private const float spaceForButtons = 70f;
 
+		private const float spaceBetweenTypes = 10f;
+
 		private const float listItemHeight = 50f;
 
 		internal Vector2 scrollPosition = Vector2.zero;
 
-		private int workTypesCount
-		{
-			get
-			{
-				int numberOfWorkTypes = 0;
-
-				foreach (var workType in DefDatabase<WorkTypeDef>.AllDefs)
-				{
-					numberOfWorkTypes++;
-				}
-
-				return numberOfWorkTypes;
-			}
-		}
-
-		private float widthNecessaryForAllTextures
-		{
-			get
-			{
-				return 10f + this.workTypesCount * (wTypeTexWidth + 10f); //10f initial padding + width per texture and additional 10f spacing
-			}
-		}
+		private float widthNecessaryForAllTextures = spaceBetweenTypes + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (wTypeTexWidth + spaceBetweenTypes);
 
 		private int totalColonists
 		{
 			get
 			{
-				int colonistCount = 0;
-
-				foreach (var pawn in Find.VisibleMap.mapPawns.FreeColonists)
-				{
-					colonistCount++;
-				}
-
-				return colonistCount;
+				return Find.VisibleMap.mapPawns.FreeColonistsCount;
 			}
 		}
 
@@ -64,7 +39,7 @@ namespace DD_WorkTab
 		{
 			get
 			{
-				return spaceForPawnName + spaceForButtons + this.widthNecessaryForAllTextures + 30f;
+				return spaceForPawnName + spaceForButtons + this.widthNecessaryForAllTextures + 60f;
 			}
 		}
 
@@ -72,34 +47,21 @@ namespace DD_WorkTab
 		{
 			get
 			{
-				return listItemHeight * this.totalColonists + listItemHeight + 30f; //Accounted for mainTypesRect
+				return listItemHeight * (1 + this.totalColonists) + 60f; //Accounted for mainTypesRect
 			}
 		}
 
 		public MainTabWindow_Work_DragAndDrop()
 		{
 			Current.Game.playSettings.useWorkPriorities = true;
-
-			//On startup: enforce priorities for all pawns
-			foreach (Pawn p in PawnsFinder.AllMaps_SpawnedPawnsInFaction(Faction.OfPlayer))
-			{
-				DDUtilities.RefreshPawnPriorities(p);
-			}
 		}
 
 		public override Vector2 RequestedTabSize
 		{
 			get
 			{
-				return new Vector2(this.totalRenderWidth + 30f, this.totalRenderHeight + 30f);
+				return new Vector2(this.totalRenderWidth, this.totalRenderHeight);
 			}
-		}
-
-		public override void PreOpen()
-		{
-			base.PreOpen();
-
-			this.scrollPosition = Vector2.zero; //Temporary for testing, might be necessary
 		}
 
 		public override void DoWindowContents(Rect inRect)
@@ -117,10 +79,10 @@ namespace DD_WorkTab
 
 			#region ScrollingList
 			//Scrolling list - outer Rect
-			Rect outRect = new Rect(inRect.x, inRect.y + mainTypesRect.height, inRect.width, inRect.height - mainTypesRect.height);
+			Rect outRect = new Rect(inRect.x, mainTypesRect.yMax, inRect.width, inRect.height - mainTypesRect.height);
 
 			//Scrolling list - virtual Rect
-			Rect viewRect = new Rect(inRect.x, inRect.y + mainTypesRect.height, totalRenderWidth, totalColonists * listItemHeight);
+			Rect viewRect = new Rect(outRect.x, outRect.y, spaceForPawnName + spaceForButtons + this.widthNecessaryForAllTextures, totalColonists * listItemHeight);
 
 			Widgets.BeginScrollView(outRect, ref this.scrollPosition, viewRect, true);
 
@@ -139,6 +101,7 @@ namespace DD_WorkTab
 				Text.Font = GameFont.Small;
 				Text.Anchor = TextAnchor.MiddleLeft;
 				Text.WordWrap = false;
+
 				Widgets.Label(nameRect, pawnLabel);
 
 				Text.Anchor = TextAnchor.UpperLeft; //Reset

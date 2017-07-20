@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -57,10 +58,11 @@ namespace DD_WorkTab
 				}
 			}
 
-			//Update priority indexes and set priority for all work types
-			this.UpdateChildIndicesByPosition(); //This will also update existing children's priorities if they were dragged around
+			/* Update priority indexes and set priority for all work types
+			 * This will also update existing children's priorities if they were dragged around */
+			this.UpdateChildIndicesByPosition();
 
-			DDUtilities.RefreshPawnPriorities(this.attachedPawn);
+			this.RefreshPawnPriorities();
 		}
 
 		public void UpdateChildIndicesByPosition()
@@ -97,9 +99,12 @@ namespace DD_WorkTab
 		//Clear children and set all work types to priority 0 (disabled)
 		public void DisableAllWork()
 		{
-			for (int i = this.children.Count - 1; i >= 0; i--)
+			if (this.children.Count > 0)
 			{
-				this.children[i] = null;
+				for (int i = this.children.Count - 1; i >= 0; i--)
+				{
+					this.children[i] = null;
+				}
 			}
 
 			this.children.Clear();
@@ -107,16 +112,16 @@ namespace DD_WorkTab
 			this.attachedPawn.workSettings.DisableAll();
 		}
 
-		//DisableAllWork + re-enable available work types by their vanilla importance
-		public void ResetToVanillaSettings()
+		//Populate children list with all viable work types
+		public void ResetChildrenByVanillaPriorities()
 		{
-			this.DisableAllWork();
+			this.children.Clear();
 
 			int priority = 1;
 
 			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
 			{
-				if (!this.attachedPawn.story.WorkTypeIsDisabled(def))
+				if (this.attachedPawn != null && !this.attachedPawn.story.WorkTypeIsDisabled(def))
 				{
 					DraggableWorkType newWorkTypeIndex = new DraggableWorkType(this, def, priority);
 
@@ -125,8 +130,36 @@ namespace DD_WorkTab
 					priority++;
 				}
 			}
+		}
 
-			DDUtilities.RefreshPawnPriorities(this.attachedPawn);
+		public void RefreshPawnPriorities()
+		{
+			if (this.attachedPawn != null)
+			{
+				Pawn_WorkSettings workSettings = this.attachedPawn.workSettings;
+
+				if (workSettings == null)
+				{
+					workSettings = new Pawn_WorkSettings(this.attachedPawn);
+
+					workSettings.DisableAll();
+				}
+
+				foreach (DraggableWorkType draggable in this.childrenSortedByPriority)
+				{
+					workSettings.SetPriority(draggable.def, draggable.priorityIndex);
+				}
+			}
+		}
+
+		//DisableAllWork + re-enable available work types by their vanilla importance
+		public void ResetToVanillaSettings()
+		{
+			this.DisableAllWork();
+
+			this.ResetChildrenByVanillaPriorities();
+
+			this.RefreshPawnPriorities();
 		}
 
 		public void OnGUI()

@@ -60,7 +60,7 @@ namespace DD_WorkTab
 
 		public void ExposeData()
 		{
-			Scribe_Values.Look(ref this.def, "def", null);
+			Scribe_Defs.Look(ref this.def, "def");
 			Scribe_Values.Look(ref this.priorityIndex, "priorityIndex", -1);
 		}
 	}

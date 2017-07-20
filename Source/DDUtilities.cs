@@ -53,24 +53,5 @@ namespace DD_WorkTab
 
 			return nameAdjusted;
 		}
-
-		public static void RefreshPawnPriorities(Pawn worker)
-		{
-			Pawn_WorkSettings workSettings = worker.workSettings;
-
-			if (workSettings == null)
-			{
-				workSettings = new Pawn_WorkSettings(worker);
-			}
-
-			workSettings.DisableAll();
-
-			WorkTypeSurface surface = Current.Game.GetComponent<DragHelper>().SurfaceForPawn(worker);
-
-			foreach (var workType in surface.childrenSortedByPriority)
-			{
-				workSettings.SetPriority(workType.def, workType.priorityIndex);
-			}
-		}
 	}
 }
