@@ -2,22 +2,16 @@
 
 namespace DD_WorkTab
 {
-	public class DraggableObject
+	/* Based on the work of Emil Johansen aka AngryAnt
+	 * https://github.com/AngryAnt */
+
+	public abstract class DraggableObject
 	{
 		public Vector2 position;
 
-		private Vector2 dragOffsetVector;
+		protected Vector2 dragOffsetVector;
 
-		private bool draggingNow = false;
-
-		public DraggableObject()
-		{
-		}
-
-		public DraggableObject(Vector2 posVector)
-		{
-			this.position = posVector;
-		}
+		protected bool draggingNow;
 
 		public bool IsDragging
 		{

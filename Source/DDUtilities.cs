@@ -4,14 +4,39 @@ using Verse;
 
 namespace DD_WorkTab
 {
+	[StaticConstructorOnStartup]
 	public static class DDUtilities
 	{
-		public static Vector2 WorkTypeTextureSize = new Vector2(30f, 30f);
+		public const float DraggableTextureWidth = 30f;
+
+		public const float DraggableTextureHeight = 30f;
+
+		public static Vector2 DraggableSize = new Vector2(DraggableTextureWidth, DraggableTextureHeight);
+
+		public static Texture2D ButtonTexture_DisableAll;
+
+		public static Texture2D ButtonTexture_ResetToVanilla;
+
+		static DDUtilities()
+		{
+			ButtonTexture_DisableAll = ContentFinder<Texture2D>.Get("ButtonDisableAll", true);
+
+			ButtonTexture_ResetToVanilla = ContentFinder<Texture2D>.Get("ButtonResetToDefaults", true);
+		}
+
+		//Get the current scrollPosition of the DD Work Tab window
+		public static Vector2 TabScrollPosition
+		{
+			get
+			{
+				return Find.WindowStack.WindowOfType<MainTabWindow_Work_DragAndDrop>().ScrollPosition;
+			}
+		}
 
 		//Provides a texture from the DD WorkTab Textures folder for a given WorkTypeDef
 		public static Texture2D TextureFromModFolder(WorkTypeDef def)
 		{
-			var textureFromModFolder = ContentFinder<Texture2D>.Get("WorkTypeIcons/" + def.defName);
+			Texture2D textureFromModFolder = ContentFinder<Texture2D>.Get("WorkTypeIcons/" + def.defName);
 
 			if (textureFromModFolder != null)
 			{
@@ -42,16 +67,18 @@ namespace DD_WorkTab
 		{
 			//RimWorld.PawnColumnWorker_Label.DoCell
 			string nameAdjusted;
+
 			if (!pawn.RaceProps.Humanlike && pawn.Name != null && !pawn.Name.Numerical)
 			{
 				nameAdjusted = pawn.Name.ToStringShort.CapitalizeFirst() + ", " + pawn.KindLabel;
 			}
+
 			else
 			{
 				nameAdjusted = pawn.LabelCap;
 			}
 
 			return nameAdjusted;
-		}
+		}		
 	}
 }

@@ -7,25 +7,32 @@ namespace DD_WorkTab
 {
 	public class MainTabWindow_Work_DragAndDrop : MainTabWindow
 	{
-		private DragHelper dragger = Current.Game.GetComponent<DragHelper>();
+		public const float spaceForPawnName = 140f;
 
-		private PrimaryTypesSurface primarySurface = new PrimaryTypesSurface();
+		public const float spaceForButtons = 80f;
 
-		private static float wTypeTexWidth = DDUtilities.WorkTypeTextureSize.x;
+		public const float spaceBetweenTypes = 5f;
 
-		private static float wTypeTexHeight = DDUtilities.WorkTypeTextureSize.y;
+		private PrimarySurface primarySurface = new PrimarySurface();
 
-		private const float spaceForPawnName = 150f;
+		private float surfaceHeight = 2f * spaceBetweenTypes + DDUtilities.DraggableTextureHeight;
 
-		private const float spaceForButtons = 70f;
+		private float surfaceWidth = spaceBetweenTypes + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (DDUtilities.DraggableTextureWidth + spaceBetweenTypes);
 
-		private const float spaceBetweenTypes = 10f;
+		private Vector2 scrollPosition = Vector2.zero;
 
-		private const float listItemHeight = 50f;
+		private DragManager dragger
+		{
+			get
+			{
+				return Current.Game.World.GetComponent<DragManager>();
+			}
+		}
 
-		internal Vector2 scrollPosition = Vector2.zero;
-
-		private float widthNecessaryForAllTextures = spaceBetweenTypes + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (wTypeTexWidth + spaceBetweenTypes);
+		public MainTabWindow_Work_DragAndDrop()
+		{
+			Current.Game.playSettings.useWorkPriorities = true;
+		}
 
 		private int totalColonists
 		{
@@ -39,7 +46,7 @@ namespace DD_WorkTab
 		{
 			get
 			{
-				return spaceForPawnName + spaceForButtons + this.widthNecessaryForAllTextures + 60f;
+				return spaceForPawnName + spaceForButtons + this.surfaceWidth + 60f;
 			}
 		}
 
@@ -47,13 +54,16 @@ namespace DD_WorkTab
 		{
 			get
 			{
-				return listItemHeight * (1 + this.totalColonists) + 60f; //Accounted for mainTypesRect
+				return surfaceHeight * (1 + this.totalColonists) + 60f; //Accounted for mainTypesRect
 			}
 		}
 
-		public MainTabWindow_Work_DragAndDrop()
+		public Vector2 ScrollPosition
 		{
-			Current.Game.playSettings.useWorkPriorities = true;
+			get
+			{
+				return this.scrollPosition;
+			}
 		}
 
 		public override Vector2 RequestedTabSize
@@ -67,89 +77,60 @@ namespace DD_WorkTab
 		public override void DoWindowContents(Rect inRect)
 		{
 			base.DoWindowContents(inRect);
-			GUI.color = Color.white;
 
-			#region MainWorkTypes
-			Rect mainTypesRect = new Rect(inRect.x + spaceForPawnName + spaceForButtons, inRect.y, inRect.width, listItemHeight);
+			GUI.color = new Color(1f, 1f, 1f, 0.5f);
+			Text.Font = GameFont.Tiny;
+			float spaceForIndicators = Text.LineHeight;
 
-			this.primarySurface.currentListRect = mainTypesRect;
+			//General Rects
+			Rect indicatorsRect = new Rect(inRect.x + spaceForPawnName + spaceForButtons, inRect.y, inRect.width - spaceForPawnName - spaceForButtons, spaceForIndicators);
+			Rect primarySurfaceRect = new Rect(inRect.x, indicatorsRect.yMax, inRect.width, surfaceHeight);
+			Rect scrollViewOuterRect = new Rect(inRect.x, primarySurfaceRect.yMax, inRect.width, inRect.height - indicatorsRect.height - primarySurfaceRect.height);
+			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, spaceForPawnName + spaceForButtons + this.surfaceWidth, totalColonists * surfaceHeight);
 
-			primarySurface.OnGUI();
-			#endregion
+			//Draw priority indicators
+			this.DrawIndicators(indicatorsRect);
 
-			#region ScrollingList
-			//Scrolling list - outer Rect
-			Rect outRect = new Rect(inRect.x, mainTypesRect.yMax, inRect.width, inRect.height - mainTypesRect.height);
+			//Primary work types
+			primarySurface.OnGUI(primarySurfaceRect); /* <-- add buttons / text / help related stuff here */
 
-			//Scrolling list - virtual Rect
-			Rect viewRect = new Rect(outRect.x, outRect.y, spaceForPawnName + spaceForButtons + this.widthNecessaryForAllTextures, totalColonists * listItemHeight);
+			Widgets.BeginScrollView(scrollViewOuterRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
-			Widgets.BeginScrollView(outRect, ref this.scrollPosition, viewRect, true);
+			//All pawns and pawn surfaces
+			float currentVerticalPosition = scrollViewInnerRect.yMin;
 
-			//Render all pawns and their surfaces
-			float currentVerticalPosition = viewRect.y;
-
-			foreach (var pawn in Find.VisibleMap.mapPawns.FreeColonists)
+			foreach (Pawn pawn in Find.VisibleMap.mapPawns.FreeColonists)
 			{
-				var pawnSurface = dragger.SurfaceForPawn(pawn);
+				//List separator
+				GUI.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+				Widgets.DrawLineHorizontal(inRect.x, currentVerticalPosition, inRect.width);
+				GUI.color = Color.white; //Reset
 
-				#region ColonistName
-				Rect nameRect = new Rect(viewRect.x, currentVerticalPosition, spaceForPawnName, listItemHeight);
+				PawnSurface surface = dragger.SurfaceForPawn(pawn);
 
-				string pawnLabel = DDUtilities.GetLabelForPawn(pawn);
+				//Pawn name
+				Rect nameRect = new Rect(scrollViewInnerRect.x, currentVerticalPosition, spaceForPawnName, surfaceHeight);
+				this.DrawPawnLabel(nameRect, pawn);
 
-				Text.Font = GameFont.Small;
-				Text.Anchor = TextAnchor.MiddleLeft;
-				Text.WordWrap = false;
+				//Disable All Work button
+				Vector2 disableAllPosition = new Vector2(nameRect.xMax + spaceBetweenTypes + (DDUtilities.DraggableTextureWidth / 2f), nameRect.center.y);
+				Rect disableAllRect = DDUtilities.RectOnVector(disableAllPosition, DDUtilities.DraggableSize);
+				this.ButtonDisableAll(surface, disableAllRect);
 
-				Widgets.Label(nameRect, pawnLabel);
+				//Reset work for pawn (enable all available types by vanilla priority order)
+				Vector2 resetToVanillaPosition = new Vector2(disableAllPosition.x + spaceBetweenTypes + (DDUtilities.DraggableTextureWidth), disableAllPosition.y);
+				Rect resetToVanillaRect = DDUtilities.RectOnVector(resetToVanillaPosition, DDUtilities.DraggableSize);
+				this.ButtonResetToVanilla(surface, resetToVanillaRect);
 
-				Text.Anchor = TextAnchor.UpperLeft; //Reset
-				Text.WordWrap = true; //Reset
-				#endregion
+				//Surface OnGUI (check for drag, draw draggables)
+				Rect surfaceRect = new Rect(nameRect.xMax + spaceForButtons, currentVerticalPosition, scrollViewInnerRect.width - nameRect.width - spaceForButtons, surfaceHeight);
+				surface.OnGUI(surfaceRect);
 
-				#region Buttons
-				Rect buttonsRect = new Rect(nameRect.xMax, currentVerticalPosition, spaceForButtons, listItemHeight);
-
-				//Disable all workTypes button
-				Vector2 disableAllVector = new Vector2(buttonsRect.xMin + (wTypeTexWidth / 2f), buttonsRect.center.y);
-				Rect disableAllRect = DDUtilities.RectOnVector(disableAllVector, DDUtilities.WorkTypeTextureSize);
-				Texture2D disableAllTexture = ContentFinder<Texture2D>.Get("ButtonDisableAll");
-				GUI.DrawTexture(disableAllRect, disableAllTexture);
-				Widgets.DrawHighlightIfMouseover(disableAllRect);
-				TooltipHandler.TipRegion(disableAllRect, "Disable all work"); //Todo: translate
-				if (Widgets.ButtonInvisible(disableAllRect))
-				{
-					//Todo: add prompt
-					pawnSurface.DisableAllWork();
-				}
-
-				//Reset work priorities according to vanilla order
-				Vector2 resetToVanillVector = new Vector2(buttonsRect.xMax - (wTypeTexWidth / 2f), buttonsRect.center.y);
-				Rect resetToVanillaRect = DDUtilities.RectOnVector(resetToVanillVector, DDUtilities.WorkTypeTextureSize);
-				Texture2D resetToVanillaTexture = ContentFinder<Texture2D>.Get("ButtonResetToDefaults");
-				GUI.DrawTexture(resetToVanillaRect, resetToVanillaTexture);
-				Widgets.DrawHighlightIfMouseover(resetToVanillaRect);
-				TooltipHandler.TipRegion(resetToVanillaRect, "Reset to vanilla priorities"); //Todo: translate
-				if (Widgets.ButtonInvisible(resetToVanillaRect))
-				{
-					//Todo: add prompt
-					pawnSurface.ResetToVanillaSettings();
-				}
-				#endregion
-
-				#region WorkAssignmentArea
-				Rect surfaceRect = new Rect(buttonsRect.xMax, currentVerticalPosition, viewRect.width - nameRect.width - buttonsRect.width, listItemHeight);
-
-				pawnSurface.currentListRect = surfaceRect;
-				pawnSurface.OnGUI();
-				#endregion
-
-				currentVerticalPosition += listItemHeight; //Increment list y for next pawn
+				//Increment list y for next pawn
+				currentVerticalPosition += surfaceHeight;
 			}
 
 			Widgets.EndScrollView();
-			#endregion
 		}
 
 		public override void PostClose()
@@ -157,6 +138,125 @@ namespace DD_WorkTab
 			base.PostClose();
 
 			dragger.CurrentDraggingObj.Clear();
+		}
+
+		private void DrawIndicators(Rect rect)
+		{
+			Text.Anchor = TextAnchor.MiddleLeft;
+			Widgets.Label(rect, "<=" + " higher priority");
+
+			Text.Anchor = TextAnchor.MiddleRight;
+			Widgets.Label(rect, "lower priority " + "=>");
+
+			GUI.color = Color.white; // Reset
+			Text.Anchor = TextAnchor.UpperLeft; //Reset
+		}
+
+		private void DrawPawnLabel(Rect rect, Pawn pawn)
+		{
+			GUI.color = Color.white;
+			Text.Font = GameFont.Small;
+			Text.Anchor = TextAnchor.MiddleLeft;
+			Text.WordWrap = false;
+
+			Widgets.Label(rect, DDUtilities.GetLabelForPawn(pawn));
+
+			Text.Anchor = TextAnchor.UpperLeft; //Reset
+			Text.WordWrap = true; //Reset
+		}
+
+		//Button: set all pawn priorities to 0 (disabled)
+		private void ButtonDisableAll(PawnSurface surface, Rect buttonRect)
+		{
+			GUI.DrawTexture(buttonRect, DDUtilities.ButtonTexture_DisableAll);
+
+			Widgets.DrawHighlightIfMouseover(buttonRect);
+
+			TooltipHandler.TipRegion(buttonRect, "DISABLE_ALL_WORK"); //Todo: translate
+
+			if (Widgets.ButtonInvisible(buttonRect))
+			{
+				if (Settings.ShowPrompt)
+				{
+					DiaOption acceptButton = new DiaOption("Accept");
+					acceptButton.action = delegate
+					{
+						surface.DisableAllWork();
+					};
+					acceptButton.resolveTree = true;
+
+					DiaOption rejectButton = new DiaOption("Cancel");
+					rejectButton.resolveTree = true;
+
+					DiaOption acceptDoNotShowAgain = new DiaOption("Accept '(do not show this again)'");
+					acceptDoNotShowAgain.action = delegate
+					{
+						Settings.ShowPrompt = false;
+
+						surface.DisableAllWork();
+					};
+					acceptButton.resolveTree = true;
+
+					DiaNode prompt = new DiaNode("This action will set all of the colonist's priorities to 0.\n\nChoose 'Cancel' if you clicked the button by mistake.\n\nIf you choose 'do not show again' you may re-enable this prompt from Options > Mod Settings.");
+					prompt.options.Add(acceptButton);
+					prompt.options.Add(rejectButton);
+					prompt.options.Add(acceptDoNotShowAgain);
+
+					Find.WindowStack.Add(new Dialog_NodeTree(prompt, false, false, "WARNING_BUTTON_DISABLEALL"));
+				}
+
+				else
+				{
+					surface.DisableAllWork();
+				}
+			}
+		}
+
+		//Button: reset all pawn priorities according to natural work type importance
+		private void ButtonResetToVanilla(PawnSurface surface, Rect buttonRect)
+		{
+			GUI.DrawTexture(buttonRect, DDUtilities.ButtonTexture_ResetToVanilla);
+
+			Widgets.DrawHighlightIfMouseover(buttonRect);
+
+			TooltipHandler.TipRegion(buttonRect, "RESET_TO_VANILLA"); //Todo: translate
+
+			if (Widgets.ButtonInvisible(buttonRect))
+			{
+				if (Settings.ShowPrompt)
+				{
+					DiaOption acceptButton = new DiaOption("Accept");
+					acceptButton.action = delegate
+					{
+						surface.ResetToVanillaSettings();
+					};
+					acceptButton.resolveTree = true;
+
+					DiaOption rejectButton = new DiaOption("Cancel");
+					rejectButton.resolveTree = true;
+
+					DiaOption acceptDoNotShowAgain = new DiaOption("Accept '(do not show this again)'");
+					acceptDoNotShowAgain.action = delegate
+					{
+						Settings.ShowPrompt = false;
+
+						surface.ResetToVanillaSettings();
+					};
+					acceptButton.resolveTree = true;
+
+					DiaNode prompt = new DiaNode("This action will enable all possible work types for this colonist by their natural priority.\n\nChoose 'Cancel' if you clicked the button by mistake.\n\nIf you choose 'do not show again' you may re-enable this prompt from Options > Mod Settings.");
+					prompt.options.Add(acceptButton);
+					prompt.options.Add(rejectButton);
+					prompt.options.Add(acceptDoNotShowAgain);
+
+					Find.WindowStack.Add(new Dialog_NodeTree(prompt, false, false, "WARNING_BUTTON_RESETTOVANILLA"));
+				}
+
+				else
+				{
+					surface.ResetToVanillaSettings();
+				}
+			}
 		}
 	}
 }
