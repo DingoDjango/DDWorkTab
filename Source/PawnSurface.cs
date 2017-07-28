@@ -35,7 +35,7 @@ namespace DD_WorkTab
 			//Do not accept disabled work types
 			if (this.pawn.story.WorkTypeIsDisabled(typeToAdd.def))
 			{
-				string text = "DD_WorkTab_PawnSurface_WorkTypeForbidden".Translate(new object[] { typeToAdd.def.labelShort }).AdjustedFor(this.pawn);
+				string text = "DD_WorkTab_PawnSurface_WorkTypeForbidden".Translate(new string[] { typeToAdd.def.gerundLabel }).AdjustedFor(this.pawn);
 				Messages.Message(text, MessageSound.RejectInput);
 
 				return;
@@ -88,7 +88,10 @@ namespace DD_WorkTab
 			{
 				this.pawn.workSettings.Disable(typeToRemove.def);
 
-				Messages.Message("DD_WorkTab_PawnSurface_WorkRemoved".Translate(new string[] { typeToRemove.def.labelShort }).AdjustedFor(this.pawn), MessageSound.Benefit);
+				if (Settings.MessageOnDraggableRemoval)
+				{
+					Messages.Message("DD_WorkTab_PawnSurface_WorkRemoved".Translate(new string[] { typeToRemove.def.gerundLabel }).AdjustedFor(this.pawn), MessageSound.Silent);
+				}
 
 				this.children.Remove(typeToRemove);
 
@@ -185,7 +188,7 @@ namespace DD_WorkTab
 					{
 						Rect drawRect = draggablePositionSetter.ToDraggableRect();
 
-						TooltipHandler.TipRegion(drawRect, draggable.def.GetDraggableTooltip(false, this.pawn));
+						TooltipHandler.TipRegion(drawRect, draggable.def.GetDraggableTooltip(false, false, this.pawn));
 					}
 
 					draggablePositionSetter.x += DDUtilities.DraggableTextureWidth + this.standardSpacing;
@@ -302,10 +305,7 @@ namespace DD_WorkTab
 		{
 			Scribe_References.Look(ref this.pawn, "pawn", false);
 
-			Scribe_Collections.Look(ref this.children, "children", LookMode.Deep, new object[1]
-			{
-				this
-			});
+			Scribe_Collections.Look(ref this.children, "children", LookMode.Deep, new object[1] { this });
 		}
 	}
 }

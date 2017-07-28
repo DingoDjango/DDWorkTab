@@ -58,7 +58,6 @@
     <Compile Include="Controller.cs" />
     <Compile Include="Dragger_SaveManager.cs" />
     <Compile Include="SortOrder.cs" />
-    <Compile Include="Window_UsageGuide.cs" />
     <Compile Include="Window_WorkTab.cs" />
     <Compile Include="Patch_Pawn_WorkSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

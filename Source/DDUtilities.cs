@@ -170,33 +170,27 @@ namespace DD_WorkTab
 			TooltipHandler.TipRegion(rect, tooltip);
 		}
 
-		public static string GetDraggableTooltip(this WorkTypeDef def, bool isPrimary, Pawn worker)
+		public static string GetDraggableTooltip(this WorkTypeDef def, bool isPrimary, bool statsWindow, Pawn worker)
 		{
 			StringBuilder tooltip = new StringBuilder();
-			tooltip.AppendLine(def.gerundLabel);
-			tooltip.AppendLine();
+			tooltip.Append(def.gerundLabel);			
 
 			//RimWorld.PawnColumnWorker_WorkPriority.GetHeaderTip
 			if (isPrimary)
 			{
+				tooltip.AppendLine();
+				tooltip.AppendLine();
 				tooltip.AppendLine(def.description);
 				tooltip.AppendLine();
 
-				for (int i = 0; i < def.workGiversByPriority.Count; i++)
+				if (!statsWindow)
 				{
-					WorkGiverDef currentWorkGiver = def.workGiversByPriority[i];
+					tooltip.Append("DD_WorkTab_PrimeDraggable_DragTip".Translate(new string[] { def.gerundLabel }));
+				}
 
-					tooltip.Append(currentWorkGiver.LabelCap);
-
-					if (currentWorkGiver.emergency)
-					{
-						tooltip.Append(" (" + "EmergencyWorkMarker".Translate() + ")");
-					}
-
-					if (i < def.workGiversByPriority.Count - 1)
-					{
-						tooltip.AppendLine();
-					}
+				else
+				{
+					tooltip.Append("DD_WorkTab_ColonistStats_SortingTip".Translate(new string[] { def.gerundLabel }));
 				}
 			}
 
@@ -205,25 +199,25 @@ namespace DD_WorkTab
 			{
 				if (def.relevantSkills.Count > 0)
 				{
+					tooltip.AppendLine();
+					tooltip.AppendLine();
+
 					string relevantSkills = string.Empty;
 
 					foreach (SkillDef skill in def.relevantSkills)
 					{
 						relevantSkills = relevantSkills + skill.skillLabel + ", ";
 					}
-					relevantSkills = relevantSkills.Substring(0, relevantSkills.Length - 2);
 
-					tooltip.AppendLine("RelevantSkills".Translate(new object[]
+					relevantSkills = relevantSkills.Substring(0, relevantSkills.Length - 2); //Deletes the last ", "
+
+					tooltip.Append("RelevantSkills".Translate(new object[]
 					{
 						relevantSkills,
 						worker.skills.AverageOfRelevantSkillsFor(def).ToString(),
 						SkillRecord.MaxLevel
 					}));
-
-					tooltip.AppendLine();
 				}
-
-				tooltip.Append(def.description);
 
 				PawnColumnWorker_WorkPriority columnWorker = new PawnColumnWorker_WorkPriority();
 				bool incapacitated = (bool)AccessTools.Method(typeof(PawnColumnWorker_WorkPriority), "IsIncapableOfWholeWorkType").Invoke(columnWorker, new object[] { worker, def });
@@ -233,6 +227,13 @@ namespace DD_WorkTab
 					tooltip.AppendLine();
 					tooltip.AppendLine();
 					tooltip.Append("IncapableOfWorkTypeBecauseOfCapacities".Translate());
+				}
+
+				if (!statsWindow)
+				{
+					tooltip.AppendLine();
+					tooltip.AppendLine();
+					tooltip.Append("DD_WorkTab_PawnDraggable_DragTip".Translate());
 				}
 			}
 

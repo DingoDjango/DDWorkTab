@@ -6,6 +6,8 @@ namespace DD_WorkTab
 	{
 		public static bool ShowPrompt = true;
 
+		public static bool MessageOnDraggableRemoval = false;
+
 		public static bool ColonistStatsOnlyVisibleMap = true; //Unsaved
 
 		public override void ExposeData()
@@ -13,6 +15,8 @@ namespace DD_WorkTab
 			base.ExposeData();
 
 			Scribe_Values.Look(ref ShowPrompt, "ShowPrompt", true);
+
+			Scribe_Values.Look(ref MessageOnDraggableRemoval, "MessageOnDraggableRemoval", false);
 		}
 	}
 }

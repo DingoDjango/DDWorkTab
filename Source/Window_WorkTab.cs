@@ -25,7 +25,14 @@ namespace DD_WorkTab
 		{
 			get
 			{
-				return Find.VisibleMap.mapPawns.FreeColonistsCount;
+				int count = Find.VisibleMap.mapPawns.FreeColonistsCount;
+
+				if (count > 0)
+				{
+					return count;
+				}
+
+				else return 1;
 			}
 		}
 
@@ -167,7 +174,7 @@ namespace DD_WorkTab
 					};
 					acceptDoNotShowAgain.resolveTree = true;
 
-					DiaNode prompt = new DiaNode("DD_WorkTab_ButtonDisableAll_Text".Translate().AdjustedFor(surface.pawn) + "DD_WorkTab_ButtonText_Unintentional".Translate() + "DD_WorkTab_ButtonText_DisablePrompt".Translate());
+					DiaNode prompt = new DiaNode("DD_WorkTab_ButtonDisableAll_Text".Translate().AdjustedFor(surface.pawn) + "DD_WorkTab_ButtonText_DisablePrompt".Translate());
 					prompt.options.Add(acceptButton);
 					prompt.options.Add(rejectButton);
 					prompt.options.Add(acceptDoNotShowAgain);
@@ -210,7 +217,7 @@ namespace DD_WorkTab
 					};
 					acceptDoNotShowAgain.resolveTree = true;
 
-					DiaNode prompt = new DiaNode("DD_WorkTab_ButtonResetVanilla_Text".Translate().AdjustedFor(surface.pawn) + "DD_WorkTab_ButtonText_Unintentional".Translate() + "DD_WorkTab_ButtonText_DisablePrompt".Translate());
+					DiaNode prompt = new DiaNode("DD_WorkTab_ButtonResetVanilla_Text".Translate().AdjustedFor(surface.pawn) + "DD_WorkTab_ButtonText_DisablePrompt".Translate());
 					prompt.options.Add(acceptButton);
 					prompt.options.Add(rejectButton);
 					prompt.options.Add(acceptDoNotShowAgain);

@@ -34,30 +34,14 @@ namespace DD_WorkTab
 			Text.Font = GameFont.Small;
 
 			//Help buttons
-			Rect helpRect = new Rect(rect.x, rect.y, Window_WorkTab.spaceForPawnName + Window_WorkTab.spaceForButtons, rect.height);
-			Rect guideButtonRect = helpRect.LeftHalf().Rounded().ContractedBy(5f);
-			Rect colonistStatsRect = helpRect.RightHalf().Rounded().ContractedBy(5f);
+			Rect helpRect = new Rect(rect.x - DDUtilities.TabScrollPosition.x, rect.y + this.standardSpacing, Window_WorkTab.spaceForPawnName + Window_WorkTab.spaceForButtons - 3f, DDUtilities.DraggableTextureHeight);
 
-			Text.Anchor = TextAnchor.MiddleCenter;
-
-			if (Widgets.ButtonText(guideButtonRect, "DD_WorkTab_ButtonHowTo".Translate(), true, false, true))
+			if (Widgets.ButtonText(helpRect, "DD_WorkTab_ButtonColonistStats".Translate(), true, false, true))
 			{
-				Find.WindowStack.Add(new Window_UsageGuide());
-			}
-
-			if (Widgets.ButtonText(colonistStatsRect, "DD_WorkTab_ButtonColonistStats".Translate(), true, false, true))
-			{
-				if (Find.VisibleMap.mapPawns.FreeColonistsCount == 0)
-				{
-					Messages.Message("DD_WorkTab_ButtonColonistStats_NoColonists".Translate(), MessageSound.RejectInput);
-				}
-
 				Find.WindowStack.Add(new Window_ColonistStats(Settings.ColonistStatsOnlyVisibleMap));
 			}
 
-			Text.Anchor = TextAnchor.UpperLeft; //Reset
-
-			Vector2 positionSetter = new Vector2(helpRect.xMax + (this.standardSpacing * 2f) + (DDUtilities.DraggableTextureWidth / 2f) - DDUtilities.TabScrollPosition.x, rect.center.y);
+			Vector2 positionSetter = new Vector2(helpRect.xMax + (this.standardSpacing * 2f) + (DDUtilities.DraggableTextureWidth / 2f), rect.center.y);
 
 			foreach (DraggableWorkType draggable in this.PrimeDraggablesByPriority)
 			{
@@ -77,7 +61,7 @@ namespace DD_WorkTab
 
 				if (!Dragger.Dragging)
 				{
-					TooltipHandler.TipRegion(drawRect, draggable.def.GetDraggableTooltip(true, null));
+					TooltipHandler.TipRegion(drawRect, draggable.def.GetDraggableTooltip(true, false, null));
 				}
 
 				positionSetter.x += DDUtilities.DraggableTextureWidth + this.standardSpacing;
@@ -86,7 +70,7 @@ namespace DD_WorkTab
 
 		public PrimarySurface()
 		{
-			//Populate the main surface with indices (only needs to be done once realistically)
+			//Populate the main surface with all work types
 			int currentMainTypePriority = 1;
 
 			foreach (WorkTypeDef typeDef in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)

@@ -8,10 +8,6 @@ namespace DD_WorkTab
 {
 	public class Window_ColonistStats : Window
 	{
-		public const float defaultWidth = 1250f;
-
-		public const float defaultHeight = 700f;
-
 		public const float standardSpacing = Window_WorkTab.spaceBetweenTypes;
 
 		public const float rowHeight = Window_WorkTab.surfaceHeight;
@@ -47,7 +43,14 @@ namespace DD_WorkTab
 			{
 				if (Settings.ColonistStatsOnlyVisibleMap)
 				{
-					return Find.VisibleMap.mapPawns.FreeColonistsCount;
+					int countVisible = Find.VisibleMap.mapPawns.FreeColonistsCount;
+
+					if (countVisible > 0)
+					{
+						return countVisible;
+					}
+
+					else return 1;
 				}
 
 				else
@@ -60,7 +63,12 @@ namespace DD_WorkTab
 						count += allMaps[i].mapPawns.FreeColonistsCount;
 					}
 
-					return count;
+					if (count > 0)
+					{
+						return count;
+					}
+
+					else return 1;
 				}
 			}
 		}
@@ -101,47 +109,31 @@ namespace DD_WorkTab
 			}
 		}
 
-		private float windowWidth
-		{
-			get
-			{
-				float widthTotal = (this.Margin * 2f) + (standardSpacing * 2f) + rowWidth;
-
-				if (widthTotal < defaultWidth)
-				{
-					return widthTotal;
-				}
-
-				else return defaultWidth;
-			}
-		}
-
-		private float windowHeight
-		{
-			get
-			{
-				float heightTotal = (this.Margin * 2f) + (standardSpacing * 2f) + rowHeight * (1f + this.colonistsCount);
-
-				if (heightTotal < defaultHeight)
-				{
-					return heightTotal;
-				}
-
-				else return defaultHeight;
-			}
-		}
-
 		public override Vector2 InitialSize
 		{
 			get
 			{
-				return new Vector2(this.windowWidth, this.windowHeight);
+				float width = standardSpacing + rowWidth + 60f;
+
+				if (width > UI.screenWidth - 10f)
+				{
+					width = UI.screenWidth - 10f;
+				}
+
+				float height = standardSpacing * 2f + rowHeight * (1f + this.colonistsCount);
+
+				if (height > (float)UI.screenHeight * 0.75f)
+				{
+					height = (float)UI.screenHeight * 0.75f;
+				}
+
+				return new Vector2(width, height);
 			}
 		}
 
 		public override void DoWindowContents(Rect inRect)
 		{
-			this.SetInitialSizeAndPosition();
+			base.SetInitialSizeAndPosition();
 
 			//General Rects
 			Rect toggleMapRect = new Rect(inRect.x - this.scrollPosition.x, inRect.y, standardSpacing + spaceForPawnName, rowHeight);
@@ -165,9 +157,7 @@ namespace DD_WorkTab
 
 				prime.DrawDraggableTexture(primeRect);
 
-				Widgets.DrawHighlightIfMouseover(primeRect);
-
-				TooltipHandler.TipRegion(primeRect, prime.def.GetDraggableTooltip(true, null) + "\n\n" + "DD_WorkTab_ColonistStats_SortingTip".Translate());
+				TooltipHandler.TipRegion(primeRect, prime.def.GetDraggableTooltip(true, true, null));
 
 				if (Mouse.IsOver(primeRect) && Event.current.type == EventType.MouseDown)
 				{
@@ -224,7 +214,7 @@ namespace DD_WorkTab
 
 					GUI.DrawTexture(iconRect, texture);
 
-					float highlightHeight = (this.windowHeight < defaultHeight) ? (this.colonistsCount + 1) * rowHeight : inRect.height - (standardSpacing * 5f);
+					float highlightHeight = inRect.height - standardSpacing * 5f;
 					Rect highlightRect = new Rect(primeRect.xMin - 2f, primeRect.yMin - 2f, primeRect.width + 4f, highlightHeight);
 					Widgets.DrawHighlight(highlightRect);
 				}
@@ -266,14 +256,12 @@ namespace DD_WorkTab
 					DraggableWorkType matchingDraggable = pawnSurface.childrenListForReading.Find(d => d.def == currentPrime.def);
 					Rect drawRect = new Vector2(surfaceRect.x + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f) + i * (standardSpacing + DDUtilities.DraggableTextureWidth), surfaceRect.center.y).ToDraggableRect();
 
-					Widgets.DrawHighlightIfMouseover(drawRect);
-
 					//Pawn is assigned to the work type
 					if (matchingDraggable != null)
 					{
 						matchingDraggable.DrawDraggableTexture(drawRect);
 
-						TooltipHandler.TipRegion(drawRect, matchingDraggable.def.GetDraggableTooltip(false, matchingDraggable.parent.pawn));
+						TooltipHandler.TipRegion(drawRect, matchingDraggable.def.GetDraggableTooltip(false, true, matchingDraggable.parent.pawn));
 					}
 
 					else
@@ -283,7 +271,7 @@ namespace DD_WorkTab
 						{
 							GUI.DrawTexture(drawRect, BaseContent.BadTex);
 
-							TooltipHandler.TipRegion(drawRect, "DD_WorkTab_PawnSurface_WorkTypeForbidden".Translate(new object[] { currentPrime.def.labelShort }).AdjustedFor(pawn));
+							TooltipHandler.TipRegion(drawRect, "DD_WorkTab_PawnSurface_WorkTypeForbidden".Translate(new string[] { currentPrime.def.gerundLabel }).AdjustedFor(pawn));
 						}
 
 						//Pawn is unassigned by player choice
@@ -291,7 +279,7 @@ namespace DD_WorkTab
 						{
 							GUI.DrawTexture(drawRect, DDUtilities.HaltIcon);
 
-							string tip = currentPrime.def.GetDraggableTooltip(false, pawn) + "\n\n" + "DD_WorkTab_ColonistStats_CurrentlyUnassigned".Translate(new object[] { currentPrime.def.labelShort }).AdjustedFor(pawn);
+							string tip = currentPrime.def.GetDraggableTooltip(false, true, pawn) + "\n\n" + "DD_WorkTab_ColonistStats_CurrentlyUnassigned".Translate(new string[] { currentPrime.def.gerundLabel }).AdjustedFor(pawn);
 
 							TooltipHandler.TipRegion(drawRect, tip);
 						}
