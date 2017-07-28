@@ -21,7 +21,7 @@ namespace DD_WorkTab
 			}
 		}
 
-		public void CheckForDrag(Rect draggingRect)
+		protected void CheckForDrag(Rect draggingRect)
 		{
 			if (Event.current.type == EventType.MouseUp)
 			{

@@ -5,7 +5,7 @@
 		<defName>DragDrop_WorkTab</defName>
 		<label>DDTest</label>
 		<description>WIP tab</description>
-		<tabWindowClass>DD_WorkTab.MainTabWindow_Work_DragAndDrop</tabWindowClass>
+		<tabWindowClass>DD_WorkTab.Window_WorkTab</tabWindowClass>
 		<order>25</order>
 	</MainButtonDef>
 

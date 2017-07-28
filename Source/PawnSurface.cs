@@ -12,17 +12,9 @@ namespace DD_WorkTab
 
 		private List<DraggableWorkType> children = new List<DraggableWorkType>();
 
-		private float standardSpacing = MainTabWindow_Work_DragAndDrop.spaceBetweenTypes;
+		private float standardSpacing = Window_WorkTab.spaceBetweenTypes;
 
-		private DragManager dragger
-		{
-			get
-			{
-				return Current.Game.World.GetComponent<DragManager>();
-			}
-		}
-
-		public List<DraggableWorkType> childrenListForReading //Unused
+		public List<DraggableWorkType> childrenListForReading
 		{
 			get
 			{
@@ -43,12 +35,7 @@ namespace DD_WorkTab
 			//Do not accept disabled work types
 			if (this.pawn.story.WorkTypeIsDisabled(typeToAdd.def))
 			{
-				string text = string.Format("Cannot assign {0} to {1}. {2} is incapable of it.", new object[]
-					{ /* change Format to Translate later */
-						this.pawn.NameStringShort,
-						typeToAdd.def.labelShort,
-						this.pawn.ProSubjCap()
-					});
+				string text = "DD_WorkTab_PawnSurface_WorkTypeForbidden".Translate(new object[] { typeToAdd.def.labelShort }).AdjustedFor(this.pawn);
 				Messages.Message(text, MessageSound.RejectInput);
 
 				return;
@@ -101,6 +88,8 @@ namespace DD_WorkTab
 			{
 				this.pawn.workSettings.Disable(typeToRemove.def);
 
+				Messages.Message("DD_WorkTab_PawnSurface_WorkRemoved".Translate(new string[] { typeToRemove.def.labelShort }).AdjustedFor(this.pawn), MessageSound.Benefit);
+
 				this.children.Remove(typeToRemove);
 
 				typeToRemove = null;
@@ -108,7 +97,7 @@ namespace DD_WorkTab
 
 			else
 			{
-				Log.Error("DDWorkTab :: Attempted to remove WorkTypeIndex that was not on the list.");
+				Log.Error("DDWorkTab :: Attempted to remove DraggableWorkType that was not on the list.");
 			}
 		}
 
@@ -192,9 +181,11 @@ namespace DD_WorkTab
 
 					draggable.OnGUI();
 
-					if (!dragger.Dragging)
+					if (!Dragger.Dragging)
 					{
-						draggable.DrawStationaryInformation(DDUtilities.RectOnVector(draggablePositionSetter, DDUtilities.DraggableSize), false);
+						Rect drawRect = draggablePositionSetter.ToDraggableRect();
+
+						TooltipHandler.TipRegion(drawRect, draggable.def.GetDraggableTooltip(false, this.pawn));
 					}
 
 					draggablePositionSetter.x += DDUtilities.DraggableTextureWidth + this.standardSpacing;
@@ -202,9 +193,9 @@ namespace DD_WorkTab
 			}
 
 			//Draw dragging indicator and listen for drop
-			if (dragger.Dragging)
+			if (Dragger.Dragging)
 			{
-				DraggableWorkType curDraggingObj = dragger.CurrentDraggingObj[0];
+				DraggableWorkType curDraggingObj = Dragger.CurrentDraggingObj[0];
 
 				Vector2 absPos = curDraggingObj.isPrimaryType ? curDraggingObj.position + DDUtilities.TabScrollPosition : curDraggingObj.position;
 
@@ -274,7 +265,7 @@ namespace DD_WorkTab
 			{
 				this.AddOrUpdateChild(nomad, true);
 
-				dragger.CurrentDraggingObj.Clear();
+				Dragger.CurrentDraggingObj.Clear();
 			}
 
 			//Draggable was dragged from within this surface
@@ -292,7 +283,7 @@ namespace DD_WorkTab
 					this.AddOrUpdateChild(nomad, false);
 				}
 
-				dragger.CurrentDraggingObj.Clear();
+				Dragger.CurrentDraggingObj.Clear();
 			}
 		}
 

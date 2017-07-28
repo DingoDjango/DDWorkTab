@@ -12,7 +12,7 @@ namespace DD_WorkTab
 			HarmonyInstance harmony = HarmonyInstance.Create("dingo.rimworld.dd_worktab");
 			harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-			GetSettings<Settings>();
+			this.GetSettings<Settings>();
 		}
 
 		public override void DoSettingsWindowContents(Rect inRect)
@@ -23,7 +23,7 @@ namespace DD_WorkTab
 
 			list.Gap(20f);
 
-			list.CheckboxLabeled("Show prompt", ref Settings.ShowPrompt, "Open an 'Are you sure?' dialogue when disabling or resetting priorities");
+			list.CheckboxLabeled("DD_WorkTab_ShowPrompt_Label".Translate(), ref Settings.ShowPrompt, "DD_WorkTab_ShowPrompt_Desc".Translate());
 
 			list.End();
 		}

@@ -13,45 +13,51 @@ namespace DD_WorkTab
 
 		public bool isPrimaryType;
 
-		private DragManager dragger
-		{
-			get
-			{
-				return Current.Game.World.GetComponent<DragManager>();
-			}
-		}
-
 		public void OnGUI()
 		{
+			Rect dragRect = this.position.ToDraggableRect();
+
 			//Draw texture on draggable position
-			Rect drawRect = DDUtilities.RectOnVector(this.position, DDUtilities.DraggableSize);
+			this.DrawDraggableTexture(dragRect);
 
-			GUI.DrawTexture(drawRect, DDUtilities.TextureFromModFolder(this.def));
+			//Do drag calculations
+			this.CheckForDrag(dragRect);
 
-			this.CheckForDrag(drawRect);
-
+			//Update DragManager if this object is being dragged
 			if (this.IsDragging)
 			{
-				if (!dragger.Dragging || (dragger.Dragging && dragger.CurrentDraggingObj[0] != this))
+				if (!Dragger.Dragging || (Dragger.Dragging && Dragger.CurrentDraggingObj[0] != this))
 				{
-					dragger.CurrentDraggingObj.Clear();
-					dragger.CurrentDraggingObj.Add(this);
+					Dragger.CurrentDraggingObj.Clear();
+					Dragger.CurrentDraggingObj.Add(this);
 				}
 			}
 		}
 
-		public void DrawStationaryInformation(Rect drawRect, bool isPrimary)
+		public void DrawDraggableTexture(Rect drawRect)
 		{
-			if (isPrimary) //Used to give the illusion that primary work types are "copied" on GUI
+			Texture2D draggableTex = DDUtilities.TextureFromModFolder(this.def);
+
+			if (!Dragger.Dragging && Mouse.IsOver(drawRect))
 			{
-				GUI.DrawTexture(drawRect, DDUtilities.TextureFromModFolder(this.def));
+				GUI.color = DDUtilities.HighlightColour;
 			}
 
-			Widgets.DrawHighlightIfMouseover(drawRect);
+			//Draw solid colour texture for primary types
+			else if (this.isPrimaryType)
+			{
+				GUI.color = DDUtilities.ButtonColour;
+			}
 
-			string tooltip = isPrimary ? this.def.labelShort + "\n\n" + this.def.description : this.def.labelShort;
+			//Draw adjusted colour otherwise
+			else
+			{
+				GUI.color = DDUtilities.DraggableColour.AdjustedForPawnSkills(this.parent.pawn, this.def);
+			}
 
-			TooltipHandler.TipRegion(drawRect, tooltip);
+			GUI.DrawTexture(drawRect, draggableTex);
+
+			GUI.color = Color.white; //Reset
 		}
 
 		#region Constructors

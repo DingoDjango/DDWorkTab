@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+	<DD_WorkTab_ShowPrompt_Label>Show prompt for buttons</DD_WorkTab_ShowPrompt_Label>
+	<DD_WorkTab_ShowPrompt_Desc>When pressing the Disable All Work or Reset Priorities buttons, open an 'Are you sure?' dialogue window.</DD_WorkTab_ShowPrompt_Desc>
+
+	<DD_WorkTab_HighPriorityIndicator>higher priority</DD_WorkTab_HighPriorityIndicator>
+	<DD_WorkTab_LowPriorityIndicator>lower priority</DD_WorkTab_LowPriorityIndicator>
+
+	<DD_WorkTab_ButtonOption_Accept>Accept</DD_WorkTab_ButtonOption_Accept>
+	<DD_WorkTab_ButtonOption_Cancel>Cancel</DD_WorkTab_ButtonOption_Cancel>
+	<DD_WorkTab_ButtonOption_AcceptDisablePrompt>Accept (Disable this prompt)</DD_WorkTab_ButtonOption_AcceptDisablePrompt>
+
+	<DD_WorkTab_ButtonText_Unintentional>\n\nChoose 'Cancel' if you did not mean to click the button.</DD_WorkTab_ButtonText_Unintentional>
+	<DD_WorkTab_ButtonText_DisablePrompt>\n\nIf you choose 'Accept (Disable this prompt)' you can always re-enable the prompt from Options > Mod Settings.</DD_WorkTab_ButtonText_DisablePrompt>
+
+	<DD_WorkTab_ButtonDisableAll_Tooltip>Disable All Work</DD_WorkTab_ButtonDisableAll_Tooltip>
+	<DD_WorkTab_ButtonDisableAll_Title>Disable All Work for NAME</DD_WorkTab_ButtonDisableAll_Title>
+	<DD_WorkTab_ButtonDisableAll_Text>If you accept, all active work for NAME will be removed. HECAP will become idle if you don't assign some new work for HIM.</DD_WorkTab_ButtonDisableAll_Text>
+
+	<DD_WorkTab_ButtonResetVanilla_Tooltip>Reset Work Priorities</DD_WorkTab_ButtonResetVanilla_Tooltip>
+	<DD_WorkTab_ButtonResetVanilla_Title>Reset All Work for NAME</DD_WorkTab_ButtonResetVanilla_Title>
+	<DD_WorkTab_ButtonResetVanilla_Text>If you accept, all possible work types for NAME will be enabled and automatically sorted by natural priority.</DD_WorkTab_ButtonResetVanilla_Text>
+
+	<DD_WorkTab_PawnSurface_WorkTypeForbidden>Cannot assign NAME to {0}. HECAP is incapable of doing it.</DD_WorkTab_PawnSurface_WorkTypeForbidden>
+	<DD_WorkTab_PawnSurface_WorkRemoved>NAME has been unassigned from {0}.</DD_WorkTab_PawnSurface_WorkRemoved>
+
+	<DD_WorkTab_ButtonHowTo>How-to Guide</DD_WorkTab_ButtonHowTo>
+	<DD_WorkTab_ButtonColonistStats>Colonist Stats</DD_WorkTab_ButtonColonistStats>
+	<DD_WorkTab_ButtonColonistStats_NoColonists>There are 0 colonists on this map. Switching to All Maps view.</DD_WorkTab_ButtonColonistStats_NoColonists>
+
+	<DD_WorkTab_ColonistStats_ToggleButton_VisibleMap>Show current map</DD_WorkTab_ColonistStats_ToggleButton_VisibleMap>
+	<DD_WorkTab_ColonistStats_ToggleButton_AllMaps>Show all maps</DD_WorkTab_ColonistStats_ToggleButton_AllMaps>
+	<DD_WorkTab_ColonistStats_SortingTip>Click to sort by this type.</DD_WorkTab_ColonistStats_SortingTip>
+	<DD_WorkTab_ColonistStats_CurrentlyUnassigned>NAME is currently unassigned to {0}. HECAP is capable of doing it.</DD_WorkTab_ColonistStats_CurrentlyUnassigned>
+
+	<DD_WorkTab_UsageGuide_Title>Guide: Using the Work Tab</DD_WorkTab_UsageGuide_Title>
+	<DD_WorkTab_UsageGuide_Tooltips>Almost every interactable element of the tab has a tooltip. Hover your mouse over different elements and explore their tooltip text.</DD_WorkTab_UsageGuide_Tooltips>
+	<DD_WorkTab_UsageGuide_ColonistStats>If you need to compare the stats of your colonists, click the '{0}' button.</DD_WorkTab_UsageGuide_ColonistStats>
+	<DD_WorkTab_UsageGuide_ColonistStats_Sorting>In the '{0}' window:\n\n	• You can toggle the colonist list between the currently visible map and all of your colonists. Click the top-left button to do so.\n	• Left or right click any main work type (the top-most symbols, above the white rectangle) to sort the colonists by their skills for that work type.\n	• You can sort by descending or ascending skill level, or return to the default list.\n	• Colonists that cannot be assigned to a currently selected work type will be at the bottom of the list.\n	• Colonists that can be assigned to the currently selected work type, but are currently not assigned, will display a unique icon.</DD_WorkTab_UsageGuide_ColonistStats_Sorting>
+	<DD_WorkTab_UsageGuide_MainWorkTypes>The top row of the 'Work' tab (next to the large buttons) is populated by the main work types. Each one represents a unique work type.\nThe main types are drawn left-to-right by their natural priority (Firefighting first, Research last if left unmodded).</DD_WorkTab_UsageGuide_MainWorkTypes>
+	<DD_WorkTab_UsageGuide_PawnLabels>Each colonist name can be clicked. This will move the camera to their location, select them, and close the tab.</DD_WorkTab_UsageGuide_PawnLabels>
+	<DD_WorkTab_UsageGuide_Buttons>To the right of each colonist's name are two buttons:\n\n	• '{0}' wipes the colonist's work schedule (they will do nothing unless you assign work for them).\n	• '{1}' overwrites every possible work type for the colonist, prioritised according to the main work types' natural priority.</DD_WorkTab_UsageGuide_Buttons>
+	<DD_WorkTab_UsageGuide_EnablingWorkTypes>To enable a work type:\n\n	• Drag one of the main work types to the colonist's work list.\n	• The drop location (which also indicates priority) will be marked by a white line.\n	• If a red line is shown, the colonist is incapable of the work type.</DD_WorkTab_UsageGuide_EnablingWorkTypes>
+	<DD_WorkTab_UsageGuide_DisablingWorkTypes>To disable a work type:\n\n	• Drag an unwanted work type from the colonist's work list.\n	• Drop it outside of the colonist's work list, but inside the white rectangle.\n	• The type will disappear from the list and a message will be displayed.</DD_WorkTab_UsageGuide_DisablingWorkTypes>
+	<DD_WorkTab_UsageGuide_ChangingPriority>Changing priorities and understanding them:\n\n	• Work priorities are visualised left-to-right.\n	• The colonist will try to find work in the left-most category first, then the second category from the left and so on.\n	• This is the same as setting the priorities to 1, 2, 3, etc. in RimWorld's basic 'Work' tab.\n\n	• Drag a work type left or right in the colonist's work list to adjuts its priority.\n	• Dragging a main work type to the colonist's work list can also adjust priorities.</DD_WorkTab_UsageGuide_ChangingPriority>	
+
+</LanguageData>

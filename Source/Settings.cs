@@ -6,6 +6,8 @@ namespace DD_WorkTab
 	{
 		public static bool ShowPrompt = true;
 
+		public static bool ColonistStatsOnlyVisibleMap = true; //Unsaved
+
 		public override void ExposeData()
 		{
 			base.ExposeData();

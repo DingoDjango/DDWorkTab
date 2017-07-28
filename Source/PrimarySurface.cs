@@ -8,23 +8,23 @@ namespace DD_WorkTab
 	//This surface is responsible for drawing primary DraggableWorkTypes and general buttons at the top of the window
 	public class PrimarySurface
 	{
-		private float standardSpacing = MainTabWindow_Work_DragAndDrop.spaceBetweenTypes;
+		private float standardSpacing = Window_WorkTab.spaceBetweenTypes;
 
-		private List<DraggableWorkType> children = new List<DraggableWorkType>();
+		private List<DraggableWorkType> primeDraggables = new List<DraggableWorkType>();
 
-		public List<DraggableWorkType> childrenListForReading //Unused
+		public List<DraggableWorkType> PrimeDraggablesList
 		{
 			get
 			{
-				return this.children;
+				return this.primeDraggables;
 			}
 		}
 
-		public IEnumerable<DraggableWorkType> childrenSortedByPriority
+		public IEnumerable<DraggableWorkType> PrimeDraggablesByPriority
 		{
 			get
 			{
-				return this.children.OrderBy(child => child.priorityIndex);
+				return this.primeDraggables.OrderBy(child => child.priorityIndex);
 			}
 		}
 
@@ -34,38 +34,51 @@ namespace DD_WorkTab
 			Text.Font = GameFont.Small;
 
 			//Help buttons
-			Rect helpRect = new Rect(rect.x, rect.y, MainTabWindow_Work_DragAndDrop.spaceForPawnName + MainTabWindow_Work_DragAndDrop.spaceForButtons, rect.height);
+			Rect helpRect = new Rect(rect.x, rect.y, Window_WorkTab.spaceForPawnName + Window_WorkTab.spaceForButtons, rect.height);
 			Rect guideButtonRect = helpRect.LeftHalf().Rounded().ContractedBy(5f);
 			Rect colonistStatsRect = helpRect.RightHalf().Rounded().ContractedBy(5f);
 
 			Text.Anchor = TextAnchor.MiddleCenter;
 
-			if (Widgets.ButtonText(guideButtonRect, "How-to Guide", true, false, true))
+			if (Widgets.ButtonText(guideButtonRect, "DD_WorkTab_ButtonHowTo".Translate(), true, false, true))
 			{
-				//Add some help window here with base.OK dianode
+				Find.WindowStack.Add(new Window_UsageGuide());
 			}
 
-			if (Widgets.ButtonText(colonistStatsRect, "Colonist Stats", true, false, true))
+			if (Widgets.ButtonText(colonistStatsRect, "DD_WorkTab_ButtonColonistStats".Translate(), true, false, true))
 			{
-				//Add colonist stats window (look to vanilla pawnrecords?)
+				if (Find.VisibleMap.mapPawns.FreeColonistsCount == 0)
+				{
+					Messages.Message("DD_WorkTab_ButtonColonistStats_NoColonists".Translate(), MessageSound.RejectInput);
+				}
+
+				Find.WindowStack.Add(new Window_ColonistStats(Settings.ColonistStatsOnlyVisibleMap));
 			}
 
 			Text.Anchor = TextAnchor.UpperLeft; //Reset
 
-			Vector2 positionSetter = new Vector2(helpRect.xMax + this.standardSpacing + (DDUtilities.DraggableTextureWidth / 2f) - DDUtilities.TabScrollPosition.x, rect.center.y);
+			Vector2 positionSetter = new Vector2(helpRect.xMax + (this.standardSpacing * 2f) + (DDUtilities.DraggableTextureWidth / 2f) - DDUtilities.TabScrollPosition.x, rect.center.y);
 
-			foreach (DraggableWorkType draggable in this.childrenSortedByPriority)
+			foreach (DraggableWorkType draggable in this.PrimeDraggablesByPriority)
 			{
+				Rect drawRect = positionSetter.ToDraggableRect();
+
 				if (!draggable.IsDragging)
 				{
 					draggable.position = positionSetter;
 				}
 
-				Rect drawRect = DDUtilities.RectOnVector(positionSetter, DDUtilities.DraggableSize);
-
-				draggable.DrawStationaryInformation(drawRect, true);
+				else
+				{
+					draggable.DrawDraggableTexture(drawRect);
+				}
 
 				draggable.OnGUI();
+
+				if (!Dragger.Dragging)
+				{
+					TooltipHandler.TipRegion(drawRect, draggable.def.GetDraggableTooltip(true, null));
+				}
 
 				positionSetter.x += DDUtilities.DraggableTextureWidth + this.standardSpacing;
 			}
@@ -82,7 +95,7 @@ namespace DD_WorkTab
 
 				primeDraggable.isPrimaryType = true;
 
-				this.children.Add(primeDraggable);
+				this.primeDraggables.Add(primeDraggable);
 
 				currentMainTypePriority++;
 			}
