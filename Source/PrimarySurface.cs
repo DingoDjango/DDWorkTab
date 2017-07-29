@@ -8,7 +8,7 @@ namespace DD_WorkTab
 	//This surface is responsible for drawing primary DraggableWorkTypes and general buttons at the top of the window
 	public class PrimarySurface
 	{
-		private float standardSpacing = Window_WorkTab.spaceBetweenTypes;
+		private static float standardSpacing = DDUtilities.standardSpacing;
 
 		private List<DraggableWorkType> primeDraggables = new List<DraggableWorkType>();
 
@@ -34,14 +34,14 @@ namespace DD_WorkTab
 			Text.Font = GameFont.Small;
 
 			//Help buttons
-			Rect helpRect = new Rect(rect.x - DDUtilities.TabScrollPosition.x, rect.y + this.standardSpacing, Window_WorkTab.spaceForPawnName + Window_WorkTab.spaceForButtons - 3f, DDUtilities.DraggableTextureHeight);
+			Rect helpRect = new Rect(rect.x + standardSpacing, rect.y + standardSpacing, DDUtilities.spaceForPawnLabel + DDUtilities.spaceForWorkButtons, DDUtilities.DraggableTextureHeight);
 
 			if (Widgets.ButtonText(helpRect, "DD_WorkTab_ButtonColonistStats".Translate(), true, false, true))
 			{
 				Find.WindowStack.Add(new Window_ColonistStats(Settings.ColonistStatsOnlyVisibleMap));
 			}
 
-			Vector2 positionSetter = new Vector2(helpRect.xMax + (this.standardSpacing * 2f) + (DDUtilities.DraggableTextureWidth / 2f), rect.center.y);
+			Vector2 positionSetter = new Vector2(helpRect.xMax + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f), rect.center.y);
 
 			foreach (DraggableWorkType draggable in this.PrimeDraggablesByPriority)
 			{
@@ -54,17 +54,17 @@ namespace DD_WorkTab
 
 				else
 				{
-					draggable.DrawDraggableTexture(drawRect);
+					draggable.DrawTexture(drawRect, false);
 				}
 
 				draggable.OnGUI();
 
 				if (!Dragger.Dragging)
 				{
-					TooltipHandler.TipRegion(drawRect, draggable.def.GetDraggableTooltip(true, false, null));
+					TooltipHandler.TipRegion(drawRect, draggable.GetDraggableTooltip(false));
 				}
 
-				positionSetter.x += DDUtilities.DraggableTextureWidth + this.standardSpacing;
+				positionSetter.x += DDUtilities.DraggableTextureWidth + standardSpacing;
 			}
 		}
 

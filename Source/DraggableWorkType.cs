@@ -13,12 +13,20 @@ namespace DD_WorkTab
 
 		public bool isPrimaryType;
 
+		public bool isEmergency
+		{
+			get
+			{
+				return this.def.workGiversByPriority.Any(wg => wg.emergency);
+			}
+		}
+
 		public void OnGUI()
 		{
 			Rect dragRect = this.position.ToDraggableRect();
 
 			//Draw texture on draggable position
-			this.DrawDraggableTexture(dragRect);
+			this.DrawTexture(dragRect, false);
 
 			//Do drag calculations
 			this.CheckForDrag(dragRect);
@@ -34,28 +42,19 @@ namespace DD_WorkTab
 			}
 		}
 
-		public void DrawDraggableTexture(Rect drawRect)
+		public void DrawTexture(Rect drawRect, bool statsWindow)
 		{
-			Texture2D draggableTex = DDUtilities.TextureFromModFolder(this.def);
-
-			if (!Dragger.Dragging && Mouse.IsOver(drawRect))
+			if (!statsWindow || (statsWindow && this.isPrimaryType))
 			{
-				GUI.color = DDUtilities.HighlightColour;
+				Widgets.DrawHighlightIfMouseover(drawRect);
 			}
 
-			//Draw solid colour texture for primary types
-			else if (this.isPrimaryType)
-			{
-				GUI.color = DDUtilities.ButtonColour;
-			}
+			DDUtilities.DrawOutline(drawRect, this.isEmergency);
 
-			//Draw adjusted colour otherwise
-			else
-			{
-				GUI.color = DDUtilities.DraggableColour.AdjustedForPawnSkills(this.parent.pawn, this.def);
-			}
+			//Adjust colour based on isPrimary, pawn skills, work type
+			GUI.color = this.GetDraggableColour();
 
-			GUI.DrawTexture(drawRect, draggableTex);
+			GUI.DrawTexture(drawRect.ContractedBy(2f), this.GetDraggableTexture());
 
 			GUI.color = Color.white; //Reset
 		}

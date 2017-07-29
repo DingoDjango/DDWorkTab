@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using RimWorld;
+﻿using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -7,19 +6,21 @@ namespace DD_WorkTab
 {
 	public class Window_WorkTab : MainTabWindow
 	{
-		public const float spaceForPawnName = 140f;
+		private static float spaceForPawnLabel = DDUtilities.spaceForPawnLabel;
 
-		public const float spaceForButtons = 80f;
+		private static float spaceForWorkButtons = DDUtilities.spaceForWorkButtons;
 
-		public const float spaceBetweenTypes = 5f;
+		private static float standardSpacing = DDUtilities.standardSpacing;
 
-		public const float surfaceHeight = 2f * spaceBetweenTypes + DDUtilities.DraggableTextureHeight;
+		private static float standardRowHeight = DDUtilities.standardRowHeight;
 
-		public static float surfaceWidth = spaceBetweenTypes + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (DDUtilities.DraggableTextureWidth + spaceBetweenTypes);
+		private static float standardSurfaceWidth = DDUtilities.standardSurfaceWidth;
 
 		private PrimarySurface primarySurface = new PrimarySurface();
 
 		private Vector2 scrollPosition = Vector2.zero;
+
+		private bool shouldResetDrag = false;
 
 		private int totalColonists
 		{
@@ -36,30 +37,6 @@ namespace DD_WorkTab
 			}
 		}
 
-		private float totalRenderWidth
-		{
-			get
-			{
-				return spaceForPawnName + spaceForButtons + surfaceWidth + 60f;
-			}
-		}
-
-		private float totalRenderHeight
-		{
-			get
-			{
-				return surfaceHeight * (1 + this.totalColonists) + 60f; //Accounted for mainTypesRect
-			}
-		}
-
-		public Vector2 ScrollPosition
-		{
-			get
-			{
-				return this.scrollPosition;
-			}
-		}
-
 		public override void DoWindowContents(Rect inRect)
 		{
 			base.DoWindowContents(inRect);
@@ -68,11 +45,11 @@ namespace DD_WorkTab
 			float spaceForIndicators = Text.LineHeight;
 
 			//General Rects
-			Rect indicatorsRect = new Rect(inRect.x + spaceForPawnName + spaceForButtons, inRect.y, inRect.width - spaceForPawnName - spaceForButtons, spaceForIndicators);
-			Rect primarySurfaceRect = new Rect(inRect.x, indicatorsRect.yMax, inRect.width, surfaceHeight);
+			Rect indicatorsRect = new Rect(inRect.x + standardSpacing + spaceForPawnLabel + spaceForWorkButtons, inRect.y, inRect.width - 2 * standardSpacing - spaceForPawnLabel - spaceForWorkButtons, spaceForIndicators);
+			Rect primarySurfaceRect = new Rect(inRect.x - this.listOffset, indicatorsRect.yMax, inRect.width, standardRowHeight);
 			Rect scrollViewBox = new Rect(inRect.x, primarySurfaceRect.yMax, inRect.width, inRect.height - indicatorsRect.height - primarySurfaceRect.height);
-			Rect scrollViewOuterRect = scrollViewBox.ContractedBy(3f);
-			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, spaceForPawnName + spaceForButtons + surfaceWidth, totalColonists * surfaceHeight);
+			Rect scrollViewOuterRect = scrollViewBox.ContractedBy(standardSpacing);
+			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, spaceForPawnLabel + spaceForWorkButtons + standardSurfaceWidth, totalColonists * standardRowHeight);
 
 			//Draw priority indicators
 			this.DrawIndicators(indicatorsRect);
@@ -81,7 +58,7 @@ namespace DD_WorkTab
 			primarySurface.OnGUI(primarySurfaceRect);
 
 			//Draw rect edges
-			DDUtilities.DrawOutline(scrollViewBox);
+			DDUtilities.DrawOutline(scrollViewBox, false);
 
 			Widgets.BeginScrollView(scrollViewOuterRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
@@ -101,34 +78,40 @@ namespace DD_WorkTab
 
 				firstPawnDrawn = true;
 
+				//Rects
+				Rect pawnLabelRect = new Rect(scrollViewInnerRect.x, currentVerticalPosition, spaceForPawnLabel, standardRowHeight);
+				Rect disableAllRect = new Vector2(pawnLabelRect.xMax + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f), pawnLabelRect.center.y).ToDraggableRect();
+				Rect resetToVanillaRect = new Vector2(disableAllRect.xMax + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f), disableAllRect.center.y).ToDraggableRect();
+				Rect surfaceRect = new Rect(pawnLabelRect.xMax + spaceForWorkButtons, currentVerticalPosition, scrollViewInnerRect.width - pawnLabelRect.width - spaceForWorkButtons, standardRowHeight);
+
 				//Pawn name
-				Rect nameRect = new Rect(scrollViewInnerRect.x, currentVerticalPosition, spaceForPawnName, surfaceHeight);
-				this.DoPawnLabel(nameRect, pawn);
+				DDUtilities.DoPawnLabel(pawnLabelRect, pawn);
 
 				//Disable All Work button
-				Vector2 disableAllPosition = new Vector2(nameRect.xMax + spaceBetweenTypes + (DDUtilities.DraggableTextureWidth / 2f), nameRect.center.y);
-				Rect disableAllRect = disableAllPosition.ToDraggableRect();
 				this.ButtonDisableAll(surface, disableAllRect);
 
-				//Reset work for pawn (enable all available types by vanilla priority order)
-				Vector2 resetToVanillaPosition = new Vector2(disableAllPosition.x + spaceBetweenTypes + (DDUtilities.DraggableTextureWidth), disableAllPosition.y);
-				Rect resetToVanillaRect = resetToVanillaPosition.ToDraggableRect();
+				//Reset to Vanilla button
 				this.ButtonResetToVanilla(surface, resetToVanillaRect);
 
-				//Surface OnGUI (check for drag, draw draggables)
-				Rect surfaceRect = new Rect(nameRect.xMax + spaceForButtons, currentVerticalPosition, scrollViewInnerRect.width - nameRect.width - spaceForButtons, surfaceHeight);
-				surface.OnGUI(surfaceRect);
+				//Check for drag, draw draggables
+				surface.OnGUI(surfaceRect, this.scrollPosition);
 
 				//Increment list y for next pawn
-				currentVerticalPosition += surfaceHeight;
+				currentVerticalPosition += standardRowHeight;
 			}
 
 			Widgets.EndScrollView();
 
-			//Check for invalid drop (draggable was dropped outside of a valid surface, causes a minor bug)
-			if (!Input.anyKey && Event.current.type != EventType.MouseUp && Dragger.Dragging && !scrollViewOuterRect.Contains(Dragger.CurrentDraggingObj[0].position))
+			//Check for invalid drop
+			if (this.shouldResetDrag)
 			{
 				Dragger.CurrentDraggingObj.Clear();
+				this.shouldResetDrag = false;
+			}
+
+			if (!Input.anyKey && Event.current.type != EventType.MouseUp && Dragger.Dragging)
+			{
+				this.shouldResetDrag = true;
 			}
 		}
 
@@ -137,10 +120,10 @@ namespace DD_WorkTab
 			GUI.color = new Color(1f, 1f, 1f, 0.5f);
 
 			Text.Anchor = TextAnchor.MiddleLeft;
-			Widgets.Label(rect, "<= " + "DD_WorkTab_HighPriorityIndicator".Translate());
+			Widgets.Label(rect, "<= " + "HigherPriority".Translate());
 
 			Text.Anchor = TextAnchor.MiddleRight;
-			Widgets.Label(rect, "DD_WorkTab_LowPriorityIndicator".Translate() + " =>");
+			Widgets.Label(rect, "LowerPriority".Translate() + " =>");
 
 			GUI.color = Color.white; // Reset
 			Text.Anchor = TextAnchor.UpperLeft; //Reset
@@ -149,9 +132,17 @@ namespace DD_WorkTab
 		//Button: set all pawn priorities to 0 (disabled)
 		private void ButtonDisableAll(PawnSurface surface, Rect buttonRect)
 		{
+			DDUtilities.DrawOutline(buttonRect, false);
+
+			Widgets.DrawHighlightIfMouseover(buttonRect);
+
 			TooltipHandler.TipRegion(buttonRect, "DD_WorkTab_ButtonDisableAll_Tooltip".Translate());
 
-			if (Widgets.ButtonImage(buttonRect, DDUtilities.ButtonTexture_DisableAll, DDUtilities.ButtonColour, DDUtilities.HighlightColour))
+			GUI.color = DDUtilities.ButtonColour;
+			GUI.DrawTexture(buttonRect.ContractedBy(2f), DDUtilities.ButtonTexture_DisableAll);
+			GUI.color = Color.white; //Reset
+
+			if (Widgets.ButtonInvisible(buttonRect, false))
 			{
 				if (Settings.ShowPrompt)
 				{
@@ -192,9 +183,17 @@ namespace DD_WorkTab
 		//Button: reset all pawn priorities according to natural work type importance
 		private void ButtonResetToVanilla(PawnSurface surface, Rect buttonRect)
 		{
+			DDUtilities.DrawOutline(buttonRect, false);
+
+			Widgets.DrawHighlightIfMouseover(buttonRect);
+
 			TooltipHandler.TipRegion(buttonRect, "DD_WorkTab_ButtonResetVanilla_Tooltip".Translate());
 
-			if (Widgets.ButtonImage(buttonRect, DDUtilities.ButtonTexture_ResetToVanilla, DDUtilities.ButtonColour, DDUtilities.HighlightColour))
+			GUI.color = DDUtilities.ButtonColour;
+			GUI.DrawTexture(buttonRect.ContractedBy(2f), DDUtilities.ButtonTexture_ResetToVanilla);
+			GUI.color = Color.white; //Reset
+
+			if (Widgets.ButtonInvisible(buttonRect, false))
 			{
 				if (Settings.ShowPrompt)
 				{
@@ -243,11 +242,30 @@ namespace DD_WorkTab
 			return true;
 		}
 
+		private float preAdjustedWidth => spaceForPawnLabel + spaceForWorkButtons + standardSurfaceWidth + 2 * standardSpacing + 2 * this.Margin + 20f;
+		private float preAdjustedHeight => standardRowHeight * (1 + this.totalColonists) + 2 * standardSpacing + 2 * this.Margin + 20f;
+		private static float maxAllowedWidth = (float)UI.screenWidth - 10f;
+		private static float maxAllowedHeight = (float)UI.screenHeight * 0.75f;
+		private float listOffset => preAdjustedWidth > maxAllowedWidth ? this.scrollPosition.x : 0f;
+
 		public override Vector2 RequestedTabSize
 		{
 			get
 			{
-				return new Vector2(this.totalRenderWidth, this.totalRenderHeight);
+				float width = preAdjustedWidth;
+				float height = preAdjustedHeight;
+
+				if (preAdjustedWidth > maxAllowedWidth)
+				{
+					width = maxAllowedWidth;
+				}
+
+				if (height > maxAllowedHeight)
+				{
+					height = maxAllowedHeight;
+				}
+
+				return new Vector2(width, height);
 			}
 		}
 

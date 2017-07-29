@@ -8,11 +8,11 @@ namespace DD_WorkTab
 {
 	public class PawnSurface : IExposable
 	{
+		private static float standardSpacing = DDUtilities.standardSpacing;
+
 		public Pawn pawn;
 
 		private List<DraggableWorkType> children = new List<DraggableWorkType>();
-
-		private float standardSpacing = Window_WorkTab.spaceBetweenTypes;
 
 		public List<DraggableWorkType> childrenListForReading
 		{
@@ -90,7 +90,7 @@ namespace DD_WorkTab
 
 				if (Settings.MessageOnDraggableRemoval)
 				{
-					Messages.Message("DD_WorkTab_PawnSurface_WorkRemoved".Translate(new string[] { typeToRemove.def.gerundLabel }).AdjustedFor(this.pawn), MessageSound.Silent);
+					Messages.Message("DD_WorkTab_PawnSurface_WorkRemoved".Translate(new string[] { typeToRemove.def.gerundLabel }).AdjustedFor(this.pawn), MessageSound.RejectInput);
 				}
 
 				this.children.Remove(typeToRemove);
@@ -168,12 +168,12 @@ namespace DD_WorkTab
 			this.RefreshPawnPriorities();
 		}
 
-		public void OnGUI(Rect listRect)
+		public void OnGUI(Rect listRect, Vector2 offsetFromScrollPosition)
 		{
 			//Draw draggables, perform drag checks
 			if (this.children.Count > 0)
 			{
-				Vector2 draggablePositionSetter = new Vector2(listRect.x + this.standardSpacing + (DDUtilities.DraggableTextureWidth / 2f), listRect.center.y);
+				Vector2 draggablePositionSetter = new Vector2(listRect.x + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f), listRect.center.y);
 
 				foreach (DraggableWorkType draggable in this.childrenSortedByPriority)
 				{
@@ -188,10 +188,10 @@ namespace DD_WorkTab
 					{
 						Rect drawRect = draggablePositionSetter.ToDraggableRect();
 
-						TooltipHandler.TipRegion(drawRect, draggable.def.GetDraggableTooltip(false, false, this.pawn));
+						TooltipHandler.TipRegion(drawRect, draggable.GetDraggableTooltip(false));
 					}
 
-					draggablePositionSetter.x += DDUtilities.DraggableTextureWidth + this.standardSpacing;
+					draggablePositionSetter.x += DDUtilities.DraggableTextureWidth + standardSpacing;
 				}
 			}
 
@@ -200,19 +200,19 @@ namespace DD_WorkTab
 			{
 				DraggableWorkType curDraggingObj = Dragger.CurrentDraggingObj[0];
 
-				Vector2 absPos = curDraggingObj.isPrimaryType ? curDraggingObj.position + DDUtilities.TabScrollPosition : curDraggingObj.position;
+				Vector2 absoluteVector = curDraggingObj.isPrimaryType ? curDraggingObj.position + offsetFromScrollPosition : curDraggingObj.position;
 
 				if (curDraggingObj.parent == this || curDraggingObj.isPrimaryType)
 				{
-					if (listRect.Contains(absPos))
+					if (listRect.Contains(absoluteVector))
 					{
-						this.DrawDynamicPosition(listRect, curDraggingObj, absPos);
+						this.DrawDynamicPosition(listRect, curDraggingObj, absoluteVector);
 					}
 				}
 
 				if (Event.current.type == EventType.MouseUp)
 				{
-					this.ConsiderPlacementOnMouseUp(listRect, curDraggingObj, absPos);
+					this.ConsiderPlacementOnMouseUp(listRect, curDraggingObj, absoluteVector);
 				}
 			}
 		}
@@ -222,49 +222,47 @@ namespace DD_WorkTab
 			GUI.color = Color.white;
 			Vector2 lineVector = Vector2.zero;
 
-			//Consider existing draggables' positions
+			//Pawn surface contains draggables
 			if (this.children.Count > 0)
 			{
 				foreach (DraggableWorkType child in this.childrenSortedByPriority.Reverse())
 				{
 					if (child.position.x < absolutePosition.x)
 					{
-						lineVector.x = child.position.x + (DDUtilities.DraggableTextureWidth / 2f) + (this.standardSpacing / 2f);
-						lineVector.y = child.position.y - (DDUtilities.DraggableTextureHeight / 2f) - (this.standardSpacing / 2f);
+						lineVector.x = child.position.x + (DDUtilities.DraggableTextureWidth / 2f) + (standardSpacing / 2f) - 1f;
+						lineVector.y = child.position.y - (DDUtilities.DraggableTextureHeight / 2f) - (standardSpacing / 2f);
 						break;
 					}
 
-					lineVector.x = listRect.xMin + (this.standardSpacing / 2f);
-					lineVector.y = listRect.yMin + (this.standardSpacing / 2f);
+					//Nomad is positioned to insert as #1
+					lineVector.x = listRect.xMin + (standardSpacing / 2f) - 1f;
+					lineVector.y = listRect.yMin + (standardSpacing / 2f);
 				}
 			}
 
-			//The pawn surface was vacant
+			//Pawn surface is vacant
 			else
 			{
-				lineVector.x = listRect.xMin + (this.standardSpacing / 2f);
-				lineVector.y = listRect.yMin + (this.standardSpacing / 2f);
+				lineVector.x = listRect.xMin + (standardSpacing / 2f) - 1f;
+				lineVector.y = listRect.yMin + (standardSpacing / 2f);
 			}
 
 			if (this.pawn.story.WorkTypeIsDisabled(nomad.def))
 			{
 				GUI.color = Color.red; //Indicates incompatible work type
-
-				Widgets.DrawLineVertical(lineVector.x, lineVector.y, DDUtilities.DraggableTextureHeight + this.standardSpacing);
-
-				GUI.color = Color.white; //Reset
 			}
 
-			else
-			{
-				Widgets.DrawLineVertical(lineVector.x, lineVector.y, DDUtilities.DraggableTextureHeight + this.standardSpacing);
-			}
+			Rect lineRect = new Rect(lineVector.x, lineVector.y, 2f, DDUtilities.DraggableTextureHeight + standardSpacing);
+
+			GUI.DrawTexture(lineRect, BaseContent.WhiteTex);
+
+			GUI.color = Color.white; //Reset
 		}
 
 		private void ConsiderPlacementOnMouseUp(Rect listRect, DraggableWorkType nomad, Vector2 absolutePosition)
 		{
 			//Primary draggable dropped onto this surface
-			if (nomad.isPrimaryType && listRect.Contains(absolutePosition))
+			if (listRect.Contains(absolutePosition) && nomad.isPrimaryType)
 			{
 				this.AddOrUpdateChild(nomad, true);
 
@@ -299,6 +297,8 @@ namespace DD_WorkTab
 			this.pawn = pawn;
 
 			this.ResetChildrenByVanillaPriorities();
+
+			this.RefreshPawnPriorities();
 		}
 
 		public void ExposeData()

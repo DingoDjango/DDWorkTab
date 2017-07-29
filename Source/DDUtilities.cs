@@ -13,7 +13,17 @@ namespace DD_WorkTab
 
 		public const float DraggableTextureHeight = 30f;
 
-		public static Vector2 DraggableSize = new Vector2(DraggableTextureWidth, DraggableTextureHeight);
+		public const float spaceForPawnLabel = 140f;
+
+		public const float spaceForWorkButtons = 80f;
+
+		public const float standardSpacing = 8f;
+
+		public const float standardRowHeight = 2f * standardSpacing + DraggableTextureHeight;
+
+		public static float standardSurfaceWidth = standardSpacing + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (DraggableTextureWidth + standardSpacing);
+
+		public static Vector2 DraggableSize = new Vector2(DraggableTextureWidth, DraggableTextureHeight); //Unused
 
 		public static Texture2D ButtonTexture_DisableAll = ContentFinder<Texture2D>.Get("ButtonDisableAll", true);
 
@@ -23,38 +33,31 @@ namespace DD_WorkTab
 
 		public static readonly Texture2D SortingDescendingIcon = ContentFinder<Texture2D>.Get("UI/Icons/SortingDescending", true);
 
-		public static readonly Texture2D HaltIcon = ContentFinder<Texture2D>.Get("UI/Commands/Halt", true); //Temporary from vanilla...
+		public static readonly Texture2D HaltIcon = ContentFinder<Texture2D>.Get("UI/Commands/Halt", true); //Temporary from vanilla
 
-		public static Color HighlightColour = new Color(0f, 0.6f, 1f);
+		public static Color ButtonColour = new Color(1f, 0.65f, 0f); //Orange
 
-		public static Color DraggableColour = new Color(0.9f, 0.9f, 0.9f);
+		public static Color LowSkillColour = new Color(0.5f, 0.5f, 0.5f); //Dark grey, also used for no-skill work types
 
-		public static Color ButtonColour = new Color(1f, 0.65f, 0f, 1f); //orange
+		public static Color MediumSkillColour = Color.white;
 
-		public static Color white = Color.white;
+		public static Color HighSkillColour = new Color(0f, 0.6f, 1f); //Dark blue
 
-		public static Color gold = new Color(1f, 0.85f, 0f);
+		public static Color VeryHighSkillColour = Color.green;
 
-		//Get the current scrollPosition of the DD Work Tab window
-		public static Vector2 TabScrollPosition
-		{
-			get
-			{
-				return Find.WindowStack.WindowOfType<Window_WorkTab>().ScrollPosition;
-			}
-		}
+		public static Color ExcellentSkillColour = new Color(1f, 0.85f, 0f); /* GOLD http://whenisnlss.com/assets/sounds/GOLD.mp3 */
 
 		//Provides a texture from the DD WorkTab Textures folder for a given WorkTypeDef
-		public static Texture2D TextureFromModFolder(WorkTypeDef def)
+		public static Texture2D GetDraggableTexture(this DraggableWorkType draggable)
 		{
-			Texture2D textureFromModFolder = ContentFinder<Texture2D>.Get("WorkTypeIcons/" + def.defName);
+			Texture2D validTexture = ContentFinder<Texture2D>.Get("WorkTypeIcons/" + draggable.def.defName);
 
-			if (textureFromModFolder != null)
+			if (validTexture != null)
 			{
-				return textureFromModFolder; //Returns a texture for a specific WorkType
+				return validTexture; //Returns a texture for a specific WorkType
 			}
 
-			else return ContentFinder<Texture2D>.Get("WorkTypeIcons/GenericTypeTex"); //Returns a generic WorkType texture
+			else return BaseContent.BadTex; //Bad texture, currently for testing
 		}
 
 		//True if the user left clicked inside the given Rect
@@ -65,7 +68,7 @@ namespace DD_WorkTab
 				&& Mouse.IsOver(rect);
 		}
 
-		//Provides a Rect whose center point is Vector2 "position"
+		//Provides a square whose center point is the provided position
 		public static Rect ToDraggableRect(this Vector2 position)
 		{
 			float halfWidth = DraggableTextureWidth / 2f;
@@ -123,15 +126,20 @@ namespace DD_WorkTab
 			return nameAdjusted;
 		}
 
-		public static void DrawOutline(Rect rect)
+		//Draw rectangular outline on Rect edges
+		public static void DrawOutline(Rect rect, bool isEmergency = false)
 		{
-			GUI.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+			GUI.color = isEmergency ? Color.red : new Color(0.6f, 0.6f, 0.6f, 1f);
 
-			Widgets.DrawBox(rect, 1);
+			GUI.DrawTexture(new Rect(rect.xMin, rect.yMin, rect.width, 1f), BaseContent.WhiteTex); //Ceiling
+			GUI.DrawTexture(new Rect(rect.xMin, rect.yMin, 1f, rect.height), BaseContent.WhiteTex); //Left wall
+			GUI.DrawTexture(new Rect(rect.xMax - 1f, rect.yMin, 1f, rect.height), BaseContent.WhiteTex); //Right wall
+			GUI.DrawTexture(new Rect(rect.xMin, rect.yMax - 1f, rect.width, 1f), BaseContent.WhiteTex); //Floor
 
 			GUI.color = Color.white; //Reset
 		}
 
+		//Draw light-grey horizontal line
 		public static void DrawListSeparator(Rect rect, float verticalPos)
 		{
 			GUI.color = new Color(0.3f, 0.3f, 0.3f, 1f);
@@ -142,7 +150,7 @@ namespace DD_WorkTab
 			GUI.color = Color.white; //Reset
 		}
 
-		public static void DoPawnLabel(this Window window, Rect rect, Pawn pawn)
+		public static void DoPawnLabel(Rect rect, Pawn pawn)
 		{
 			GUI.color = Color.white;
 			Text.Font = GameFont.Small;
@@ -165,23 +173,24 @@ namespace DD_WorkTab
 				Find.WindowStack.TryRemove(typeof(Window_WorkTab), false);
 			}
 
-			TipSignal tooltip = pawn.GetTooltip();
-			tooltip.text = "ClickToJumpTo".Translate() + "\n\n" + tooltip.text;
+			string tooltip = "ClickToJumpTo".Translate() + "\n\n" + pawn.GetTooltip().text;
 			TooltipHandler.TipRegion(rect, tooltip);
 		}
 
-		public static string GetDraggableTooltip(this WorkTypeDef def, bool isPrimary, bool statsWindow, Pawn worker)
+		public static string GetDraggableTooltip(this DraggableWorkType draggable, bool statsWindow)
 		{
-			StringBuilder tooltip = new StringBuilder();
-			tooltip.Append(def.gerundLabel);			
+			WorkTypeDef def = draggable.def;
 
-			//RimWorld.PawnColumnWorker_WorkPriority.GetHeaderTip
-			if (isPrimary)
+			StringBuilder tooltip = new StringBuilder(def.gerundLabel);
+
+			if (draggable.isEmergency)
 			{
-				tooltip.AppendLine();
-				tooltip.AppendLine();
-				tooltip.AppendLine(def.description);
-				tooltip.AppendLine();
+				tooltip.Append("DD_WorkTab_WorkTypeHasEmergency".Translate());
+			}
+
+			if (draggable.isPrimaryType)
+			{
+				tooltip.AppendLine("\n\n" + def.description);
 
 				if (!statsWindow)
 				{
@@ -190,18 +199,17 @@ namespace DD_WorkTab
 
 				else
 				{
-					tooltip.Append("DD_WorkTab_ColonistStats_SortingTip".Translate(new string[] { def.gerundLabel }));
+					tooltip.Append("\n" + "ClickToSortByThisColumn".Translate());
 				}
 			}
 
 			//RimWorld.WidgetsWork.TipForPawnWorker
 			else
 			{
+				Pawn worker = draggable.parent.pawn;
+
 				if (def.relevantSkills.Count > 0)
 				{
-					tooltip.AppendLine();
-					tooltip.AppendLine();
-
 					string relevantSkills = string.Empty;
 
 					foreach (SkillDef skill in def.relevantSkills)
@@ -211,7 +219,7 @@ namespace DD_WorkTab
 
 					relevantSkills = relevantSkills.Substring(0, relevantSkills.Length - 2); //Deletes the last ", "
 
-					tooltip.Append("RelevantSkills".Translate(new object[]
+					tooltip.Append("\n\n" + "RelevantSkills".Translate(new object[]
 					{
 						relevantSkills,
 						worker.skills.AverageOfRelevantSkillsFor(def).ToString(),
@@ -224,15 +232,11 @@ namespace DD_WorkTab
 
 				if (incapacitated)
 				{
-					tooltip.AppendLine();
-					tooltip.AppendLine();
-					tooltip.Append("IncapableOfWorkTypeBecauseOfCapacities".Translate());
+					tooltip.Append("\n\n" + "IncapableOfWorkTypeBecauseOfCapacities".Translate());
 				}
 
 				if (!statsWindow)
 				{
-					tooltip.AppendLine();
-					tooltip.AppendLine();
 					tooltip.Append("DD_WorkTab_PawnDraggable_DragTip".Translate());
 				}
 			}
@@ -240,33 +244,46 @@ namespace DD_WorkTab
 			return tooltip.ToString();
 		}
 
-		public static Color AdjustedForPawnSkills(this Color col, Pawn p, WorkTypeDef w)
+		public static Color GetDraggableColour(this DraggableWorkType d)
 		{
-			if (w.relevantSkills.Count == 0)
+			if (d.isPrimaryType)
 			{
-				return new Color(col.r, col.g, col.b, 0.7f);
-			}
-
-			float skillAverage = p.skills.AverageOfRelevantSkillsFor(w) / (float)SkillRecord.MaxLevel;
-
-			if (skillAverage <= 0.2f)
-			{
-				return new Color(col.r, col.g, col.b, 0.7f);
-			}
-
-			else if (skillAverage <= 0.5f)
-			{
-				return new Color(white.r, white.g, white.b, 0.7f);
-			}
-
-			else if (skillAverage <= 0.8f)
-			{
-				return white;
+				return ButtonColour;
 			}
 
 			else
 			{
-				return gold;
+				if (d.def.relevantSkills.Count == 0)
+				{
+					return LowSkillColour;
+				}
+
+				float skillAverage = d.parent.pawn.skills.AverageOfRelevantSkillsFor(d.def) / (float)SkillRecord.MaxLevel;
+
+				if (skillAverage < 0.2f) //0-3
+				{
+					return LowSkillColour;
+				}
+
+				else if (skillAverage < 0.4f) //4-7
+				{
+					return MediumSkillColour;
+				}
+
+				else if (skillAverage < 0.6f) //8-11
+				{
+					return HighSkillColour;
+				}
+
+				else if (skillAverage < 0.8f) //12-15
+				{
+					return VeryHighSkillColour;
+				}
+
+				else //16-20
+				{
+					return ExcellentSkillColour;
+				}
 			}
 		}
 	}

@@ -5,19 +5,20 @@
 
 	<DD_WorkTab_ShowPrompt_Label>Show prompt for buttons</DD_WorkTab_ShowPrompt_Label>
 	<DD_WorkTab_ShowPrompt_Desc>When pressing the '{0}' or '{1}' buttons, open an 'Are you sure?' dialogue window.</DD_WorkTab_ShowPrompt_Desc>
-	
+
 	<DD_WorkTab_MessageOnDraggableRemoval_Label>Show message when removing a work type</DD_WorkTab_MessageOnDraggableRemoval_Label>
 	<DD_WorkTab_MessageOnDraggableRemoval_Desc>If a work type is dragged away from a colonist's work list (and thus removed), display a message.</DD_WorkTab_MessageOnDraggableRemoval_Desc>
 
+	<!-- General tooltips -->
+
+	<DD_WorkTab_WorkTypeHasEmergency>\n• Includes &lt;color=red&gt;emergency&lt;/color&gt; work.</DD_WorkTab_WorkTypeHasEmergency>
+
 	<!-- Work tab -->
 
-	<DD_WorkTab_HighPriorityIndicator>higher priority</DD_WorkTab_HighPriorityIndicator>
-	<DD_WorkTab_LowPriorityIndicator>lower priority</DD_WorkTab_LowPriorityIndicator>
+	<DD_WorkTab_ButtonColonistStats>Compare Skills</DD_WorkTab_ButtonColonistStats>
 
-	<DD_WorkTab_ButtonColonistStats>Colonist Stats</DD_WorkTab_ButtonColonistStats>
-
-	<DD_WorkTab_PrimeDraggable_DragTip>Drag to any colonist's work list to add {0}.\n\nIf the colonist already has {0}, its priority will be updated.\n\nIf the colonist can't be assigned to {0}, it will be indicated by a red line.</DD_WorkTab_PrimeDraggable_DragTip>
-	<DD_WorkTab_PawnDraggable_DragTip>Drag left or right to adjust priority.\n\nDrop outside of the list to remove.</DD_WorkTab_PawnDraggable_DragTip>
+	<DD_WorkTab_PrimeDraggable_DragTip>\nDrag to any colonist's work list to add {0}.\n\nIf the colonist already has {0}, its priority will be updated.\n\nIf the colonist can't be assigned to {0}, it will be indicated by a red line.</DD_WorkTab_PrimeDraggable_DragTip>
+	<DD_WorkTab_PawnDraggable_DragTip>\n\nDrag left or right to adjust priority.\n\nDrag outside of this row to remove.</DD_WorkTab_PawnDraggable_DragTip>
 
 	<DD_WorkTab_ButtonOption_Accept>Accept</DD_WorkTab_ButtonOption_Accept>
 	<DD_WorkTab_ButtonOption_Cancel>Cancel</DD_WorkTab_ButtonOption_Cancel>
@@ -27,7 +28,7 @@
 
 	<DD_WorkTab_ButtonDisableAll_Tooltip>Disable All Work</DD_WorkTab_ButtonDisableAll_Tooltip>
 	<DD_WorkTab_ButtonDisableAll_Title>Disable All Work for NAME</DD_WorkTab_ButtonDisableAll_Title>
-	<DD_WorkTab_ButtonDisableAll_Text>All active work for NAME will be removed.\n\nNAME will become idle if you don't assign some new work for HIM.</DD_WorkTab_ButtonDisableAll_Text>
+	<DD_WorkTab_ButtonDisableAll_Text>All active work for NAME will be removed.\n\nNAME will become idle if you don't assign new work for HIM.</DD_WorkTab_ButtonDisableAll_Text>
 
 	<DD_WorkTab_ButtonResetVanilla_Tooltip>Reset Work Priorities</DD_WorkTab_ButtonResetVanilla_Tooltip>
 	<DD_WorkTab_ButtonResetVanilla_Title>Reset All Work for NAME</DD_WorkTab_ButtonResetVanilla_Title>
@@ -38,9 +39,8 @@
 
 	<!-- Colonist stats window -->
 
-	<DD_WorkTab_ColonistStats_ToggleButton_VisibleMap>Show current map</DD_WorkTab_ColonistStats_ToggleButton_VisibleMap>
-	<DD_WorkTab_ColonistStats_ToggleButton_AllMaps>Show all maps</DD_WorkTab_ColonistStats_ToggleButton_AllMaps>
-	<DD_WorkTab_ColonistStats_SortingTip>Click to sort colonists by their {0} skills.\n\nColonists who can't be assigned to {0} will be placed at the bottom.</DD_WorkTab_ColonistStats_SortingTip>
+	<DD_WorkTab_ColonistStats_ToggleButton_VisibleMap>Current Map</DD_WorkTab_ColonistStats_ToggleButton_VisibleMap>
+	<DD_WorkTab_ColonistStats_ToggleButton_AllMaps>All Maps</DD_WorkTab_ColonistStats_ToggleButton_AllMaps>
 	<DD_WorkTab_ColonistStats_CurrentlyUnassigned>NAME is currently unassigned from {0}. HECAP is capable of doing it.</DD_WorkTab_ColonistStats_CurrentlyUnassigned>
 
 </LanguageData>

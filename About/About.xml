@@ -4,5 +4,7 @@
 	<author>Dingo</author>
 	<url>https://ludeon.com/forums/index.php?topic=26077</url>
 	<targetVersion>0.17.0</targetVersion>
-	<description>Work in Progress work tab.</description>
+	<description>Work in Progress work tab.
+
+Includes an options menu (&lt;color=orange&gt;Options > Mod Settings&lt;/color&gt;).</description>
 </ModMetaData>
