@@ -8,7 +8,17 @@ namespace DD_WorkTab
 	//This surface is responsible for drawing primary DraggableWorkTypes and general buttons at the top of the window
 	public class PrimarySurface
 	{
-		private static float standardSpacing = DDUtilities.standardSpacing;
+		private const float standardSpacing = DDUtilities.standardSpacing;
+
+		private const float spaceForPawnLabel = DDUtilities.spaceForPawnLabel;
+
+		private const float spaceForWorkButtons = DDUtilities.spaceForWorkButtons;
+
+		private const float draggableWidth = DDUtilities.DraggableTextureWidth;
+
+		private const float draggableHeight = DDUtilities.DraggableTextureHeight;
+
+		private static float surfaceWidth = DDUtilities.standardSurfaceWidth;
 
 		private List<DraggableWorkType> primeDraggables = new List<DraggableWorkType>();
 
@@ -20,31 +30,36 @@ namespace DD_WorkTab
 			}
 		}
 
-		public IEnumerable<DraggableWorkType> PrimeDraggablesByPriority
-		{
-			get
-			{
-				return this.primeDraggables.OrderBy(child => child.priorityIndex);
-			}
-		}
-
-		public void OnGUI(Rect rect)
+		public void OnWorkTabGUI(Rect rect)
 		{
 			GUI.color = Color.white;
 			Text.Font = GameFont.Small;
 
-			//Help buttons
-			Rect helpRect = new Rect(rect.x + standardSpacing, rect.y + standardSpacing, DDUtilities.spaceForPawnLabel + DDUtilities.spaceForWorkButtons, DDUtilities.DraggableTextureHeight);
+			//Compare Skills button
+			Rect compareSkillsRect = new Rect(rect.x, rect.y + standardSpacing, standardSpacing + spaceForPawnLabel, draggableHeight);
 
-			if (Widgets.ButtonText(helpRect, "DD_WorkTab_ButtonColonistStats".Translate(), true, false, true))
+			if (Widgets.ButtonText(compareSkillsRect, "DD_WorkTab_ButtonColonistStats".TranslateFast(), true, false, true))
 			{
 				Find.WindowStack.Add(new Window_ColonistStats(Settings.ColonistStatsOnlyVisibleMap));
 			}
 
-			Vector2 positionSetter = new Vector2(helpRect.xMax + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f), rect.center.y);
+			//Disable All (for everyone) button
+			Rect disableWorkRect = new Rect(compareSkillsRect.xMax + standardSpacing, compareSkillsRect.y, draggableWidth, draggableHeight);
 
-			foreach (DraggableWorkType draggable in this.PrimeDraggablesByPriority)
+			DDUtilities.Button_DisableAllWork(true, null, disableWorkRect);
+
+			//Reset All Work (for everyone) button
+			Rect resetWorkRect = new Rect(disableWorkRect.xMax + standardSpacing, disableWorkRect.y, draggableWidth, draggableHeight);
+
+			DDUtilities.Button_ResetWorkToVanilla(true, null, resetWorkRect);
+
+			//Primary work types
+			Vector2 positionSetter = new Vector2(compareSkillsRect.xMax + spaceForWorkButtons + standardSpacing + (draggableWidth / 2f), rect.center.y);
+
+			for (int i = 0; i < this.primeDraggables.Count; i++)
 			{
+				DraggableWorkType draggable = this.primeDraggables[i];
+
 				Rect drawRect = positionSetter.ToDraggableRect();
 
 				if (!draggable.IsDragging)
@@ -54,34 +69,23 @@ namespace DD_WorkTab
 
 				else
 				{
-					draggable.DrawTexture(drawRect, false);
+					draggable.DrawTexture(drawRect);
 				}
 
-				draggable.OnGUI();
+				draggable.OnWorkTabGUI();
 
-				if (!Dragger.Dragging)
-				{
-					TooltipHandler.TipRegion(drawRect, draggable.GetDraggableTooltip(false));
-				}
-
-				positionSetter.x += DDUtilities.DraggableTextureWidth + standardSpacing;
+				positionSetter.x += draggableWidth + standardSpacing;
 			}
 		}
 
+		//Draggables source containing all work types
 		public PrimarySurface()
 		{
-			//Populate the main surface with all work types
-			int currentMainTypePriority = 1;
-
-			foreach (WorkTypeDef typeDef in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
+			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
 			{
-				DraggableWorkType primeDraggable = new DraggableWorkType(null, typeDef, currentMainTypePriority);
-
-				primeDraggable.isPrimaryType = true;
+				DraggableWorkType primeDraggable = new DraggableWorkType(def, null, true);
 
 				this.primeDraggables.Add(primeDraggable);
-
-				currentMainTypePriority++;
 			}
 		}
 	}

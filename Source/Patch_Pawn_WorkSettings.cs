@@ -8,7 +8,7 @@ namespace DD_WorkTab
 	[HarmonyPatch("SetPriority")]
 	public class Patch_Pawn_WorkSettings
 	{
-		public static void Prefix(ref object __state, WorkTypeDef w, ref int priority)
+		public static void Prefix(ref object __state, ref int priority)
 		{
 			if (priority > Pawn_WorkSettings.LowestPriority)
 			{
@@ -17,7 +17,7 @@ namespace DD_WorkTab
 			}
 		}
 
-		public static void Postfix(Pawn_WorkSettings __instance, object __state, WorkTypeDef w, int priority)
+		public static void Postfix(Pawn_WorkSettings __instance, object __state, WorkTypeDef w)
 		{
 			if (__state != null)
 			{

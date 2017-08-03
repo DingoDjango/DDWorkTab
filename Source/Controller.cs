@@ -23,15 +23,19 @@ namespace DD_WorkTab
 
 			list.Gap(20f);
 
-			list.CheckboxLabeled("DD_WorkTab_ShowPrompt_Label".Translate(), ref Settings.ShowPrompt, "DD_WorkTab_ShowPrompt_Desc".Translate(new string[]
+			list.CheckboxLabeled("DD_WorkTab_UseSounds_Label".TranslateFast(), ref Settings.UseSounds, "DD_WorkTab_UseSounds_Desc".TranslateFast());
+
+			list.Gap(20f);
+
+			list.CheckboxLabeled("DD_WorkTab_ShowPrompt_Label".TranslateFast(), ref Settings.ShowPrompt, "DD_WorkTab_ShowPrompt_Desc".TranslateFast(new string[]
 				{
-					"DD_WorkTab_ButtonDisableAll_Tooltip".Translate(),
-					"DD_WorkTab_ButtonResetVanilla_Tooltip".Translate()
+					"DD_WorkTab_ButtonDisableAll_Tooltip".TranslateFast(),
+					"DD_WorkTab_ButtonResetVanilla_Tooltip".TranslateFast()
 				}));
 
 			list.Gap(20f);
 
-			list.CheckboxLabeled("DD_WorkTab_MessageOnDraggableRemoval_Label".Translate(), ref Settings.MessageOnDraggableRemoval, "DD_WorkTab_MessageOnDraggableRemoval_Desc".Translate());
+			list.CheckboxLabeled("DD_WorkTab_MessageOnDraggableRemoval_Label".TranslateFast(), ref Settings.MessageOnDraggableRemoval, "DD_WorkTab_MessageOnDraggableRemoval_Desc".TranslateFast());
 
 			list.End();
 		}

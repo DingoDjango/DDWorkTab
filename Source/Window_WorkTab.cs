@@ -1,4 +1,6 @@
-﻿using RimWorld;
+﻿using System.Collections.Generic;
+using System.Linq;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -16,11 +18,25 @@ namespace DD_WorkTab
 
 		private static float standardSurfaceWidth = DDUtilities.standardSurfaceWidth;
 
+		private float preAdjustedWidth => spaceForPawnLabel + spaceForWorkButtons + standardSurfaceWidth + 2 * standardSpacing + 2 * this.Margin + 20f;
+
+		private float preAdjustedHeight => standardRowHeight * (1 + this.totalColonists) + 2 * standardSpacing + 2 * this.Margin + 20f;
+
+		private static float maxAllowedWidth = (float)UI.screenWidth - 10f;
+
+		private static float maxAllowedHeight = (float)UI.screenHeight * 0.75f;
+
+		private float listOffset => preAdjustedWidth > maxAllowedWidth ? this.scrollPosition.x : 0f;
+
 		private PrimarySurface primarySurface = new PrimarySurface();
 
 		private Vector2 scrollPosition = Vector2.zero;
 
 		private bool shouldResetDrag = false;
+
+		private IEnumerable<Pawn> mapColonistsCached;
+
+		private int lastColonistCount;
 
 		private int totalColonists
 		{
@@ -37,9 +53,21 @@ namespace DD_WorkTab
 			}
 		}
 
+		private void RecacheColonists()
+		{
+			this.lastColonistCount = this.totalColonists;
+
+			this.mapColonistsCached = Find.VisibleMap.mapPawns.FreeColonists.OrderBy(p => DDUtilities.GetLabelForPawn(p)).ToArray();
+		}
+
 		public override void DoWindowContents(Rect inRect)
 		{
 			base.DoWindowContents(inRect);
+
+			if (this.lastColonistCount != this.totalColonists)
+			{
+				this.RecacheColonists();
+			}
 
 			Text.Font = GameFont.Tiny;
 			float spaceForIndicators = Text.LineHeight;
@@ -49,16 +77,16 @@ namespace DD_WorkTab
 			Rect primarySurfaceRect = new Rect(inRect.x - this.listOffset, indicatorsRect.yMax, inRect.width, standardRowHeight);
 			Rect scrollViewBox = new Rect(inRect.x, primarySurfaceRect.yMax, inRect.width, inRect.height - indicatorsRect.height - primarySurfaceRect.height);
 			Rect scrollViewOuterRect = scrollViewBox.ContractedBy(standardSpacing);
-			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, spaceForPawnLabel + spaceForWorkButtons + standardSurfaceWidth, totalColonists * standardRowHeight);
+			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, spaceForPawnLabel + spaceForWorkButtons + standardSurfaceWidth, lastColonistCount * standardRowHeight);
 
 			//Draw priority indicators
-			this.DrawIndicators(indicatorsRect);
+			DDUtilities.DrawPriorityIndicators(indicatorsRect);
 
 			//Primary work types
-			primarySurface.OnGUI(primarySurfaceRect);
+			primarySurface.OnWorkTabGUI(primarySurfaceRect);
 
 			//Draw rect edges
-			DDUtilities.DrawOutline(scrollViewBox, false);
+			DDUtilities.DrawOutline(scrollViewBox, false, true);
 
 			Widgets.BeginScrollView(scrollViewOuterRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
@@ -66,9 +94,9 @@ namespace DD_WorkTab
 			float currentVerticalPosition = scrollViewInnerRect.yMin;
 			bool firstPawnDrawn = false;
 
-			foreach (Pawn pawn in Find.VisibleMap.mapPawns.FreeColonists)
+			foreach (Pawn pawn in mapColonistsCached)
 			{
-				PawnSurface surface = Dragger.SurfaceForPawn(pawn);
+				PawnSurface surface = Dragger.GetPawnSurface(pawn);
 
 				//List separator
 				if (firstPawnDrawn)
@@ -78,23 +106,10 @@ namespace DD_WorkTab
 
 				firstPawnDrawn = true;
 
-				//Rects
-				Rect pawnLabelRect = new Rect(scrollViewInnerRect.x, currentVerticalPosition, spaceForPawnLabel, standardRowHeight);
-				Rect disableAllRect = new Vector2(pawnLabelRect.xMax + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f), pawnLabelRect.center.y).ToDraggableRect();
-				Rect resetToVanillaRect = new Vector2(disableAllRect.xMax + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f), disableAllRect.center.y).ToDraggableRect();
-				Rect surfaceRect = new Rect(pawnLabelRect.xMax + spaceForWorkButtons, currentVerticalPosition, scrollViewInnerRect.width - pawnLabelRect.width - spaceForWorkButtons, standardRowHeight);
-
-				//Pawn name
-				DDUtilities.DoPawnLabel(pawnLabelRect, pawn);
-
-				//Disable All Work button
-				this.ButtonDisableAll(surface, disableAllRect);
-
-				//Reset to Vanilla button
-				this.ButtonResetToVanilla(surface, resetToVanillaRect);
+				Rect surfaceRect = new Rect(scrollViewInnerRect.x, currentVerticalPosition, scrollViewInnerRect.width, standardRowHeight);
 
 				//Check for drag, draw draggables
-				surface.OnGUI(surfaceRect, this.scrollPosition);
+				surface.OnWorkTabGUI(surfaceRect, this.scrollPosition);
 
 				//Increment list y for next pawn
 				currentVerticalPosition += standardRowHeight;
@@ -105,129 +120,13 @@ namespace DD_WorkTab
 			//Check for invalid drop
 			if (this.shouldResetDrag)
 			{
-				Dragger.CurrentDraggingObj.Clear();
+				Dragger.CurrentDraggable = null;
 				this.shouldResetDrag = false;
 			}
 
-			if (!Input.anyKey && Event.current.type != EventType.MouseUp && Dragger.Dragging)
+			if (Event.current.type != EventType.MouseUp && Dragger.Dragging && !Input.GetMouseButton(0))
 			{
 				this.shouldResetDrag = true;
-			}
-		}
-
-		private void DrawIndicators(Rect rect)
-		{
-			GUI.color = new Color(1f, 1f, 1f, 0.5f);
-
-			Text.Anchor = TextAnchor.MiddleLeft;
-			Widgets.Label(rect, "<= " + "HigherPriority".Translate());
-
-			Text.Anchor = TextAnchor.MiddleRight;
-			Widgets.Label(rect, "LowerPriority".Translate() + " =>");
-
-			GUI.color = Color.white; // Reset
-			Text.Anchor = TextAnchor.UpperLeft; //Reset
-		}
-
-		//Button: set all pawn priorities to 0 (disabled)
-		private void ButtonDisableAll(PawnSurface surface, Rect buttonRect)
-		{
-			DDUtilities.DrawOutline(buttonRect, false);
-
-			Widgets.DrawHighlightIfMouseover(buttonRect);
-
-			TooltipHandler.TipRegion(buttonRect, "DD_WorkTab_ButtonDisableAll_Tooltip".Translate());
-
-			GUI.color = DDUtilities.ButtonColour;
-			GUI.DrawTexture(buttonRect.ContractedBy(2f), DDUtilities.ButtonTexture_DisableAll);
-			GUI.color = Color.white; //Reset
-
-			if (Widgets.ButtonInvisible(buttonRect, false))
-			{
-				if (Settings.ShowPrompt)
-				{
-					DiaOption acceptButton = new DiaOption("DD_WorkTab_ButtonOption_Accept".Translate());
-					acceptButton.action = delegate
-					{
-						surface.DisableAllWork();
-					};
-					acceptButton.resolveTree = true;
-
-					DiaOption rejectButton = new DiaOption("DD_WorkTab_ButtonOption_Cancel".Translate());
-					rejectButton.resolveTree = true;
-
-					DiaOption acceptDoNotShowAgain = new DiaOption("DD_WorkTab_ButtonOption_AcceptDisablePrompt".Translate());
-					acceptDoNotShowAgain.action = delegate
-					{
-						Settings.ShowPrompt = false;
-
-						surface.DisableAllWork();
-					};
-					acceptDoNotShowAgain.resolveTree = true;
-
-					DiaNode prompt = new DiaNode("DD_WorkTab_ButtonDisableAll_Text".Translate().AdjustedFor(surface.pawn) + "DD_WorkTab_ButtonText_DisablePrompt".Translate());
-					prompt.options.Add(acceptButton);
-					prompt.options.Add(rejectButton);
-					prompt.options.Add(acceptDoNotShowAgain);
-
-					Find.WindowStack.Add(new Dialog_NodeTree(prompt, false, false, "DD_WorkTab_ButtonDisableAll_Title".Translate().AdjustedFor(surface.pawn)));
-				}
-
-				else
-				{
-					surface.DisableAllWork();
-				}
-			}
-		}
-
-		//Button: reset all pawn priorities according to natural work type importance
-		private void ButtonResetToVanilla(PawnSurface surface, Rect buttonRect)
-		{
-			DDUtilities.DrawOutline(buttonRect, false);
-
-			Widgets.DrawHighlightIfMouseover(buttonRect);
-
-			TooltipHandler.TipRegion(buttonRect, "DD_WorkTab_ButtonResetVanilla_Tooltip".Translate());
-
-			GUI.color = DDUtilities.ButtonColour;
-			GUI.DrawTexture(buttonRect.ContractedBy(2f), DDUtilities.ButtonTexture_ResetToVanilla);
-			GUI.color = Color.white; //Reset
-
-			if (Widgets.ButtonInvisible(buttonRect, false))
-			{
-				if (Settings.ShowPrompt)
-				{
-					DiaOption acceptButton = new DiaOption("DD_WorkTab_ButtonOption_Accept".Translate());
-					acceptButton.action = delegate
-					{
-						surface.ResetToVanillaSettings();
-					};
-					acceptButton.resolveTree = true;
-
-					DiaOption rejectButton = new DiaOption("DD_WorkTab_ButtonOption_Cancel".Translate());
-					rejectButton.resolveTree = true;
-
-					DiaOption acceptDoNotShowAgain = new DiaOption("DD_WorkTab_ButtonOption_AcceptDisablePrompt".Translate());
-					acceptDoNotShowAgain.action = delegate
-					{
-						Settings.ShowPrompt = false;
-
-						surface.ResetToVanillaSettings();
-					};
-					acceptDoNotShowAgain.resolveTree = true;
-
-					DiaNode prompt = new DiaNode("DD_WorkTab_ButtonResetVanilla_Text".Translate().AdjustedFor(surface.pawn) + "DD_WorkTab_ButtonText_DisablePrompt".Translate());
-					prompt.options.Add(acceptButton);
-					prompt.options.Add(rejectButton);
-					prompt.options.Add(acceptDoNotShowAgain);
-
-					Find.WindowStack.Add(new Dialog_NodeTree(prompt, false, false, "DD_WorkTab_ButtonResetVanilla_Title".Translate().AdjustedFor(surface.pawn)));
-				}
-
-				else
-				{
-					surface.ResetToVanillaSettings();
-				}
 			}
 		}
 
@@ -241,12 +140,6 @@ namespace DD_WorkTab
 		{
 			return true;
 		}
-
-		private float preAdjustedWidth => spaceForPawnLabel + spaceForWorkButtons + standardSurfaceWidth + 2 * standardSpacing + 2 * this.Margin + 20f;
-		private float preAdjustedHeight => standardRowHeight * (1 + this.totalColonists) + 2 * standardSpacing + 2 * this.Margin + 20f;
-		private static float maxAllowedWidth = (float)UI.screenWidth - 10f;
-		private static float maxAllowedHeight = (float)UI.screenHeight * 0.75f;
-		private float listOffset => preAdjustedWidth > maxAllowedWidth ? this.scrollPosition.x : 0f;
 
 		public override Vector2 RequestedTabSize
 		{
@@ -273,7 +166,7 @@ namespace DD_WorkTab
 		{
 			base.PostClose();
 
-			Dragger.CurrentDraggingObj.Clear();
+			Dragger.CurrentDraggable = null;
 		}
 	}
 }

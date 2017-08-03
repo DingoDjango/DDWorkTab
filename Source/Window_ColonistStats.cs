@@ -3,6 +3,7 @@ using System.Linq;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.Sound;
 
 namespace DD_WorkTab
 {
@@ -16,9 +17,23 @@ namespace DD_WorkTab
 
 		private static float standardRowWidth = spaceForPawnLabel + DDUtilities.standardSurfaceWidth;
 
+		private float preAdjustedWidth => standardRowWidth + 2 * standardSpacing + 2 * this.Margin + 20f;
+
+		private float preAdjustedHeight => standardRowHeight * (1f + this.colonistsCount) + 2f * standardSpacing + 2 * this.Margin + 20f;
+
+		private static float maxAllowedWidth = (float)UI.screenWidth - 10f;
+
+		private static float maxAllowedHeight = (float)UI.screenHeight * 0.75f;
+
+		private float listOffset => preAdjustedWidth > maxAllowedWidth ? this.scrollPosition.x : 0f;
+
 		private PrimarySurface primeTypes = new PrimarySurface();
 
 		private Vector2 scrollPosition = Vector2.zero;
+
+		private IEnumerable<Pawn> colonistsToDraw;
+
+		private bool needToRecachePawns = true;
 
 		private WorkTypeDef sortingDef;
 
@@ -30,10 +45,10 @@ namespace DD_WorkTab
 			{
 				if (Settings.ColonistStatsOnlyVisibleMap)
 				{
-					return "DD_WorkTab_ColonistStats_ToggleButton_VisibleMap".Translate();
+					return "DD_WorkTab_ColonistStats_ToggleButton_VisibleMap".TranslateFast();
 				}
 
-				else return "DD_WorkTab_ColonistStats_ToggleButton_AllMaps".Translate();
+				else return "DD_WorkTab_ColonistStats_ToggleButton_AllMaps".TranslateFast();
 			}
 		}
 
@@ -41,63 +56,55 @@ namespace DD_WorkTab
 		{
 			get
 			{
+				int count = 0;
+
 				if (Settings.ColonistStatsOnlyVisibleMap)
 				{
-					int countVisible = Find.VisibleMap.mapPawns.FreeColonistsCount;
-
-					if (countVisible > 0)
-					{
-						return countVisible;
-					}
-
-					else return 1;
+					count = Find.VisibleMap.mapPawns.FreeColonistsCount;
 				}
 
 				else
 				{
 					List<Map> allMaps = Find.Maps;
-					int count = 0;
 
 					for (int i = 0; i < allMaps.Count; i++)
 					{
 						count += allMaps[i].mapPawns.FreeColonistsCount;
 					}
-
-					if (count > 0)
-					{
-						return count;
-					}
-
-					else return 1;
 				}
+
+				if (count > 0)
+				{
+					return count;
+				}
+
+				else return 1;
 			}
 		}
 
-		private IEnumerable<Pawn> colonistsToDraw
+		private void RecachePawnList()
 		{
-			get
+			this.needToRecachePawns = false;
+
+			IEnumerable<Pawn> pawnsList = Settings.ColonistStatsOnlyVisibleMap ? Find.VisibleMap.mapPawns.FreeColonists : PawnsFinder.AllMaps_FreeColonists;
+
+			if (this.sortingOrder == SortOrder.Undefined || this.sortingDef == null)
 			{
-				IEnumerable<Pawn> pawnsList = Settings.ColonistStatsOnlyVisibleMap ? Find.VisibleMap.mapPawns.FreeColonists : PawnsFinder.AllMaps_FreeColonists;
-
-				if (this.sortingOrder == SortOrder.Descending && this.sortingDef != null)
-				{
-					return pawnsList.OrderByDescending(p => p.skills.AverageOfRelevantSkillsFor(this.sortingDef)).OrderBy(p => p.story.WorkTypeIsDisabled(this.sortingDef));
-				}
-
-				else if (this.sortingOrder == SortOrder.Ascending && this.sortingDef != null)
-				{
-					return pawnsList.OrderBy(p => p.skills.AverageOfRelevantSkillsFor(this.sortingDef)).OrderBy(p => !p.story.WorkTypeIsDisabled(this.sortingDef));
-				}
-
-				else return pawnsList;
+				pawnsList = pawnsList.OrderBy(p => DDUtilities.GetLabelForPawn(p));
 			}
-		}
 
-		private float preAdjustedWidth => standardRowWidth + 2 * standardSpacing + 2 * this.Margin + 20f;
-		private float preAdjustedHeight => standardRowHeight * (1f + this.colonistsCount) + 2f * standardSpacing + 2 * this.Margin + 20f;
-		private static float maxAllowedWidth = (float)UI.screenWidth - 10f;
-		private static float maxAllowedHeight = (float)UI.screenHeight * 0.75f;
-		private float listOffset => preAdjustedWidth > maxAllowedWidth ? this.scrollPosition.x : 0f;
+			else
+			{
+				pawnsList = pawnsList.OrderBy(p => p.story.WorkTypeIsDisabled(this.sortingDef)).ThenByDescending(p => p.skills.AverageOfRelevantSkillsFor(this.sortingDef)).ThenBy(p => DDUtilities.GetLabelForPawn(p));
+
+				if (this.sortingOrder == SortOrder.Ascending)
+				{
+					pawnsList = pawnsList.Reverse();
+				}
+			}
+
+			this.colonistsToDraw = pawnsList.ToArray();
+		}
 
 		public override Vector2 InitialSize
 		{
@@ -124,6 +131,11 @@ namespace DD_WorkTab
 		{
 			base.SetInitialSizeAndPosition();
 
+			if (needToRecachePawns)
+			{
+				this.RecachePawnList();
+			}
+
 			//General Rects
 			Rect toggleMapRect = new Rect(inRect.x - this.listOffset, inRect.y, standardSpacing + spaceForPawnLabel, standardRowHeight);
 			Rect primaryTypesRect = new Rect(toggleMapRect.xMax, inRect.y, inRect.width - toggleMapRect.width, standardRowHeight);
@@ -134,76 +146,89 @@ namespace DD_WorkTab
 			if (Widgets.ButtonText(toggleMapRect.ContractedBy(standardSpacing), this.toggleButtonText, true, false, true))
 			{
 				Settings.ColonistStatsOnlyVisibleMap = !Settings.ColonistStatsOnlyVisibleMap;
+
+				this.needToRecachePawns = true;
+
+				if (Settings.UseSounds)
+				{
+					SoundDefOf.DialogBoxAppear.PlayOneShotOnCamera(null);
+				}
 			}
 
 			Vector2 primePosition = new Vector2(primaryTypesRect.x + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f), primaryTypesRect.center.y);
 
-			foreach (DraggableWorkType prime in this.primeTypes.PrimeDraggablesByPriority)
+			for (int i = 0; i < this.primeTypes.PrimeDraggablesList.Count; i++)
 			{
+				DraggableWorkType prime = this.primeTypes.PrimeDraggablesList[i];
+
 				prime.position = primePosition;
 
 				Rect primeRect = primePosition.ToDraggableRect();
 
-				prime.DrawTexture(primeRect, true);
+				prime.DrawTexture(primeRect);
 
-				TooltipHandler.TipRegion(primeRect, prime.GetDraggableTooltip(true));
-
-				if (Mouse.IsOver(primeRect) && Event.current.type == EventType.MouseDown)
+				if (Mouse.IsOver(primeRect))
 				{
-					if (Event.current.button == 0)
+					if (Event.current.type == EventType.MouseDown)
 					{
-						if (this.sortingDef != prime.def)
+						if (Event.current.button == 0)
 						{
-							this.sortingDef = prime.def;
-							this.sortingOrder = SortOrder.Descending;
+							if (this.sortingDef != prime.def)
+							{
+								this.sortingDef = prime.def;
+								this.sortingOrder = SortOrder.Descending;
+							}
+
+							else
+							{
+								this.sortingOrder = this.sortingOrder.Next();
+							}
 						}
 
-						else
+						else if (Event.current.button == 1)
 						{
-							this.sortingOrder = this.sortingOrder.Next();
+							if (this.sortingDef != prime.def)
+							{
+								this.sortingDef = prime.def;
+								this.sortingOrder = SortOrder.Ascending;
+							}
+
+							else
+							{
+								this.sortingOrder = this.sortingOrder.Previous();
+							}
 						}
 
 						Event.current.Use();
+
+						if (Settings.UseSounds)
+						{
+							SoundDef soundToUse = this.sortingOrder == SortOrder.Undefined ? SoundDefOf.TickLow : SoundDefOf.TickHigh;
+
+							soundToUse.PlayOneShotOnCamera(null);
+						}
 					}
 
-					else if (Event.current.button == 1)
+					else
 					{
-						if (this.sortingDef != prime.def)
-						{
-							this.sortingDef = prime.def;
-							this.sortingOrder = SortOrder.Ascending;
-						}
+						Widgets.DrawHighlight(primeRect);
 
-						else
-						{
-							this.sortingOrder = this.sortingOrder.Previous();
-						}
-
-						Event.current.Use();
+						TooltipHandler.TipRegion(primeRect, DDUtilities.GetDraggableTooltip(prime.def, true, true, null));
 					}
 				}
 
-				//Draw little arrow indicator below work type and highlight column
-				if (this.sortingDef == prime.def && this.sortingOrder != SortOrder.Undefined)
+
+				if (this.sortingOrder != SortOrder.Undefined && this.sortingDef == prime.def)
 				{
-					if (this.sortingOrder == SortOrder.Descending)
-					{
-						Texture2D iconDescending = DDUtilities.SortingDescendingIcon;
-						Rect iconRect = new Rect(primeRect.xMax - (float)iconDescending.width, primeRect.yMax + 1f, iconDescending.width, iconDescending.height);
+					//Draw little arrow indicator below work type
+					Texture2D icon = this.sortingOrder == SortOrder.Descending ? DDUtilities.SortingDescendingIcon : DDUtilities.SortingIcon;
+					Rect iconRect = new Rect(primeRect.xMax - (float)icon.width, primeRect.yMax + 1f, icon.width, icon.height);
 
-						GUI.DrawTexture(iconRect, iconDescending);
-					}
+					GUI.DrawTexture(iconRect, icon);
 
-					else if (this.sortingOrder == SortOrder.Ascending)
-					{
-						Texture2D iconAscending = DDUtilities.SortingIcon;
-						Rect iconRect = new Rect(primeRect.xMax - (float)iconAscending.width, primeRect.yMax + 1f, iconAscending.width, iconAscending.height);
+					//Highlight column
+					Rect highlightRect = new Rect(primeRect.xMin - 2f, primeRect.yMin - standardSpacing / 2f, primeRect.width + 4f, inRect.height - 2f * standardSpacing);
 
-						GUI.DrawTexture(iconRect, iconAscending);
-					}
-
-					float highlightHeight = inRect.height - 2f * standardSpacing;
-					Rect highlightRect = new Rect(primeRect.xMin - 2f, primeRect.yMin - standardSpacing / 2f, primeRect.width + 4f, highlightHeight);
 					Widgets.DrawHighlight(highlightRect);
 				}
 
@@ -211,7 +236,7 @@ namespace DD_WorkTab
 			}
 
 			//Draw rect edges
-			DDUtilities.DrawOutline(scrollViewBox, false);
+			DDUtilities.DrawOutline(scrollViewBox, false, true);
 
 			Widgets.BeginScrollView(scrollViewOutRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
@@ -221,7 +246,7 @@ namespace DD_WorkTab
 
 			foreach (Pawn pawn in this.colonistsToDraw)
 			{
-				PawnSurface pawnSurface = Dragger.SurfaceForPawn(pawn);
+				PawnSurface pawnSurface = Dragger.GetPawnSurface(pawn);
 
 				//List separator
 				if (firstPawnDrawn)
@@ -235,21 +260,22 @@ namespace DD_WorkTab
 				Rect nameRect = new Rect(scrollViewInnerRect.x, currentVerticalPosition, spaceForPawnLabel, standardRowHeight);
 				DDUtilities.DoPawnLabel(nameRect, pawn);
 
-				//Work types / draggables
+				//Work types
 				Rect surfaceRect = new Rect(nameRect.xMax, currentVerticalPosition, scrollViewInnerRect.width - nameRect.width, standardRowHeight);
 
 				for (int i = 0; i < this.primeTypes.PrimeDraggablesList.Count; i++)
 				{
 					DraggableWorkType currentPrime = this.primeTypes.PrimeDraggablesList[i];
 					DraggableWorkType matchingDraggable = pawnSurface.childrenListForReading.Find(d => d.def == currentPrime.def);
-					Rect drawRect = new Vector2(surfaceRect.x + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f) + i * (standardSpacing + DDUtilities.DraggableTextureWidth), surfaceRect.center.y).ToDraggableRect();
+					Rect drawRect = new Vector2(currentPrime.position.x, surfaceRect.center.y).ToDraggableRect();
+					int tooltipSelector;
 
 					//Pawn is assigned to the work type
 					if (matchingDraggable != null)
 					{
-						matchingDraggable.DrawTexture(drawRect, true);
+						tooltipSelector = 1;
 
-						TooltipHandler.TipRegion(drawRect, matchingDraggable.GetDraggableTooltip(true));
+						matchingDraggable.DrawTexture(drawRect);
 					}
 
 					else
@@ -257,22 +283,41 @@ namespace DD_WorkTab
 						//Pawn is unassigned by incapability
 						if (pawn.story.WorkTypeIsDisabled(currentPrime.def))
 						{
-							GUI.DrawTexture(drawRect, BaseContent.BadTex);
+							tooltipSelector = 2;
 
-							TooltipHandler.TipRegion(drawRect, "DD_WorkTab_PawnSurface_WorkTypeForbidden".Translate(new string[] { currentPrime.def.gerundLabel }).AdjustedFor(pawn));
+							GUI.DrawTexture(drawRect, BaseContent.BadTex);
 						}
 
 						//Pawn is unassigned by player choice
 						else
 						{
+							tooltipSelector = 3;
+
 							GUI.DrawTexture(drawRect, DDUtilities.HaltIcon);
-
-							DraggableWorkType temporaryDraggable = new DraggableWorkType(pawnSurface, currentPrime.def, -1);
-
-							string tip = temporaryDraggable.GetDraggableTooltip(true) + "\n\n" + "DD_WorkTab_ColonistStats_CurrentlyUnassigned".Translate(new string[] { temporaryDraggable.def.gerundLabel }).AdjustedFor(pawn);
-
-							TooltipHandler.TipRegion(drawRect, tip);
 						}
+					}
+
+					if (Mouse.IsOver(drawRect))
+					{
+						string tipString;
+
+						switch (tooltipSelector)
+						{
+							case 1:
+								tipString = DDUtilities.GetDraggableTooltip(matchingDraggable.def, true, false, matchingDraggable.parent.pawn);
+								break;
+							case 2:
+								tipString = "DD_WorkTab_ColonistStats_WorkTypeForbidden".TranslateFast(new string[] { currentPrime.def.gerundLabel }).AdjustedFor(pawn);
+								break;
+							case 3:
+								tipString = DDUtilities.GetDraggableTooltip(currentPrime.def, true, false, pawn) + "\n\n" + "DD_WorkTab_ColonistStats_CurrentlyUnassigned".TranslateFast(new string[] { currentPrime.def.gerundLabel }).AdjustedFor(pawn);
+								break;
+							default:
+								tipString = string.Empty;
+								break;
+						}
+
+						TooltipHandler.TipRegion(drawRect, tipString);
 					}
 				}
 
@@ -290,15 +335,12 @@ namespace DD_WorkTab
 			this.sortingOrder = SortOrder.Undefined;
 		}
 
-		public Window_ColonistStats()
+		public Window_ColonistStats(bool visibleMap)
 		{
 			this.layer = WindowLayer.GameUI;
 			this.doCloseX = true;
 			this.closeOnClickedOutside = true;
-		}
 
-		public Window_ColonistStats(bool visibleMap) : this()
-		{
 			Settings.ColonistStatsOnlyVisibleMap = visibleMap;
 		}
 	}

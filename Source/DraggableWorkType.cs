@@ -1,90 +1,117 @@
-﻿using UnityEngine;
+﻿using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace DD_WorkTab
 {
 	public class DraggableWorkType : DraggableObject, IExposable
 	{
-		public PawnSurface parent;
-
 		public WorkTypeDef def;
 
-		public int priorityIndex;
+		public PawnSurface parent;
 
-		public bool isPrimaryType;
+		public readonly bool primary;
 
-		public bool isEmergency
-		{
-			get
-			{
-				return this.def.workGiversByPriority.Any(wg => wg.emergency);
-			}
-		}
-
-		public void OnGUI()
+		public void OnWorkTabGUI()
 		{
 			Rect dragRect = this.position.ToDraggableRect();
 
 			//Draw texture on draggable position
-			this.DrawTexture(dragRect, false);
+			this.DrawTexture(dragRect);
 
 			//Do drag calculations
 			this.CheckForDrag(dragRect);
 
 			//Update DragManager if this object is being dragged
-			if (this.IsDragging)
+			if (this.draggingNow)
 			{
-				if (!Dragger.Dragging || (Dragger.Dragging && Dragger.CurrentDraggingObj[0] != this))
+				if (Dragger.CurrentDraggable != this)
 				{
-					Dragger.CurrentDraggingObj.Clear();
-					Dragger.CurrentDraggingObj.Add(this);
+					Dragger.CurrentDraggable = this;
 				}
+			}
+
+			if (Mouse.IsOver(dragRect) && !Dragger.Dragging)
+			{
+				Pawn worker = this.primary ? null : this.parent.pawn;
+
+				Widgets.DrawHighlight(dragRect);
+
+				TooltipHandler.TipRegion(dragRect, DDUtilities.GetDraggableTooltip(this.def, false, this.primary, worker));
 			}
 		}
 
-		public void DrawTexture(Rect drawRect, bool statsWindow)
+		public void DrawTexture(Rect drawRect)
 		{
-			if (!statsWindow || (statsWindow && this.isPrimaryType))
-			{
-				Widgets.DrawHighlightIfMouseover(drawRect);
-			}
-
-			DDUtilities.DrawOutline(drawRect, this.isEmergency);
+			DDUtilities.DrawOutline(drawRect, DDUtilities.EmergencyWorkTypes[this.def], false);
 
 			//Adjust colour based on isPrimary, pawn skills, work type
 			GUI.color = this.GetDraggableColour();
 
-			GUI.DrawTexture(drawRect.ContractedBy(2f), this.GetDraggableTexture());
+			GUI.DrawTexture(drawRect.ContractedBy(2f), DDUtilities.WorkTypeTextures[this.def]);
 
 			GUI.color = Color.white; //Reset
 		}
 
-		#region Constructors
+		private Color GetDraggableColour()
+		{
+			if (this.primary)
+			{
+				return DDUtilities.ButtonColour;
+			}
+
+			else
+			{
+				if (this.def.relevantSkills.Count == 0)
+				{
+					return DDUtilities.LowSkillColour;
+				}
+
+				float skillAverage = this.parent.pawn.skills.AverageOfRelevantSkillsFor(this.def) / (float)SkillRecord.MaxLevel;
+
+				if (skillAverage < 0.2f) //0-3
+				{
+					return DDUtilities.LowSkillColour;
+				}
+
+				else if (skillAverage < 0.4f) //4-7
+				{
+					return DDUtilities.MediumSkillColour;
+				}
+
+				else if (skillAverage < 0.6f) //8-11
+				{
+					return DDUtilities.HighSkillColour;
+				}
+
+				else if (skillAverage < 0.8f) //12-15
+				{
+					return DDUtilities.VeryHighSkillColour;
+				}
+
+				else //16-20
+				{
+					return DDUtilities.ExcellentSkillColour;
+				}
+			}
+		}
+
 		public DraggableWorkType(PawnSurface surface)
 		{
 			this.parent = surface;
 		}
 
-		public DraggableWorkType(PawnSurface surface, WorkTypeDef wTypeDef, int priority)
+		public DraggableWorkType(WorkTypeDef workType, PawnSurface surface = null, bool isPrimary = false, Vector2 posVector = default(Vector2))
 		{
+			this.def = workType;
 			this.parent = surface;
-			this.def = wTypeDef;
-			this.priorityIndex = priority;
+			this.primary = isPrimary;
+			this.position = posVector;
 		}
-
-		public DraggableWorkType(PawnSurface surface, WorkTypeDef wTypeDef, Vector2 position)
-		{
-			this.parent = surface;
-			this.def = wTypeDef;
-			this.position = position;
-		}
-		#endregion
 
 		public void ExposeData()
 		{
 			Scribe_Defs.Look(ref this.def, "def");
-
-			Scribe_Values.Look(ref this.priorityIndex, "priorityIndex");
 		}
 	}
 }

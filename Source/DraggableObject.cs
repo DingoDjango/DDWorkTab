@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Verse;
 
 namespace DD_WorkTab
 {
@@ -9,7 +10,7 @@ namespace DD_WorkTab
 	{
 		public Vector2 position;
 
-		protected Vector2 dragOffsetVector;
+		private Vector2 dragOffsetVector;
 
 		protected bool draggingNow;
 
@@ -28,7 +29,7 @@ namespace DD_WorkTab
 				this.draggingNow = false;
 			}
 
-			else if (DDUtilities.MouseLeftClickedRect(draggingRect))
+			else if (DragStarted(draggingRect))
 			{
 				this.draggingNow = true;
 				this.dragOffsetVector = Event.current.mousePosition - this.position;
@@ -39,6 +40,16 @@ namespace DD_WorkTab
 			{
 				this.position = Event.current.mousePosition - this.dragOffsetVector;
 			}
+		}
+
+		//Verse.Mouse
+		private static bool DragStarted(Rect dragRect)
+		{
+			return Event.current.type == EventType.MouseDown
+				&& Event.current.button == 0
+				&& dragRect.Contains(Event.current.mousePosition)
+				&& !Find.WindowStack.MouseObscuredNow
+				&& Find.WindowStack.CurrentWindowGetsInput;
 		}
 	}
 }
