@@ -9,56 +9,58 @@ namespace DD_WorkTab
 {
 	public class Window_ColonistStats : Window
 	{
-		private static float spaceForPawnLabel = DDUtilities.spaceForPawnLabel;
+		private const float draggableTextureDiameter = DD_Widgets.DraggableTextureDiameter;
 
-		private static float standardSpacing = DDUtilities.standardSpacing;
+		private const float spaceForPawnLabel = DD_Widgets.SpaceForPawnLabel;
 
-		private static float standardRowHeight = DDUtilities.standardRowHeight;
+		private const float spaceForWorkButtons = DD_Widgets.SpaceForWorkButtons;
 
-		private static float standardRowWidth = spaceForPawnLabel + DDUtilities.standardSurfaceWidth;
+		private const float standardSpacing = DD_Widgets.StandardSpacing;
 
-		private float preAdjustedWidth => standardRowWidth + 2 * standardSpacing + 2 * this.Margin + 20f;
+		private const float standardRowHeight = DD_Widgets.StandardRowHeight;
 
-		private float preAdjustedHeight => standardRowHeight * (1f + this.colonistsCount) + 2f * standardSpacing + 2 * this.Margin + 20f;
+		private static readonly float standardSurfaceWidth = DD_Widgets.StandardSurfaceWidth;
 
-		private static float maxAllowedWidth = (float)UI.screenWidth - 10f;
+		private static readonly float rowWidth = spaceForPawnLabel + standardSurfaceWidth;
 
-		private static float maxAllowedHeight = (float)UI.screenHeight * 0.75f;
-
-		private float listOffset => preAdjustedWidth > maxAllowedWidth ? this.scrollPosition.x : 0f;
-
-		private PrimarySurface primeTypes = new PrimarySurface();
+		private Dictionary<WorkTypeDef, Vector2> primePositions = new Dictionary<WorkTypeDef, Vector2>();
 
 		private Vector2 scrollPosition = Vector2.zero;
 
 		private IEnumerable<Pawn> colonistsToDraw;
 
-		private bool needToRecachePawns = true;
+		private bool mustRecachePawns = true;
 
 		private WorkTypeDef sortingDef;
 
 		private SortOrder sortingOrder = SortOrder.Undefined;
 
-		private string toggleButtonText
+		private float PreAdjustedWidth => rowWidth + 2 * standardSpacing + 2 * this.Margin + 20f;
+
+		private float PreAdjustedHeight => standardRowHeight * (1f + this.ColonistsCount) + 2f * standardSpacing + 2 * this.Margin + 20f;
+
+		private float ListOffset => PreAdjustedWidth > DD_Widgets.MaxWindowWidth ? this.scrollPosition.x : 0f;
+
+		private string ToggleButtonText
 		{
 			get
 			{
-				if (Settings.ColonistStatsOnlyVisibleMap)
+				if (DD_Settings.ColonistStatsOnlyVisibleMap)
 				{
-					return "DD_WorkTab_ColonistStats_ToggleButton_VisibleMap".TranslateFast();
+					return "DD_WorkTab_ColonistStats_ToggleButton_VisibleMap".CachedTranslation();
 				}
 
-				else return "DD_WorkTab_ColonistStats_ToggleButton_AllMaps".TranslateFast();
+				return "DD_WorkTab_ColonistStats_ToggleButton_AllMaps".CachedTranslation();
 			}
 		}
 
-		private int colonistsCount
+		private int ColonistsCount
 		{
 			get
 			{
 				int count = 0;
 
-				if (Settings.ColonistStatsOnlyVisibleMap)
+				if (DD_Settings.ColonistStatsOnlyVisibleMap)
 				{
 					count = Find.VisibleMap.mapPawns.FreeColonistsCount;
 				}
@@ -78,24 +80,24 @@ namespace DD_WorkTab
 					return count;
 				}
 
-				else return 1;
+				return 1;
 			}
 		}
 
 		private void RecachePawnList()
 		{
-			this.needToRecachePawns = false;
+			this.mustRecachePawns = false;
 
-			IEnumerable<Pawn> pawnsList = Settings.ColonistStatsOnlyVisibleMap ? Find.VisibleMap.mapPawns.FreeColonists : PawnsFinder.AllMaps_FreeColonists;
+			IEnumerable<Pawn> pawnsList = DD_Settings.ColonistStatsOnlyVisibleMap ? Find.VisibleMap.mapPawns.FreeColonists : PawnsFinder.AllMaps_FreeColonists;
 
 			if (this.sortingOrder == SortOrder.Undefined || this.sortingDef == null)
 			{
-				pawnsList = pawnsList.OrderBy(p => DDUtilities.GetLabelForPawn(p));
+				pawnsList = pawnsList.OrderBy(p => p.CachedPawnLabel());
 			}
 
 			else
 			{
-				pawnsList = pawnsList.OrderBy(p => p.story.WorkTypeIsDisabled(this.sortingDef)).ThenByDescending(p => p.skills.AverageOfRelevantSkillsFor(this.sortingDef)).ThenBy(p => DDUtilities.GetLabelForPawn(p));
+				pawnsList = pawnsList.OrderBy(p => p.story.WorkTypeIsDisabled(this.sortingDef)).ThenByDescending(p => p.skills.AverageOfRelevantSkillsFor(this.sortingDef)).ThenBy(p => p.CachedPawnLabel());
 
 				if (this.sortingOrder == SortOrder.Ascending)
 				{
@@ -106,64 +108,42 @@ namespace DD_WorkTab
 			this.colonistsToDraw = pawnsList.ToArray();
 		}
 
-		public override Vector2 InitialSize
-		{
-			get
-			{
-				float width = preAdjustedWidth;
-				float height = preAdjustedHeight;
-
-				if (preAdjustedWidth > maxAllowedWidth)
-				{
-					width = maxAllowedWidth;
-				}
-
-				if (height > maxAllowedHeight)
-				{
-					height = maxAllowedHeight;
-				}
-
-				return new Vector2(width, height);
-			}
-		}
-
 		public override void DoWindowContents(Rect inRect)
 		{
 			base.SetInitialSizeAndPosition();
 
-			if (needToRecachePawns)
+			if (mustRecachePawns)
 			{
 				this.RecachePawnList();
 			}
 
-			//General Rects
-			Rect toggleMapRect = new Rect(inRect.x - this.listOffset, inRect.y, standardSpacing + spaceForPawnLabel, standardRowHeight);
+			Rect toggleMapRect = new Rect(inRect.x - this.ListOffset, inRect.y, standardSpacing + spaceForPawnLabel, standardRowHeight);
 			Rect primaryTypesRect = new Rect(toggleMapRect.xMax, inRect.y, inRect.width - toggleMapRect.width, standardRowHeight);
 			Rect scrollViewBox = new Rect(inRect.x, primaryTypesRect.yMax, inRect.width, inRect.height - primaryTypesRect.height);
 			Rect scrollViewOutRect = scrollViewBox.ContractedBy(standardSpacing);
-			Rect scrollViewInnerRect = new Rect(scrollViewOutRect.x, scrollViewOutRect.y, standardRowWidth, this.colonistsCount * standardRowHeight);
+			Rect scrollViewInnerRect = new Rect(scrollViewOutRect.x, scrollViewOutRect.y, rowWidth, this.ColonistsCount * standardRowHeight);
 
-			if (Widgets.ButtonText(toggleMapRect.ContractedBy(standardSpacing), this.toggleButtonText, true, false, true))
+			if (Widgets.ButtonText(toggleMapRect.ContractedBy(standardSpacing), this.ToggleButtonText, true, false, true))
 			{
-				Settings.ColonistStatsOnlyVisibleMap = !Settings.ColonistStatsOnlyVisibleMap;
+				DD_Settings.ColonistStatsOnlyVisibleMap = !DD_Settings.ColonistStatsOnlyVisibleMap;
 
-				this.needToRecachePawns = true;
+				this.mustRecachePawns = true;
 
-				if (Settings.UseSounds)
+				if (DD_Settings.UseSounds)
 				{
 					SoundDefOf.DialogBoxAppear.PlayOneShotOnCamera(null);
 				}
 			}
 
-			Vector2 primePosition = new Vector2(primaryTypesRect.x + standardSpacing + (DDUtilities.DraggableTextureWidth / 2f), primaryTypesRect.center.y);
+			Vector2 primePositionVector = new Vector2(primaryTypesRect.x + standardSpacing + (draggableTextureDiameter / 2f), primaryTypesRect.center.y);
 
-			for (int i = 0; i < this.primeTypes.PrimeDraggablesList.Count; i++)
+			for (int i = 0; i < PrimaryTypes.PrimaryDraggablesList.Count; i++)
 			{
-				DraggableWorkType prime = this.primeTypes.PrimeDraggablesList[i];
+				DraggableWorkType prime = PrimaryTypes.PrimaryDraggablesList[i];
 
-				prime.position = primePosition;
+				primePositions[prime.def] = primePositionVector;
 
-				Rect primeRect = primePosition.ToDraggableRect();
+				Rect primeRect = primePositionVector.ToDraggableRect();
 
 				prime.DrawTexture(primeRect);
 
@@ -181,11 +161,22 @@ namespace DD_WorkTab
 
 							else
 							{
-								this.sortingOrder = this.sortingOrder.Next();
+								switch (this.sortingOrder)
+								{
+									case SortOrder.Descending:
+										this.sortingOrder = SortOrder.Ascending;
+										break;
+									case SortOrder.Ascending:
+										this.sortingOrder = SortOrder.Undefined;
+										break;
+									default:
+										this.sortingOrder = SortOrder.Descending;
+										break;
+								}
 							}
 						}
 
-						else if (Event.current.button == 1)
+						if (Event.current.button == 1)
 						{
 							if (this.sortingDef != prime.def)
 							{
@@ -195,48 +186,53 @@ namespace DD_WorkTab
 
 							else
 							{
-								this.sortingOrder = this.sortingOrder.Previous();
+								switch (this.sortingOrder)
+								{
+									case SortOrder.Descending:
+										this.sortingOrder = SortOrder.Undefined;
+										break;
+									case SortOrder.Ascending:
+										this.sortingOrder = SortOrder.Descending;
+										break;
+									default:
+										this.sortingOrder = SortOrder.Ascending;
+										break;
+								}
 							}
 						}
 
-						Event.current.Use();
-
-						if (Settings.UseSounds)
+						if (DD_Settings.UseSounds)
 						{
 							SoundDef soundToUse = this.sortingOrder == SortOrder.Undefined ? SoundDefOf.TickLow : SoundDefOf.TickHigh;
 
 							soundToUse.PlayOneShotOnCamera(null);
 						}
+
+						this.mustRecachePawns = true;
+
+						Event.current.Use();
 					}
 
-					else
-					{
-						Widgets.DrawHighlight(primeRect);
+					Widgets.DrawHighlight(primeRect);
 
-						TooltipHandler.TipRegion(primeRect, DDUtilities.GetDraggableTooltip(prime.def, true, true, null));
-					}
+					TooltipHandler.TipRegion(primeRect, DD_Widgets.GetDraggableTooltip(prime.def, true, true, null));
 				}
 
-
+				//Draw little arrow indicator below work type
 				if (this.sortingOrder != SortOrder.Undefined && this.sortingDef == prime.def)
 				{
-					//Draw little arrow indicator below work type
-					Texture2D icon = this.sortingOrder == SortOrder.Descending ? DDUtilities.SortingDescendingIcon : DDUtilities.SortingIcon;
+					Texture2D icon = this.sortingOrder == SortOrder.Descending ? DD_Widgets.SortingDescendingIcon : DD_Widgets.SortingAscendingIcon;
 					Rect iconRect = new Rect(primeRect.xMax - (float)icon.width, primeRect.yMax + 1f, icon.width, icon.height);
 
 					GUI.DrawTexture(iconRect, icon);
 
-					//Highlight column
-					Rect highlightRect = new Rect(primeRect.xMin - 2f, primeRect.yMin - standardSpacing / 2f, primeRect.width + 4f, inRect.height - 2f * standardSpacing);
-
-					Widgets.DrawHighlight(highlightRect);
+					Widgets.DrawHighlight(new Rect(primeRect.xMin - 3f, primeRect.yMin - 3f, primeRect.width + 6f, primeRect.height + 6f));
 				}
 
-				primePosition.x += standardSpacing + DDUtilities.DraggableTextureWidth;
+				primePositionVector.x += standardSpacing + draggableTextureDiameter;
 			}
 
-			//Draw rect edges
-			DDUtilities.DrawOutline(scrollViewBox, false, true);
+			DD_Widgets.DrawBoxOutline(scrollViewBox);
 
 			Widgets.BeginScrollView(scrollViewOutRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
@@ -246,32 +242,30 @@ namespace DD_WorkTab
 
 			foreach (Pawn pawn in this.colonistsToDraw)
 			{
-				PawnSurface pawnSurface = Dragger.GetPawnSurface(pawn);
+				PawnSurface pawnSurface = DragManager.GetPawnSurface(pawn);
 
-				//List separator
 				if (firstPawnDrawn)
 				{
-					DDUtilities.DrawListSeparator(scrollViewInnerRect, currentVerticalPosition);
+					DD_Widgets.DrawListSeparator(scrollViewInnerRect, currentVerticalPosition);
 				}
 
 				firstPawnDrawn = true;
 
-				//Pawn name
 				Rect nameRect = new Rect(scrollViewInnerRect.x, currentVerticalPosition, spaceForPawnLabel, standardRowHeight);
-				DDUtilities.DoPawnLabel(nameRect, pawn);
+				Rect surfaceRect = new Rect(nameRect.xMax, currentVerticalPosition, standardSurfaceWidth, standardRowHeight);
 
-				//Work types
-				Rect surfaceRect = new Rect(nameRect.xMax, currentVerticalPosition, scrollViewInnerRect.width - nameRect.width, standardRowHeight);
+				DD_Widgets.DrawPawnLabel(nameRect, pawn);
 
-				for (int i = 0; i < this.primeTypes.PrimeDraggablesList.Count; i++)
+				for (int i = 0; i < PrimaryTypes.PrimaryDraggablesList.Count; i++)
 				{
-					DraggableWorkType currentPrime = this.primeTypes.PrimeDraggablesList[i];
-					DraggableWorkType matchingDraggable = pawnSurface.childrenListForReading.Find(d => d.def == currentPrime.def);
-					Rect drawRect = new Vector2(currentPrime.position.x, surfaceRect.center.y).ToDraggableRect();
+					WorkTypeDef def = PrimaryTypes.PrimaryDraggablesList[i].def;
+					Rect drawRect = new Vector2(primePositions[def].x, surfaceRect.center.y).ToDraggableRect();
 					int tooltipSelector;
 
+					DD_Widgets.DrawPassion(pawn, def, drawRect);
+
 					//Pawn is assigned to the work type
-					if (matchingDraggable != null)
+					if (pawnSurface.QuickFindByDef.TryGetValue(def, out DraggableWorkType matchingDraggable))
 					{
 						tooltipSelector = 1;
 
@@ -281,11 +275,9 @@ namespace DD_WorkTab
 					else
 					{
 						//Pawn is unassigned by incapability
-						if (pawn.story.WorkTypeIsDisabled(currentPrime.def))
+						if (pawn.story.WorkTypeIsDisabled(def))
 						{
 							tooltipSelector = 2;
-
-							GUI.DrawTexture(drawRect, BaseContent.BadTex);
 						}
 
 						//Pawn is unassigned by player choice
@@ -293,7 +285,7 @@ namespace DD_WorkTab
 						{
 							tooltipSelector = 3;
 
-							GUI.DrawTexture(drawRect, DDUtilities.HaltIcon);
+							DD_Widgets.DraggableOutline(drawRect, DD_Widgets.MediumSkillColour);
 						}
 					}
 
@@ -304,13 +296,13 @@ namespace DD_WorkTab
 						switch (tooltipSelector)
 						{
 							case 1:
-								tipString = DDUtilities.GetDraggableTooltip(matchingDraggable.def, true, false, matchingDraggable.parent.pawn);
+								tipString = DD_Widgets.GetDraggableTooltip(def, true, false, pawn);
 								break;
 							case 2:
-								tipString = "DD_WorkTab_ColonistStats_WorkTypeForbidden".TranslateFast(new string[] { currentPrime.def.gerundLabel }).AdjustedFor(pawn);
+								tipString = "DD_WorkTab_ColonistStats_WorkTypeForbidden".CachedTranslation(new string[] { def.gerundLabel }).AdjustedFor(pawn);
 								break;
 							case 3:
-								tipString = DDUtilities.GetDraggableTooltip(currentPrime.def, true, false, pawn) + "\n\n" + "DD_WorkTab_ColonistStats_CurrentlyUnassigned".TranslateFast(new string[] { currentPrime.def.gerundLabel }).AdjustedFor(pawn);
+								tipString = DD_Widgets.GetDraggableTooltip(def, true, false, pawn) + "DD_WorkTab_ColonistStats_CurrentlyUnassigned".CachedTranslation(new string[] { def.gerundLabel }).AdjustedFor(pawn);
 								break;
 							default:
 								tipString = string.Empty;
@@ -335,13 +327,34 @@ namespace DD_WorkTab
 			this.sortingOrder = SortOrder.Undefined;
 		}
 
+		public override Vector2 InitialSize
+		{
+			get
+			{
+				float width = PreAdjustedWidth;
+				float height = PreAdjustedHeight;
+
+				if (PreAdjustedWidth > DD_Widgets.MaxWindowWidth)
+				{
+					width = DD_Widgets.MaxWindowWidth;
+				}
+
+				if (height > DD_Widgets.MaxWindowHeight)
+				{
+					height = DD_Widgets.MaxWindowHeight;
+				}
+
+				return new Vector2(width, height);
+			}
+		}
+
 		public Window_ColonistStats(bool visibleMap)
 		{
 			this.layer = WindowLayer.GameUI;
 			this.doCloseX = true;
 			this.closeOnClickedOutside = true;
 
-			Settings.ColonistStatsOnlyVisibleMap = visibleMap;
+			DD_Settings.ColonistStatsOnlyVisibleMap = visibleMap;
 		}
 	}
 }

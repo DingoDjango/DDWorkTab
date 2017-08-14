@@ -8,27 +8,17 @@ namespace DD_WorkTab
 {
 	public class Window_WorkTab : MainTabWindow
 	{
-		private static float spaceForPawnLabel = DDUtilities.spaceForPawnLabel;
+		private const float draggableTextureDiameter = DD_Widgets.DraggableTextureDiameter;
 
-		private static float spaceForWorkButtons = DDUtilities.spaceForWorkButtons;
+		private const float spaceForPawnLabel = DD_Widgets.SpaceForPawnLabel;
 
-		private static float standardSpacing = DDUtilities.standardSpacing;
+		private const float spaceForWorkButtons = DD_Widgets.SpaceForWorkButtons;
 
-		private static float standardRowHeight = DDUtilities.standardRowHeight;
+		private const float standardSpacing = DD_Widgets.StandardSpacing;
 
-		private static float standardSurfaceWidth = DDUtilities.standardSurfaceWidth;
+		private const float standardRowHeight = DD_Widgets.StandardRowHeight;
 
-		private float preAdjustedWidth => spaceForPawnLabel + spaceForWorkButtons + standardSurfaceWidth + 2 * standardSpacing + 2 * this.Margin + 20f;
-
-		private float preAdjustedHeight => standardRowHeight * (1 + this.totalColonists) + 2 * standardSpacing + 2 * this.Margin + 20f;
-
-		private static float maxAllowedWidth = (float)UI.screenWidth - 10f;
-
-		private static float maxAllowedHeight = (float)UI.screenHeight * 0.75f;
-
-		private float listOffset => preAdjustedWidth > maxAllowedWidth ? this.scrollPosition.x : 0f;
-
-		private PrimarySurface primarySurface = new PrimarySurface();
+		private static readonly float standardSurfaceWidth = DD_Widgets.StandardSurfaceWidth;
 
 		private Vector2 scrollPosition = Vector2.zero;
 
@@ -38,7 +28,7 @@ namespace DD_WorkTab
 
 		private int lastColonistCount;
 
-		private int totalColonists
+		private int TotalColonists
 		{
 			get
 			{
@@ -49,44 +39,59 @@ namespace DD_WorkTab
 					return count;
 				}
 
-				else return 1;
+				return 1;
 			}
 		}
 
+		private float PreAdjustedWidth => spaceForPawnLabel + spaceForWorkButtons + standardSurfaceWidth + 2 * standardSpacing + 2 * this.Margin + 20f;
+
+		private float PreAdjustedHeight => standardRowHeight * (1 + this.TotalColonists) + 2 * standardSpacing + 2 * this.Margin + 20f;
+
+		private float ListOffset => PreAdjustedWidth > DD_Widgets.MaxWindowWidth ? this.scrollPosition.x : 0f;
+
 		private void RecacheColonists()
 		{
-			this.lastColonistCount = this.totalColonists;
+			this.lastColonistCount = this.TotalColonists;
 
-			this.mapColonistsCached = Find.VisibleMap.mapPawns.FreeColonists.OrderBy(p => DDUtilities.GetLabelForPawn(p)).ToArray();
+			this.mapColonistsCached = Find.VisibleMap.mapPawns.FreeColonists.OrderBy(p => p.CachedPawnLabel()).ToArray();
+		}
+
+		private void DrawPriorityIndicators(Rect rect)
+		{
+			GUI.color = DD_Widgets.IndicatorsColour;
+
+			Text.Anchor = TextAnchor.MiddleLeft;
+			Widgets.Label(rect, "<= " + "HigherPriority".CachedTranslation());
+
+			Text.Anchor = TextAnchor.MiddleRight;
+			Widgets.Label(rect, "LowerPriority".CachedTranslation() + " =>");
+
+			GUI.color = Color.white; // Reset
+			Text.Anchor = TextAnchor.UpperLeft; //Reset
 		}
 
 		public override void DoWindowContents(Rect inRect)
 		{
-			base.DoWindowContents(inRect);
+			base.SetInitialSizeAndPosition();
 
-			if (this.lastColonistCount != this.totalColonists)
+			if (this.lastColonistCount != this.TotalColonists)
 			{
 				this.RecacheColonists();
 			}
 
-			Text.Font = GameFont.Tiny;
-			float spaceForIndicators = Text.LineHeight;
+			Text.Font = GameFont.Tiny; //For indicatorsRect height
 
-			//General Rects
-			Rect indicatorsRect = new Rect(inRect.x + standardSpacing + spaceForPawnLabel + spaceForWorkButtons, inRect.y, inRect.width - 2 * standardSpacing - spaceForPawnLabel - spaceForWorkButtons, spaceForIndicators);
-			Rect primarySurfaceRect = new Rect(inRect.x - this.listOffset, indicatorsRect.yMax, inRect.width, standardRowHeight);
-			Rect scrollViewBox = new Rect(inRect.x, primarySurfaceRect.yMax, inRect.width, inRect.height - indicatorsRect.height - primarySurfaceRect.height);
+			Rect indicatorsRect = new Rect(inRect.x + standardSpacing + spaceForPawnLabel + spaceForWorkButtons, inRect.y, inRect.width - 2 * standardSpacing - spaceForPawnLabel - spaceForWorkButtons, Text.LineHeight);
+			Rect primaryTypesRect = new Rect(inRect.x - this.ListOffset, indicatorsRect.yMax, inRect.width, standardRowHeight);
+			Rect scrollViewBox = new Rect(inRect.x, primaryTypesRect.yMax, inRect.width, inRect.height - indicatorsRect.height - primaryTypesRect.height);
 			Rect scrollViewOuterRect = scrollViewBox.ContractedBy(standardSpacing);
 			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, spaceForPawnLabel + spaceForWorkButtons + standardSurfaceWidth, lastColonistCount * standardRowHeight);
 
-			//Draw priority indicators
-			DDUtilities.DrawPriorityIndicators(indicatorsRect);
+			this.DrawPriorityIndicators(indicatorsRect);
 
-			//Primary work types
-			primarySurface.OnWorkTabGUI(primarySurfaceRect);
+			PrimaryTypes.DoWorkTabGUI(primaryTypesRect);
 
-			//Draw rect edges
-			DDUtilities.DrawOutline(scrollViewBox, false, true);
+			DD_Widgets.DrawBoxOutline(scrollViewBox);
 
 			Widgets.BeginScrollView(scrollViewOuterRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
@@ -96,22 +101,28 @@ namespace DD_WorkTab
 
 			foreach (Pawn pawn in mapColonistsCached)
 			{
-				PawnSurface surface = Dragger.GetPawnSurface(pawn);
+				PawnSurface surface = DragManager.GetPawnSurface(pawn);
 
-				//List separator
 				if (firstPawnDrawn)
 				{
-					DDUtilities.DrawListSeparator(scrollViewInnerRect, currentVerticalPosition);
+					DD_Widgets.DrawListSeparator(scrollViewInnerRect, currentVerticalPosition);
 				}
 
 				firstPawnDrawn = true;
 
-				Rect surfaceRect = new Rect(scrollViewInnerRect.x, currentVerticalPosition, scrollViewInnerRect.width, standardRowHeight);
+				Rect pawnLabelRect = new Rect(scrollViewInnerRect.x, currentVerticalPosition, spaceForPawnLabel, standardRowHeight);
+				Rect disableWorkRect = new Rect(pawnLabelRect.xMax + standardSpacing, currentVerticalPosition + standardSpacing, draggableTextureDiameter, draggableTextureDiameter);
+				Rect resetWorkRect = new Rect(disableWorkRect.xMax + standardSpacing, disableWorkRect.y, disableWorkRect.width, disableWorkRect.height);
+				Rect draggablesRect = new Rect(pawnLabelRect.xMax + spaceForWorkButtons, currentVerticalPosition, standardSurfaceWidth, standardRowHeight);
 
-				//Check for drag, draw draggables
-				surface.OnWorkTabGUI(surfaceRect, this.scrollPosition);
+				DD_Widgets.DrawPawnLabel(pawnLabelRect, pawn);
 
-				//Increment list y for next pawn
+				DD_Widgets.Button(ButtonType.DisableWork, surface, disableWorkRect);
+
+				DD_Widgets.Button(ButtonType.ResetWork, surface, resetWorkRect);
+
+				surface.DoWorkTabGUI(draggablesRect, this.scrollPosition); //Check for drag, draw draggables
+
 				currentVerticalPosition += standardRowHeight;
 			}
 
@@ -120,45 +131,13 @@ namespace DD_WorkTab
 			//Check for invalid drop
 			if (this.shouldResetDrag)
 			{
-				Dragger.CurrentDraggable = null;
+				DragManager.CurrentDraggable = null;
 				this.shouldResetDrag = false;
 			}
 
-			if (Event.current.type != EventType.MouseUp && Dragger.Dragging && !Input.GetMouseButton(0))
+			if (DragManager.Dragging && Event.current.type != EventType.MouseUp && !Input.GetMouseButton(0))
 			{
 				this.shouldResetDrag = true;
-			}
-		}
-
-		//General Window settings
-		public Window_WorkTab()
-		{
-			Current.Game.playSettings.useWorkPriorities = true;
-		}
-
-		public override bool CausesMessageBackground()
-		{
-			return true;
-		}
-
-		public override Vector2 RequestedTabSize
-		{
-			get
-			{
-				float width = preAdjustedWidth;
-				float height = preAdjustedHeight;
-
-				if (preAdjustedWidth > maxAllowedWidth)
-				{
-					width = maxAllowedWidth;
-				}
-
-				if (height > maxAllowedHeight)
-				{
-					height = maxAllowedHeight;
-				}
-
-				return new Vector2(width, height);
 			}
 		}
 
@@ -166,7 +145,38 @@ namespace DD_WorkTab
 		{
 			base.PostClose();
 
-			Dragger.CurrentDraggable = null;
+			DragManager.CurrentDraggable = null;
+		}
+
+		public override Vector2 RequestedTabSize
+		{
+			get
+			{
+				float width = PreAdjustedWidth;
+				float height = PreAdjustedHeight;
+
+				if (PreAdjustedWidth > DD_Widgets.MaxWindowWidth)
+				{
+					width = DD_Widgets.MaxWindowWidth;
+				}
+
+				if (height > DD_Widgets.MaxWindowHeight)
+				{
+					height = DD_Widgets.MaxWindowHeight;
+				}
+
+				return new Vector2(width, height);
+			}
+		}
+
+		public override bool CausesMessageBackground()
+		{
+			return true;
+		}
+
+		public Window_WorkTab()
+		{
+			Current.Game.playSettings.useWorkPriorities = true;
 		}
 	}
 }

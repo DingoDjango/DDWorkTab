@@ -5,7 +5,7 @@ using Verse;
 namespace DD_WorkTab
 {
 	[HarmonyPatch(typeof(Pawn_WorkSettings))]
-	[HarmonyPatch("SetPriority")]
+	[HarmonyPatch(nameof(Pawn_WorkSettings.SetPriority))]
 	public class Patch_Pawn_WorkSettings
 	{
 		public static void Prefix(ref object __state, ref int priority)

@@ -4,96 +4,145 @@ using Verse;
 
 namespace DD_WorkTab
 {
-	public class DraggableWorkType : DraggableObject, IExposable
-	{
-		public WorkTypeDef def;
+	/* Based on the work of Emil Johansen aka AngryAnt
+	* https://github.com/AngryAnt */
 
-		public PawnSurface parent;
+	public class DraggableWorkType : IExposable
+	{
+		private Vector2 dragOffsetVector;
+
+		private bool draggingNow;
+
+		private Texture2D texture;
 
 		public readonly bool primary;
 
-		public void OnWorkTabGUI()
+		public readonly PawnSurface parent;
+
+		public Vector2 position;
+
+		public Rect dragRect;
+
+		public WorkTypeDef def;
+
+		public bool IsDragging => this.draggingNow;
+
+		public int DoWorkTabGUI()
 		{
-			Rect dragRect = this.position.ToDraggableRect();
+			int shiftClicked = 0;
 
-			//Draw texture on draggable position
-			this.DrawTexture(dragRect);
+			this.DrawTexture(this.dragRect);
 
-			//Do drag calculations
-			this.CheckForDrag(dragRect);
-
-			//Update DragManager if this object is being dragged
-			if (this.draggingNow)
+			if (Event.current.type == EventType.MouseUp)
 			{
-				if (Dragger.CurrentDraggable != this)
+				this.draggingNow = false;
+			}
+
+			if (Mouse.IsOver(dragRect))
+			{
+				if (Event.current.type == EventType.MouseDown)
 				{
-					Dragger.CurrentDraggable = this;
+					if (!Event.current.shift)
+					{
+						if (Event.current.button == 0)
+						{
+							this.draggingNow = true;
+							this.dragOffsetVector = Event.current.mousePosition - this.position;
+
+							DragManager.CurrentDraggable = this;
+						}
+					}
+
+					else
+					{
+						if (Event.current.button == 0)
+						{
+							shiftClicked = -1;
+						}
+
+						if (Event.current.button == 1)
+						{
+							shiftClicked = 1;
+						}
+					}
+
+					Event.current.Use();
+				}
+
+				if (!DragManager.Dragging)
+				{
+					Widgets.DrawHighlight(this.dragRect);
+
+					Pawn worker = !this.primary ? this.parent.pawn : null;
+
+					TooltipHandler.TipRegion(this.dragRect, DD_Widgets.GetDraggableTooltip(this.def, false, this.primary, worker));
 				}
 			}
 
-			if (Mouse.IsOver(dragRect) && !Dragger.Dragging)
+			if (draggingNow)
 			{
-				Pawn worker = this.primary ? null : this.parent.pawn;
+				this.position = Event.current.mousePosition - this.dragOffsetVector;
 
-				Widgets.DrawHighlight(dragRect);
-
-				TooltipHandler.TipRegion(dragRect, DDUtilities.GetDraggableTooltip(this.def, false, this.primary, worker));
+				this.dragRect = this.position.ToDraggableRect();
 			}
+
+			return shiftClicked;
 		}
 
 		public void DrawTexture(Rect drawRect)
 		{
-			DDUtilities.DrawOutline(drawRect, DDUtilities.EmergencyWorkTypes[this.def], false);
+			DD_Widgets.DraggableOutline(drawRect, this.GetDynamicColour());
 
-			//Adjust colour based on isPrimary, pawn skills, work type
-			GUI.color = this.GetDraggableColour();
-
-			GUI.DrawTexture(drawRect.ContractedBy(2f), DDUtilities.WorkTypeTextures[this.def]);
+			GUI.DrawTexture(drawRect.ContractedBy(2f), this.texture);
 
 			GUI.color = Color.white; //Reset
 		}
 
-		private Color GetDraggableColour()
+		private Color GetDynamicColour()
 		{
 			if (this.primary)
 			{
-				return DDUtilities.ButtonColour;
+				return DD_Widgets.MediumSkillColour;
 			}
 
-			else
+			if (DD_Widgets.CapacitiesCompromisedForWorkType(this.parent.pawn, this.def))
 			{
-				if (this.def.relevantSkills.Count == 0)
-				{
-					return DDUtilities.LowSkillColour;
-				}
-
-				float skillAverage = this.parent.pawn.skills.AverageOfRelevantSkillsFor(this.def) / (float)SkillRecord.MaxLevel;
-
-				if (skillAverage < 0.2f) //0-3
-				{
-					return DDUtilities.LowSkillColour;
-				}
-
-				else if (skillAverage < 0.4f) //4-7
-				{
-					return DDUtilities.MediumSkillColour;
-				}
-
-				else if (skillAverage < 0.6f) //8-11
-				{
-					return DDUtilities.HighSkillColour;
-				}
-
-				else if (skillAverage < 0.8f) //12-15
-				{
-					return DDUtilities.VeryHighSkillColour;
-				}
-
-				else //16-20
-				{
-					return DDUtilities.ExcellentSkillColour;
-				}
+				return Color.red;
 			}
+
+			if (this.def.relevantSkills.Count == 0)
+			{
+				return DD_Widgets.MediumSkillColour;
+			}
+
+			float skillAverage = this.parent.pawn.skills.AverageOfRelevantSkillsFor(this.def);
+
+			if (skillAverage < 4f) //0-3
+			{
+				return DD_Widgets.LowSkillColour;
+			}
+
+			if (skillAverage < 8f) //4-7
+			{
+				return DD_Widgets.MediumSkillColour;
+			}
+
+			if (skillAverage < 12f) //8-11
+			{
+				return DD_Widgets.HighSkillColour;
+			}
+
+			if (skillAverage < 16f) //12-15
+			{
+				return DD_Widgets.VeryHighSkillColour;
+			}
+
+			return DD_Widgets.ExcellentSkillColour; //16-20
+		}
+
+		private void FetchUtilityValues()
+		{
+			this.texture = !this.primary ? DD_Widgets.DraggableAttributes[this.def].texture : DD_Widgets.DraggableAttributes[this.def].primaryTexture;
 		}
 
 		public DraggableWorkType(PawnSurface surface)
@@ -101,17 +150,25 @@ namespace DD_WorkTab
 			this.parent = surface;
 		}
 
-		public DraggableWorkType(WorkTypeDef workType, PawnSurface surface = null, bool isPrimary = false, Vector2 posVector = default(Vector2))
+		public DraggableWorkType(WorkTypeDef workType, PawnSurface surface, bool isPrimary, Vector2 posVector = default(Vector2)) : this(surface)
 		{
 			this.def = workType;
-			this.parent = surface;
 			this.primary = isPrimary;
 			this.position = posVector;
+
+			this.FetchUtilityValues();
 		}
 
 		public void ExposeData()
 		{
 			Scribe_Defs.Look(ref this.def, "def");
+
+			if (Scribe.mode == LoadSaveMode.LoadingVars)
+			{
+				this.FetchUtilityValues();
+
+				this.parent.QuickFindByDef[this.def] = this;
+			}
 		}
 	}
 }

@@ -9,33 +9,48 @@ namespace DD_WorkTab
 {
 	public class PawnSurface : IExposable
 	{
-		private const float standardSpacing = DDUtilities.standardSpacing;
+		private const float draggableTextureDiameter = DD_Widgets.DraggableTextureDiameter;
 
-		private const float spaceForPawnLabel = DDUtilities.spaceForPawnLabel;
+		private const float spaceForPawnLabel = DD_Widgets.SpaceForPawnLabel;
 
-		private const float spaceForWorkButtons = DDUtilities.spaceForWorkButtons;
+		private const float spaceForWorkButtons = DD_Widgets.SpaceForWorkButtons;
 
-		private const float draggableWidth = DDUtilities.DraggableTextureWidth;
+		private const float standardSpacing = DD_Widgets.StandardSpacing;
 
-		private const float draggableHeight = DDUtilities.DraggableTextureHeight;
+		private const float standardRowHeight = DD_Widgets.StandardRowHeight;
 
-		private static float surfaceWidth = DDUtilities.standardSurfaceWidth;
-
-		public Pawn pawn;
+		private static readonly float standardSurfaceWidth = DD_Widgets.StandardSurfaceWidth;
 
 		private List<DraggableWorkType> children = new List<DraggableWorkType>();
 
-		public List<DraggableWorkType> childrenListForReading
-		{
-			get
-			{
-				return this.children;
-			}
-		}
+		public Dictionary<WorkTypeDef, DraggableWorkType> QuickFindByDef = new Dictionary<WorkTypeDef, DraggableWorkType>();
+
+		public Pawn pawn;
+
+		public List<DraggableWorkType> DraggablesList => this.children;
 
 		private void SortChildrenByPosition()
 		{
 			this.children = this.children.OrderBy(child => child.position.x).ToList();
+		}
+
+		private void ResetChildrenByVanillaDefaults()
+		{
+			this.children.Clear();
+
+			this.QuickFindByDef.Clear();
+
+			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
+			{
+				if (!this.pawn.story.WorkTypeIsDisabled(def))
+				{
+					DraggableWorkType newChild = new DraggableWorkType(def, this, false);
+
+					this.children.Add(newChild);
+
+					this.QuickFindByDef[def] = newChild;
+				}
+			}
 		}
 
 		private void AddOrUpdateChild(DraggableWorkType nomad)
@@ -46,11 +61,11 @@ namespace DD_WorkTab
 				//Do not accept disabled work types
 				if (this.pawn.story.WorkTypeIsDisabled(nomad.def))
 				{
-					string forbiddenTypeString = "DD_WorkTab_PawnSurface_WorkTypeForbidden".TranslateFast(new string[] { nomad.def.gerundLabel }).AdjustedFor(this.pawn);
+					string forbiddenTypeString = "DD_WorkTab_PawnSurface_WorkTypeForbidden".CachedTranslation(new string[] { nomad.def.gerundLabel }).AdjustedFor(this.pawn);
 
 					Messages.Message(forbiddenTypeString, MessageSound.Silent);
 
-					if (Settings.UseSounds)
+					if (DD_Settings.UseSounds)
 					{
 						SoundDefOf.ClickReject.PlayOneShotOnCamera(null);
 					}
@@ -58,12 +73,10 @@ namespace DD_WorkTab
 					return;
 				}
 
-				DraggableWorkType existingChild = this.children.Find(child => child.def == nomad.def);
-
 				//Pawn already has a priority for this work type
-				if (existingChild != null)
+				if (this.QuickFindByDef.TryGetValue(nomad.def, out DraggableWorkType existingDraggable))
 				{
-					existingChild.position = nomad.position;
+					existingDraggable.position = nomad.position;
 				}
 
 				//Pawn accepts the work type and it was not on the list
@@ -72,137 +85,121 @@ namespace DD_WorkTab
 					DraggableWorkType newDraggable = new DraggableWorkType(nomad.def, this, false, nomad.position);
 
 					this.children.Add(newDraggable);
+
+					this.QuickFindByDef[nomad.def] = newDraggable;
 				}
 			}
 
-			/* Update priority indexes and set priority for all work types
-			 * This will also update existing children's priorities if they were dragged around */
 			this.SortChildrenByPosition();
 
-			this.RefreshPawnPriorities();
+			this.UpdatePawnPriorities();
 
-			if (Settings.UseSounds)
+			if (DD_Settings.UseSounds)
 			{
 				SoundDefOf.MessageBenefit.PlayOneShotOnCamera(null);
 			}
 
-			Dragger.CurrentDraggable = null;
+			DragManager.CurrentDraggable = null;
 		}
 
-		public void RemoveChild(DraggableWorkType typeToRemove)
+		private void RemoveChild(DraggableWorkType disposedType)
 		{
-			if (this.children.Contains(typeToRemove))
+			this.pawn.workSettings.Disable(disposedType.def);
+
+			this.QuickFindByDef.Remove(disposedType.def);
+
+			this.children.Remove(disposedType);
+
+			DragManager.CurrentDraggable = null;
+
+			if (DD_Settings.MessageOnDraggableRemoval)
 			{
-				this.pawn.workSettings.Disable(typeToRemove.def);
+				string disposedTypeString = "DD_WorkTab_PawnSurface_WorkRemoved".CachedTranslation(new string[] { disposedType.def.gerundLabel }).AdjustedFor(this.pawn);
 
-				if (Settings.MessageOnDraggableRemoval)
-				{
-					string draggableRemovedString = "DD_WorkTab_PawnSurface_WorkRemoved".TranslateFast(new string[] { typeToRemove.def.gerundLabel }).AdjustedFor(this.pawn);
-
-					Messages.Message(draggableRemovedString, MessageSound.Silent);
-				}
-
-				if (Settings.UseSounds)
-				{
-					SoundDefOf.ClickReject.PlayOneShotOnCamera(null);
-				}
-
-				this.children.Remove(typeToRemove);
-
-				typeToRemove = null;
+				Messages.Message(disposedTypeString, MessageSound.Silent);
 			}
 
-			else
+			if (DD_Settings.UseSounds)
 			{
-				Log.Error("DDWorkTab :: Attempted to remove DraggableWorkType that was not on the list.");
+				SoundDefOf.ClickReject.PlayOneShotOnCamera(null);
 			}
-
-			Dragger.CurrentDraggable = null;
 		}
 
-		//Clear children and set all work types to priority 0 (disabled)
-		public void DisableAllWork()
+		private void UpdatePawnPriorities()
 		{
+			for (int i = 0; i < this.children.Count; i++)
+			{
+				this.pawn.workSettings.SetPriority(this.children[i].def, i + 1);
+			}
+		}
+
+		private void DrawDynamicPosition(Rect listRect, DraggableWorkType nomad, float xVector)
+		{
+			GUI.color = !this.pawn.story.WorkTypeIsDisabled(nomad.def) ? Color.white : Color.red;
+			float xPosition = listRect.xMin + (standardSpacing / 2f) - 1f;
+			float yPosition = listRect.yMin + (standardSpacing / 2f);
+
 			if (this.children.Count > 0)
 			{
 				for (int i = this.children.Count - 1; i >= 0; i--)
 				{
-					this.children[i] = null;
+					DraggableWorkType child = this.children[i];
+
+					if (child.position.x < xVector)
+					{
+						xPosition = child.position.x + (draggableTextureDiameter / 2f) + (standardSpacing / 2f) - 1f;
+						yPosition = child.position.y - (draggableTextureDiameter / 2f) - (standardSpacing / 2f);
+
+						break;
+					}
 				}
 			}
 
+			Rect lineRect = new Rect(xPosition, yPosition, 2f, draggableTextureDiameter + standardSpacing);
+
+			GUI.DrawTexture(lineRect, BaseContent.WhiteTex);
+
+			GUI.color = Color.white; //Reset
+		}
+
+		public void InsertFromPrimaryShiftClick(int change, WorkTypeDef def)
+		{
+			int index = this.children.FindIndex(dr => dr.def == def);
+
+			int absoluteIndex = index + change;
+
+			if (index >= 0 && absoluteIndex >= 0 && absoluteIndex != this.children.Count)
+			{
+				DraggableWorkType d = this.children[index];
+
+				this.children.Remove(d);
+
+				this.children.Insert(absoluteIndex, d);
+
+				this.UpdatePawnPriorities();
+			}
+		}
+
+		public void DisablePawnWork()
+		{
 			this.children.Clear();
+
+			this.QuickFindByDef.Clear();
 
 			this.pawn.workSettings.DisableAll();
 		}
 
-		//Populate children list with all viable work types
-		public void ResetChildrenByVanillaPriorities()
+		public void ResetPawnWorkByDefaults()
 		{
-			this.children.Clear();
+			this.ResetChildrenByVanillaDefaults();
 
-			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
-			{
-				if (this.pawn != null && !this.pawn.story.WorkTypeIsDisabled(def))
-				{
-					DraggableWorkType newChild = new DraggableWorkType(def, this);
-
-					this.children.Add(newChild);
-				}
-			}
+			this.UpdatePawnPriorities();
 		}
 
-		//Update pawn priorities (should be called last on drop to this surface)
-		public void RefreshPawnPriorities()
+		public void DoWorkTabGUI(Rect surfaceRect, Vector2 scrollOffset)
 		{
-			Pawn_WorkSettings workSettings = this.pawn.workSettings;
-
-			if (workSettings != null)
-			{
-				foreach (WorkTypeDef workType in DefDatabase<WorkTypeDef>.AllDefs)
-				{
-					int workPriority = this.children.FindIndex(d => d.def == workType) + 1;
-
-					if (workPriority > 0)
-					{
-						workSettings.SetPriority(workType, workPriority);
-					}
-
-					else
-					{
-						workSettings.SetPriority(workType, 0);
-					}
-				}
-			}
-		}
-
-		//Disable all work and re-enable available work types by their vanilla importance
-		public void ResetToVanillaSettings()
-		{
-			this.ResetChildrenByVanillaPriorities();
-
-			this.RefreshPawnPriorities();
-		}
-
-		public void OnWorkTabGUI(Rect listRect, Vector2 scrollOffset)
-		{
-			//Rects
-			Rect pawnLabelRect = new Rect(listRect.x, listRect.y, spaceForPawnLabel, listRect.height);
-			Rect disableAllRect = new Rect(pawnLabelRect.xMax + standardSpacing, listRect.y + standardSpacing, draggableWidth, draggableHeight);
-			Rect resetToVanillaRect = new Rect(disableAllRect.xMax + standardSpacing, disableAllRect.y, disableAllRect.width, disableAllRect.height);
-			Rect draggablesRect = new Rect(pawnLabelRect.xMax + spaceForWorkButtons, listRect.y, surfaceWidth, listRect.height);
-
-			//Pawn name
-			DDUtilities.DoPawnLabel(pawnLabelRect, pawn);
-
-			//Disable All Work button
-			DDUtilities.Button_DisableAllWork(false, this, disableAllRect);
-
-			//Reset to Vanilla button
-			DDUtilities.Button_ResetWorkToVanilla(false, this, resetToVanillaRect);
-
 			//Draw draggables, perform drag checks
-			Vector2 draggablePositionSetter = new Vector2(draggablesRect.xMin + standardSpacing + (draggableWidth / 2f), listRect.center.y);
+			Vector2 draggablePositionSetter = new Vector2(surfaceRect.xMin + standardSpacing + (draggableTextureDiameter / 2f), surfaceRect.center.y);
 
 			for (int i = 0; i < this.children.Count; i++)
 			{
@@ -211,26 +208,29 @@ namespace DD_WorkTab
 				if (!draggable.IsDragging)
 				{
 					draggable.position = draggablePositionSetter;
+
+					draggable.dragRect = draggablePositionSetter.ToDraggableRect();
+
+					DD_Widgets.DrawPassion(this.pawn, draggable.def, draggable.dragRect);
 				}
 
-				draggable.OnWorkTabGUI();
+				draggable.DoWorkTabGUI();
 
-				draggablePositionSetter.x += draggableWidth + standardSpacing;
+				draggablePositionSetter.x += draggableTextureDiameter + standardSpacing;
 			}
 
 			//Draw dragging indicator and listen for drop
-			if (Dragger.Dragging)
+			if (DragManager.Dragging)
 			{
-				DraggableWorkType nomad = Dragger.CurrentDraggable;
+				DraggableWorkType nomad = DragManager.CurrentDraggable;
 
 				if (nomad.parent == this || nomad.primary)
 				{
 					Vector2 absoluteVector = nomad.primary ? nomad.position + scrollOffset : nomad.position;
 
-					if (draggablesRect.Contains(absoluteVector))
+					if (surfaceRect.Contains(absoluteVector))
 					{
-
-						this.DrawDynamicPosition(draggablesRect, nomad, absoluteVector);
+						this.DrawDynamicPosition(surfaceRect, nomad, absoluteVector.x);
 
 						//Draggable dropped onto surface
 						if (Event.current.type == EventType.MouseUp)
@@ -248,45 +248,13 @@ namespace DD_WorkTab
 			}
 		}
 
-		private void DrawDynamicPosition(Rect listRect, DraggableWorkType nomad, Vector2 absolutePosition)
-		{
-			GUI.color = !this.pawn.story.WorkTypeIsDisabled(nomad.def) ? Color.white : Color.red;
-			Vector2 lineVector = new Vector2(listRect.xMin + (standardSpacing / 2f) - 1f, listRect.yMin + (standardSpacing / 2f));
-
-			if (this.children.Count > 0)
-			{
-				for (int i = this.children.Count - 1; i >= 0; i--)
-				{
-					DraggableWorkType child = this.children[i];
-
-					if (child.position.x < absolutePosition.x)
-					{
-						lineVector.x = child.position.x + (draggableWidth / 2f) + (standardSpacing / 2f) - 1f;
-						lineVector.y = child.position.y - (draggableHeight / 2f) - (standardSpacing / 2f);
-
-						break;
-					}
-				}
-			}
-
-			Rect lineRect = new Rect(lineVector.x, lineVector.y, 2f, draggableHeight + standardSpacing);
-
-			GUI.DrawTexture(lineRect, BaseContent.WhiteTex);
-
-			GUI.color = Color.white; //Reset
-		}
-
-		public PawnSurface()
-		{
-		}
+		public PawnSurface() { }
 
 		public PawnSurface(Pawn pawn)
 		{
 			this.pawn = pawn;
 
-			this.ResetChildrenByVanillaPriorities();
-
-			this.RefreshPawnPriorities();
+			this.ResetPawnWorkByDefaults();
 		}
 
 		public void ExposeData()
