@@ -56,7 +56,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DD_Controller.cs" />
-    <Compile Include="DD_RenderInfo.cs" />
+    <Compile Include="DD_Window.cs" />
+    <Compile Include="DD_WorkTypeInfo.cs" />
     <Compile Include="DragManager.cs" />
     <Compile Include="DD_Enums.cs" />
     <Compile Include="Window_WorkTab.cs" />

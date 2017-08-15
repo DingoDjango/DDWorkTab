@@ -20,12 +20,12 @@ namespace DD_WorkTab
 			{
 				bool foundPawn = false;
 
-				for (int i = 0; i < AllPawnSurfaces.Count; i++)
+				foreach (PawnSurface listSurface in AllPawnSurfaces)
 				{
-					if (AllPawnSurfaces[i].pawn == pawn)
+					if (listSurface.pawn == pawn)
 					{
-						surface = AllPawnSurfaces[i];
-						PawnSurfaceLookup[pawn] = AllPawnSurfaces[i];
+						surface = listSurface;
+						PawnSurfaceLookup[pawn] = listSurface;
 						foundPawn = true;
 
 						break;

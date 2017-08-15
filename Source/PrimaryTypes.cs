@@ -17,13 +17,23 @@ namespace DD_WorkTab
 
 		private const float standardRowHeight = DD_Widgets.StandardRowHeight;
 
-		private static readonly float standardSurfaceWidth = DD_Widgets.StandardSurfaceWidth;
+		private static readonly float standardSurfaceWidth = DD_Widgets.PawnSurfaceWidth;
 
 		private static List<DraggableWorkType> primaryTypes = new List<DraggableWorkType>(); //Draggables source containing all work types
 
 		public static List<DraggableWorkType> PrimaryDraggablesList => primaryTypes;
 
-		public static void DoWorkTabGUI(Rect rect)
+		static PrimaryTypes()
+		{
+			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
+			{
+				DraggableWorkType primeDraggable = new DraggableWorkType(def, null, true);
+
+				primaryTypes.Add(primeDraggable);
+			}
+		}
+
+		public static void DoWorkTabGUI(Rect rect, Vector2 mousePosition)
 		{
 			GUI.color = Color.white;
 			Text.Font = GameFont.Small;
@@ -37,16 +47,14 @@ namespace DD_WorkTab
 				Find.WindowStack.Add(new Window_ColonistStats(DD_Settings.ColonistStatsOnlyVisibleMap));
 			}
 
-			DD_Widgets.Button(ButtonType.DisableAllWork, null, disableWorkRect);
+			DD_Widgets.Button(ButtonType.DisableAllWork, null, disableWorkRect, mousePosition);
 
-			DD_Widgets.Button(ButtonType.ResetAllWork, null, resetWorkRect);
+			DD_Widgets.Button(ButtonType.ResetAllWork, null, resetWorkRect, mousePosition);
 
 			Vector2 positionSetter = new Vector2(compareSkillsRect.xMax + spaceForWorkButtons + standardSpacing + (draggableTextureDiameter / 2f), rect.center.y);
 
-			for (int i = 0; i < primaryTypes.Count; i++)
+			foreach (DraggableWorkType primary in primaryTypes)
 			{
-				DraggableWorkType primary = primaryTypes[i];
-
 				Rect drawRect = positionSetter.ToDraggableRect();
 
 				if (!primary.IsDragging)
@@ -59,10 +67,10 @@ namespace DD_WorkTab
 				//Draw a copied texture in the primary type's natural position
 				else
 				{
-					primary.DrawTexture(drawRect);
+					primary.DrawTexture(drawRect, false);
 				}
 
-				int shiftClick = primary.DoWorkTabGUI();
+				int shiftClick = primary.DoWorkTabGUI(mousePosition);
 
 				//Shift-click functionality to manipulate specific work type priority for all pawns
 				if (shiftClick != 0)
@@ -74,16 +82,6 @@ namespace DD_WorkTab
 				}
 
 				positionSetter.x += draggableTextureDiameter + standardSpacing;
-			}
-		}
-
-		static PrimaryTypes()
-		{
-			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
-			{
-				DraggableWorkType primeDraggable = new DraggableWorkType(def, null, true);
-
-				primaryTypes.Add(primeDraggable);
 			}
 		}
 	}

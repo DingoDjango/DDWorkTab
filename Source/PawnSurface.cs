@@ -19,7 +19,7 @@ namespace DD_WorkTab
 
 		private const float standardRowHeight = DD_Widgets.StandardRowHeight;
 
-		private static readonly float standardSurfaceWidth = DD_Widgets.StandardSurfaceWidth;
+		private static readonly float standardSurfaceWidth = DD_Widgets.PawnSurfaceWidth;
 
 		private List<DraggableWorkType> children = new List<DraggableWorkType>();
 
@@ -47,8 +47,6 @@ namespace DD_WorkTab
 					DraggableWorkType newChild = new DraggableWorkType(def, this, false);
 
 					this.children.Add(newChild);
-
-					this.QuickFindByDef[def] = newChild;
 				}
 			}
 		}
@@ -85,8 +83,6 @@ namespace DD_WorkTab
 					DraggableWorkType newDraggable = new DraggableWorkType(nomad.def, this, false, nomad.position);
 
 					this.children.Add(newDraggable);
-
-					this.QuickFindByDef[nomad.def] = newDraggable;
 				}
 			}
 
@@ -196,15 +192,13 @@ namespace DD_WorkTab
 			this.UpdatePawnPriorities();
 		}
 
-		public void DoWorkTabGUI(Rect surfaceRect, Vector2 scrollOffset)
+		public void DoWorkTabGUI(Rect surfaceRect, Vector2 scrollOffset, Vector2 mousePosition)
 		{
 			//Draw draggables, perform drag checks
 			Vector2 draggablePositionSetter = new Vector2(surfaceRect.xMin + standardSpacing + (draggableTextureDiameter / 2f), surfaceRect.center.y);
 
-			for (int i = 0; i < this.children.Count; i++)
+			foreach (DraggableWorkType draggable in this.children)
 			{
-				DraggableWorkType draggable = this.children[i];
-
 				if (!draggable.IsDragging)
 				{
 					draggable.position = draggablePositionSetter;
@@ -214,7 +208,7 @@ namespace DD_WorkTab
 					DD_Widgets.DrawPassion(this.pawn, draggable.def, draggable.dragRect);
 				}
 
-				draggable.DoWorkTabGUI();
+				draggable.DoWorkTabGUI(mousePosition);
 
 				draggablePositionSetter.x += draggableTextureDiameter + standardSpacing;
 			}

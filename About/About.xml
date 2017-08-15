@@ -4,7 +4,13 @@
 	<author>Dingo</author>
 	<url>https://ludeon.com/forums/index.php?topic=26077</url>
 	<targetVersion>0.17.0</targetVersion>
-	<description>Work in Progress work tab.
+	<description>Replaces the Work tab with an overhauled version incorporating a drag and drop interface.
 
-Includes an options menu (&lt;color=orange&gt;Options > Mod Settings&lt;/color&gt;).</description>
+Includes a Colonist Stats secondary window for easy sorting and stats comparison.
+
+There are tooltips for nearly everything in the new interface, from drag tips to stats, disabilities etc. (similar to the vanilla tab).
+
+Includes an options menu (&lt;color=orange&gt;Options > Mod Settings&lt;/color&gt;).
+
+&lt;color=red&gt;This mod is incompatible with other Work Tab mods.&lt;/color&gt;</description>
 </ModMetaData>

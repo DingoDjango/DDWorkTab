@@ -20,18 +20,9 @@ namespace DD_WorkTab
 
 		public const float StandardRowHeight = 2f * StandardSpacing + DraggableTextureDiameter;
 
-		public static readonly float StandardSurfaceWidth = StandardSpacing + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (DraggableTextureDiameter + StandardSpacing);
+		public static readonly float PawnSurfaceWidth = StandardSpacing + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (DraggableTextureDiameter + StandardSpacing);
 
-		public static float MaxWindowWidth => (float)UI.screenWidth - 10f;
-
-		public static float MaxWindowHeight => (float)UI.screenHeight * 0.75f;
-
-		public static readonly Dictionary<WorkTypeDef, DD_RenderInfo> DraggableAttributes = new Dictionary<WorkTypeDef, DD_RenderInfo>();
-
-		//CachedStrings[string] => cached translation
-		//CachedStrings[WorkTypeDef] => relevant skills for def
-		//CachedStrings[Pawn] => pawn label
-		public static Dictionary<object, string> CachedStrings = new Dictionary<object, string>();
+		public static readonly float TinyTextLineHeight;
 
 		public static readonly Texture2D DraggableOutlineTexture = ContentFinder<Texture2D>.Get("Draggables/DraggableOutline", true);
 
@@ -42,6 +33,10 @@ namespace DD_WorkTab
 		public static readonly Texture2D SortingDescendingIcon = ContentFinder<Texture2D>.Get("UI/Icons/SortingDescending", true); //Vanilla
 
 		public static readonly Texture2D SortingAscendingIcon = ContentFinder<Texture2D>.Get("UI/Icons/Sorting", true); //Vanilla
+
+		public static readonly Texture2D PassionMinorIcon = ContentFinder<Texture2D>.Get("Icons/PassionMinor", true); //Edited vanilla texture
+
+		public static readonly Texture2D PassionMajorIcon = ContentFinder<Texture2D>.Get("Icons/PassionMajor", true); //Edited vanilla texture
 
 		public static readonly Color OutlineColour = new Color(0.6f, 0.6f, 0.6f); //Light grey
 
@@ -59,12 +54,34 @@ namespace DD_WorkTab
 
 		public static readonly Color ExcellentSkillColour = new Color(1f, 0.85f, 0f); /* GOLD http://whenisnlss.com/assets/sounds/GOLD.mp3 */
 
+		public static readonly Dictionary<WorkTypeDef, DD_WorkTypeInfo> WorkDefAttributes = new Dictionary<WorkTypeDef, DD_WorkTypeInfo>();
+
+		//CachedStrings[string] => cached translation
+		//CachedStrings[WorkTypeDef] => relevant skills for def
+		//CachedStrings[Pawn] => pawn label
+		public static Dictionary<object, string> CachedStrings = new Dictionary<object, string>();
+
+		public static float MaxWindowWidth => (float)UI.screenWidth - 10f;
+
+		public static float MaxWindowHeight => (float)UI.screenHeight * 0.75f;
+
 		static DD_Widgets()
 		{
 			foreach (WorkTypeDef def in DefDatabase<WorkTypeDef>.AllDefs)
 			{
-				DraggableAttributes[def] = new DD_RenderInfo(ContentFinder<Texture2D>.Get("Draggables/" + def.defName, true), //Greyscale texture
-					ContentFinder<Texture2D>.Get("Draggables/Primaries/" + def.defName, true)); //Coloured texture (for primaries)
+				HashSet<PawnCapacityDef> capacities = new HashSet<PawnCapacityDef>();
+
+				foreach (WorkGiverDef workGiver in def.workGiversByPriority)
+				{
+					foreach (PawnCapacityDef capacity in workGiver.requiredCapacities)
+					{
+						capacities.Add(capacity);
+					}
+				}
+
+				WorkDefAttributes[def] = new DD_WorkTypeInfo(ContentFinder<Texture2D>.Get("Draggables/" + def.defName, true), //Greyscale texture
+					ContentFinder<Texture2D>.Get("Draggables/Primaries/" + def.defName, true), //Coloured texture (for primaries)
+					capacities);
 
 				if (def.relevantSkills.Count > 0)
 				{
@@ -79,9 +96,14 @@ namespace DD_WorkTab
 				}
 			}
 
+			//Strings from vanilla
 			CachedStrings["ClickToSortByThisColumn"] = "\n\n" + "ClickToSortByThisColumn".Translate();
 			CachedStrings["RelevantSkills"] = "\n\n" + "RelevantSkills".Translate();
 			CachedStrings["ClickToJumpTo"] = "ClickToJumpTo".Translate() + "\n\n";
+
+			Text.Font = GameFont.Tiny;
+			TinyTextLineHeight = Text.LineHeight;
+			Text.Font = GameFont.Small; //Reset
 		}
 
 		//Provides a square whose center point is the provided position
@@ -139,7 +161,7 @@ namespace DD_WorkTab
 			GUI.color = Color.white; //Reset
 		}
 
-		public static void DrawBoxOutline(Rect rect)
+		public static void BoxOutline(Rect rect)
 		{
 			GUI.color = OutlineColour;
 
@@ -151,7 +173,7 @@ namespace DD_WorkTab
 			GUI.color = Color.white; //Reset
 		}
 
-		public static void DrawListSeparator(Rect rect, float verticalPos)
+		public static void ListSeparator(Rect rect, float verticalPos)
 		{
 			GUI.color = ListSeparatorColour;
 			Rect position = new Rect(rect.x, verticalPos, rect.width, 1f);
@@ -161,9 +183,8 @@ namespace DD_WorkTab
 			GUI.color = Color.white; //Reset
 		}
 
-		public static void DrawPawnLabel(Rect rect, Pawn pawn)
+		public static void PawnLabel(Rect rect, Pawn pawn, Vector2 mousePosition)
 		{
-			GUI.color = Color.white;
 			Text.Font = GameFont.Small;
 			Text.Anchor = TextAnchor.MiddleLeft;
 			Text.WordWrap = false;
@@ -173,7 +194,7 @@ namespace DD_WorkTab
 			Text.Anchor = TextAnchor.UpperLeft; //Reset
 			Text.WordWrap = true; //Reset
 
-			if (Mouse.IsOver(rect))
+			if (rect.Contains(mousePosition))
 			{
 				if (Event.current.type == EventType.MouseDown && Event.current.button == 0)
 				{
@@ -197,27 +218,24 @@ namespace DD_WorkTab
 
 			if (passion > Passion.None)
 			{
-				GUI.color = Color.white;
-
-				Rect passionRect = new Rect(drawRect)
-				{
-					xMin = drawRect.center.x,
-					yMin = drawRect.center.y
-				};
+				Rect passionRect = new Rect(drawRect.center.x, drawRect.center.y, 14f, 14f);
+				Texture passionTex;
 
 				if (passion == Passion.Minor)
 				{
-					GUI.DrawTexture(passionRect, WidgetsWork.PassionWorkboxMinorIcon);
+					passionTex = PassionMinorIcon;
 				}
 
-				if (passion == Passion.Major)
+				else
 				{
-					GUI.DrawTexture(passionRect, WidgetsWork.PassionWorkboxMajorIcon);
+					passionTex = PassionMajorIcon;
 				}
+
+				GUI.DrawTexture(passionRect, passionTex, ScaleMode.ScaleToFit);
 			}
 		}
 
-		public static string GetDraggableTooltip(WorkTypeDef def, bool statsWindow, bool primary, Pawn worker)
+		public static string DraggableTooltip(WorkTypeDef def, bool statsWindow, bool primary, Pawn worker)
 		{
 			StringBuilder tooltip = new StringBuilder(def.labelShort);
 
@@ -228,7 +246,7 @@ namespace DD_WorkTab
 
 				if (!statsWindow)
 				{
-					tooltip.Append("DD_WorkTab_PrimeDraggable_DragTip".CachedTranslation(new string[] { def.gerundLabel }));
+					tooltip.Append("DD_WorkTab_PrimeDraggable_DragTip".CachedTranslation());
 				}
 
 				else
@@ -264,7 +282,7 @@ namespace DD_WorkTab
 			return tooltip.ToString();
 		}
 
-		public static void Button(ButtonType buttonType, PawnSurface surface, Rect buttonRect)
+		public static void Button(ButtonType buttonType, PawnSurface surface, Rect buttonRect, Vector2 mousePosition)
 		{
 			DraggableOutline(buttonRect, MediumSkillColour);
 
@@ -286,7 +304,7 @@ namespace DD_WorkTab
 					break;
 			}
 
-			if (Mouse.IsOver(buttonRect))
+			if (buttonRect.Contains(mousePosition))
 			{
 				string tooltip;
 				string text;
@@ -386,9 +404,17 @@ namespace DD_WorkTab
 		}
 
 		//RimWorld.PawnColumnWorker_WorkPriority equivalent
-		public static bool CapacitiesCompromisedForWorkType(Pawn p, WorkTypeDef work)
+		public static bool CapacitiesCompromisedForWorkType(Pawn p, WorkTypeDef def)
 		{
-			return work.workGiversByPriority.Any(wg => wg.requiredCapacities.Any(rc => !p.health.capacities.CapableOf(rc)));
+			foreach (PawnCapacityDef capDef in WorkDefAttributes[def].allRequiredCapacities)
+			{
+				if (!p.health.capacities.CapableOf(capDef))
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 	}
 }

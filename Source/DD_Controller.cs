@@ -10,6 +10,7 @@ namespace DD_WorkTab
 		public DD_Controller(ModContentPack content) : base(content)
 		{
 			HarmonyInstance harmony = HarmonyInstance.Create("dingo.rimworld.dd_worktab");
+
 			harmony.PatchAll(Assembly.GetExecutingAssembly());
 
 			this.GetSettings<DD_Settings>();

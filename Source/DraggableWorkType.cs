@@ -1,5 +1,4 @@
-﻿using RimWorld;
-using UnityEngine;
+﻿using UnityEngine;
 using Verse;
 
 namespace DD_WorkTab
@@ -26,77 +25,6 @@ namespace DD_WorkTab
 		public WorkTypeDef def;
 
 		public bool IsDragging => this.draggingNow;
-
-		public int DoWorkTabGUI()
-		{
-			int shiftClicked = 0;
-
-			this.DrawTexture(this.dragRect);
-
-			if (Event.current.type == EventType.MouseUp)
-			{
-				this.draggingNow = false;
-			}
-
-			if (Mouse.IsOver(dragRect))
-			{
-				if (Event.current.type == EventType.MouseDown)
-				{
-					if (!Event.current.shift)
-					{
-						if (Event.current.button == 0)
-						{
-							this.draggingNow = true;
-							this.dragOffsetVector = Event.current.mousePosition - this.position;
-
-							DragManager.CurrentDraggable = this;
-						}
-					}
-
-					else
-					{
-						if (Event.current.button == 0)
-						{
-							shiftClicked = -1;
-						}
-
-						if (Event.current.button == 1)
-						{
-							shiftClicked = 1;
-						}
-					}
-
-					Event.current.Use();
-				}
-
-				if (!DragManager.Dragging)
-				{
-					Widgets.DrawHighlight(this.dragRect);
-
-					Pawn worker = !this.primary ? this.parent.pawn : null;
-
-					TooltipHandler.TipRegion(this.dragRect, DD_Widgets.GetDraggableTooltip(this.def, false, this.primary, worker));
-				}
-			}
-
-			if (draggingNow)
-			{
-				this.position = Event.current.mousePosition - this.dragOffsetVector;
-
-				this.dragRect = this.position.ToDraggableRect();
-			}
-
-			return shiftClicked;
-		}
-
-		public void DrawTexture(Rect drawRect)
-		{
-			DD_Widgets.DraggableOutline(drawRect, this.GetDynamicColour());
-
-			GUI.DrawTexture(drawRect.ContractedBy(2f), this.texture);
-
-			GUI.color = Color.white; //Reset
-		}
 
 		private Color GetDynamicColour()
 		{
@@ -142,7 +70,91 @@ namespace DD_WorkTab
 
 		private void FetchUtilityValues()
 		{
-			this.texture = !this.primary ? DD_Widgets.DraggableAttributes[this.def].texture : DD_Widgets.DraggableAttributes[this.def].primaryTexture;
+			if (!this.primary)
+			{
+				this.texture = DD_Widgets.WorkDefAttributes[this.def].texture;
+
+				this.parent.QuickFindByDef[this.def] = this;
+			}
+
+			else
+			{
+				this.texture = DD_Widgets.WorkDefAttributes[this.def].primaryTexture;
+			}
+		}
+
+		public void DrawTexture(Rect drawRect, bool drawPassion)
+		{
+			DD_Widgets.DraggableOutline(drawRect, this.GetDynamicColour());
+
+			GUI.DrawTexture(drawRect.ContractedBy(2f), this.texture);
+
+			if (drawPassion)
+			{
+				DD_Widgets.DrawPassion(this.parent.pawn, this.def, drawRect);
+			}
+		}
+
+		public int DoWorkTabGUI(Vector2 mousePosition)
+		{
+			int shiftClicked = 0;
+
+			this.DrawTexture(this.dragRect, !this.primary);
+
+			if (Event.current.type == EventType.MouseUp)
+			{
+				this.draggingNow = false;
+			}
+
+			if (dragRect.Contains(mousePosition))
+			{
+				if (Event.current.type == EventType.MouseDown)
+				{
+					if (!Event.current.shift)
+					{
+						if (Event.current.button == 0)
+						{
+							this.draggingNow = true;
+							this.dragOffsetVector = mousePosition - this.position;
+
+							DragManager.CurrentDraggable = this;
+						}
+					}
+
+					else
+					{
+						if (Event.current.button == 0)
+						{
+							shiftClicked = -1;
+						}
+
+						if (Event.current.button == 1)
+						{
+							shiftClicked = 1;
+						}
+					}
+
+					Event.current.Use();
+				}
+
+				if (!DragManager.Dragging)
+				{
+					Widgets.DrawHighlight(this.dragRect);
+
+					Pawn worker = !this.primary ? this.parent.pawn : null;
+
+					TooltipHandler.TipRegion(this.dragRect, DD_Widgets.DraggableTooltip(this.def, false, this.primary, worker));
+				}
+			}
+
+			if (draggingNow)
+			{
+				this.position = mousePosition - this.dragOffsetVector;
+
+				this.dragRect = this.position.ToDraggableRect();
+			}
+
+			return shiftClicked;
 		}
 
 		public DraggableWorkType(PawnSurface surface)
@@ -166,8 +178,6 @@ namespace DD_WorkTab
 			if (Scribe.mode == LoadSaveMode.LoadingVars)
 			{
 				this.FetchUtilityValues();
-
-				this.parent.QuickFindByDef[this.def] = this;
 			}
 		}
 	}

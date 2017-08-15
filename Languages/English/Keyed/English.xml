@@ -4,10 +4,10 @@
 	<!-- Settings window -->
 
 	<DD_WorkTab_UseSounds_Label>Use sounds</DD_WorkTab_UseSounds_Label>
-	<DD_WorkTab_UseSounds_Desc>Play sounds when performing various actions, such as adding/removing work or displaying messages.</DD_WorkTab_UseSounds_Desc>
+	<DD_WorkTab_UseSounds_Desc>Play sounds when performing various actions, such as adding/removing work or when messages are displayed.</DD_WorkTab_UseSounds_Desc>
 
 	<DD_WorkTab_ShowPrompt_Label>Show prompts</DD_WorkTab_ShowPrompt_Label>
-	<DD_WorkTab_ShowPrompt_Desc>When disabling or resetting work using the appropriate buttons, open an 'Are you sure?' dialogue window.</DD_WorkTab_ShowPrompt_Desc>
+	<DD_WorkTab_ShowPrompt_Desc>When disabling or resetting work via buttons, open an 'Are you sure?' dialogue window.</DD_WorkTab_ShowPrompt_Desc>
 
 	<DD_WorkTab_MessageOnRemoval_Label>Show message on work removal</DD_WorkTab_MessageOnRemoval_Label>
 	<DD_WorkTab_MessageOnRemoval_Desc>If a work type is dragged away from a colonist's work list (and thus removed), display a message.</DD_WorkTab_MessageOnRemoval_Desc>
@@ -26,7 +26,7 @@
 
 	<DD_WorkTab_ButtonColonistStats>Compare Skills</DD_WorkTab_ButtonColonistStats>
 
-	<DD_WorkTab_PrimeDraggable_DragTip>\n\nDrag into any row to add &lt;color=orange&gt;{0}&lt;/color&gt; (or update priority if it's already assigned).\n\nIf it can't be assigned, it will be indicated by a red line.\n\nShift-click to adjust priority for all assigned colonists.</DD_WorkTab_PrimeDraggable_DragTip>
+	<DD_WorkTab_PrimeDraggable_DragTip>\n\nDrag into any row to add/re-prioritize this work type.\n\nShift-click to adjust priority for all assigned colonists.</DD_WorkTab_PrimeDraggable_DragTip>
 
 	<DD_WorkTab_PawnDraggable_DragTip>\n\nDrag left or right to adjust priority.\n\nDrag out of this row to remove.</DD_WorkTab_PawnDraggable_DragTip>
 
@@ -46,9 +46,9 @@
 	<DD_WorkTab_ColonistStats_ToggleButton_VisibleMap>Current Map</DD_WorkTab_ColonistStats_ToggleButton_VisibleMap>
 	<DD_WorkTab_ColonistStats_ToggleButton_AllMaps>All Maps</DD_WorkTab_ColonistStats_ToggleButton_AllMaps>
 
-	<DD_WorkTab_ColonistStats_CurrentlyUnassigned>\n\nNAME is currently unassigned from &lt;color=orange&gt;{0}&lt;/color&gt;. HECAP is capable of doing it.</DD_WorkTab_ColonistStats_CurrentlyUnassigned>
+	<DD_WorkTab_ColonistStats_CurrentlyUnassigned>\n\nNAME is not assigned to this work type.</DD_WorkTab_ColonistStats_CurrentlyUnassigned>
 
-	<DD_WorkTab_ColonistStats_WorkTypeForbidden>Cannot assign NAME to &lt;color=orange&gt;{0}&lt;/color&gt;. HECAP is incapable of doing it.</DD_WorkTab_ColonistStats_WorkTypeForbidden>
+	<DD_WorkTab_ColonistStats_WorkTypeForbidden>Cannot assign NAME to this work type. HECAP is incapable of doing it.</DD_WorkTab_ColonistStats_WorkTypeForbidden>
 
 	<DD_WorkTab_DisableWorkVisibleMap_Tooltip>Disable All Work for Everyone</DD_WorkTab_DisableWorkVisibleMap_Tooltip>
 	<DD_WorkTab_DisableWorkVisibleMap_Title>Disable All Work (All Visible Colonists)</DD_WorkTab_DisableWorkVisibleMap_Title>
