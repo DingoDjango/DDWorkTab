@@ -54,7 +54,7 @@ namespace DD_WorkTab
 			return count;
 		}
 
-		protected override IEnumerable<PawnSurface> CurrentSurfacesList()
+		protected override IEnumerable<PawnSurface> GetCachedSurfaces()
 		{
 			IEnumerable<Pawn> pawnsList = DD_Settings.ColonistStatsOnlyVisibleMap ? this.currentMap.mapPawns.FreeColonists : PawnsFinder.AllMaps_FreeColonists;
 
@@ -89,6 +89,8 @@ namespace DD_WorkTab
 			Rect scrollViewOutRect = scrollViewBox.ContractedBy(standardSpacing);
 			Rect scrollViewInnerRect = new Rect(scrollViewOutRect.x, scrollViewOutRect.y, spaceForPawnLabel + pawnSurfaceWidth, this.cachedColonistCount * standardRowHeight);
 
+			Vector2 primePositionVector = new Vector2(primaryTypesRect.x + standardSpacing + (draggableTextureDiameter / 2f), primaryTypesRect.center.y);
+
 			Text.Font = GameFont.Small;
 
 			if (Widgets.ButtonText(toggleMapRect.ContractedBy(standardSpacing), this.ToggleButtonText, true, false, true))
@@ -103,9 +105,7 @@ namespace DD_WorkTab
 				}
 			}
 
-			Vector2 primePositionVector = new Vector2(primaryTypesRect.x + standardSpacing + (draggableTextureDiameter / 2f), primaryTypesRect.center.y);
-
-			foreach (DraggableWorkType prime in PrimaryTypes.PrimaryDraggablesList)
+			foreach (DraggableWorkType prime in PrimaryTypes.primaryDraggablesList)
 			{
 				primePositions[prime.def] = primePositionVector.x;
 
@@ -223,8 +223,9 @@ namespace DD_WorkTab
 
 				DD_Widgets.PawnLabel(nameRect, pawn, this.listMousePosition);
 
-				foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
+				foreach (DraggableWorkType primary in PrimaryTypes.primaryDraggablesList)
 				{
+					WorkTypeDef def = primary.def;
 					Rect drawRect = new Vector2(primePositions[def], surfaceRectCenterY).ToDraggableRect();
 					int tooltipSelector = 1;
 

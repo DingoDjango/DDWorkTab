@@ -8,23 +8,36 @@ namespace DD_WorkTab
 
 	public class DraggableWorkType : IExposable
 	{
-		private Vector2 dragOffsetVector;
-
-		private bool draggingNow;
-
 		private Texture2D texture;
+
+		private Vector2 dragOffsetVector;
 
 		public readonly bool primary;
 
 		public readonly PawnSurface parent;
 
+		public WorkTypeDef def;
+
 		public Vector2 position;
 
 		public Rect dragRect;
 
-		public WorkTypeDef def;
+		public bool draggingNow;
 
-		public bool IsDragging => this.draggingNow;
+		private void FetchUtilityValues()
+		{
+			if (!this.primary)
+			{
+				this.texture = DD_Widgets.WorkDefAttributes[this.def].texture;
+
+				this.parent.QuickFindByDef[this.def] = this;
+			}
+
+			else
+			{
+				this.texture = DD_Widgets.WorkDefAttributes[this.def].primaryTexture;
+			}
+		}
 
 		private Color GetDynamicColour()
 		{
@@ -68,21 +81,6 @@ namespace DD_WorkTab
 			return DD_Widgets.ExcellentSkillColour; //16-20
 		}
 
-		private void FetchUtilityValues()
-		{
-			if (!this.primary)
-			{
-				this.texture = DD_Widgets.WorkDefAttributes[this.def].texture;
-
-				this.parent.QuickFindByDef[this.def] = this;
-			}
-
-			else
-			{
-				this.texture = DD_Widgets.WorkDefAttributes[this.def].primaryTexture;
-			}
-		}
-
 		public void DrawTexture(Rect drawRect, bool drawPassion)
 		{
 			DD_Widgets.DraggableOutline(drawRect, this.GetDynamicColour());
@@ -97,7 +95,7 @@ namespace DD_WorkTab
 
 		public int DoWorkTabGUI(Vector2 mousePosition)
 		{
-			int shiftClicked = 0;
+			int clickInt = 0;
 
 			this.DrawTexture(this.dragRect, !this.primary);
 
@@ -125,12 +123,12 @@ namespace DD_WorkTab
 					{
 						if (Event.current.button == 0)
 						{
-							shiftClicked = -1;
+							clickInt = -1;
 						}
 
 						if (Event.current.button == 1)
 						{
-							shiftClicked = 1;
+							clickInt = 1;
 						}
 					}
 
@@ -154,7 +152,7 @@ namespace DD_WorkTab
 				this.dragRect = this.position.ToDraggableRect();
 			}
 
-			return shiftClicked;
+			return clickInt;
 		}
 
 		public DraggableWorkType(PawnSurface surface)

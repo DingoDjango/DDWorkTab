@@ -6,11 +6,11 @@ namespace DD_WorkTab
 {
 	public struct DD_WorkTypeInfo
 	{
-		public Texture2D texture;
+		public readonly Texture2D texture;
 
-		public Texture2D primaryTexture;
+		public readonly Texture2D primaryTexture;
 
-		public HashSet<PawnCapacityDef> allRequiredCapacities;
+		public readonly HashSet<PawnCapacityDef> allRequiredCapacities;
 
 		public DD_WorkTypeInfo(Texture2D tex, Texture2D primaryTex, HashSet<PawnCapacityDef> capacities)
 		{

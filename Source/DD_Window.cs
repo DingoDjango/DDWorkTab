@@ -30,7 +30,7 @@ namespace DD_WorkTab
 
 		protected Map currentMap = Find.VisibleMap;
 
-		protected IEnumerable<PawnSurface> cachedPawnSurfaces;
+		protected List<PawnSurface> cachedPawnSurfaces;
 
 		protected int cachedColonistCount = 1;
 
@@ -42,10 +42,12 @@ namespace DD_WorkTab
 
 		protected abstract int GetColonistCount();
 
-		protected abstract IEnumerable<PawnSurface> CurrentSurfacesList();
+		protected abstract IEnumerable<PawnSurface> GetCachedSurfaces();
 
 		public override void PreOpen()
 		{
+			this.currentMap = Find.VisibleMap;
+
 			if (this.cachedColonistCount != this.GetColonistCount())
 			{
 				this.mustRecacheColonists = true;
@@ -54,22 +56,13 @@ namespace DD_WorkTab
 
 		public override void WindowOnGUI()
 		{
-			Map visibleMap = Find.VisibleMap;
-
-			if (this.currentMap != visibleMap)
-			{
-				this.mustRecacheColonists = true;
-
-				this.currentMap = visibleMap;
-			}
-
 			if (this.mustRecacheColonists)
 			{
 				this.mustRecacheColonists = false;
 
 				this.cachedColonistCount = this.GetColonistCount();
 
-				this.cachedPawnSurfaces = this.CurrentSurfacesList().ToArray();
+				this.cachedPawnSurfaces = this.GetCachedSurfaces().ToList();
 			}
 
 			base.WindowOnGUI();
@@ -80,15 +73,15 @@ namespace DD_WorkTab
 			base.SetInitialSizeAndPosition();
 
 			this.eventMousePosition = Event.current.mousePosition;
-			this.listMousePosition = eventMousePosition + this.scrollPosition;
+			this.listMousePosition = this.eventMousePosition + this.scrollPosition;
 		}
 
 		public override Vector2 RequestedTabSize
 		{
 			get
 			{
-				float width = NaturalWindowWidth();
-				float height = NaturalWindowHeight();
+				float width = this.NaturalWindowWidth();
+				float height = this.NaturalWindowHeight();
 				float maxWidth = DD_Widgets.MaxWindowWidth;
 				float maxHeight = DD_Widgets.MaxWindowHeight;
 

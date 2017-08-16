@@ -27,8 +27,6 @@ namespace DD_WorkTab
 
 		public Pawn pawn;
 
-		public List<DraggableWorkType> DraggablesList => this.children;
-
 		private void SortChildrenByPosition()
 		{
 			this.children = this.children.OrderBy(child => child.position.x).ToList();
@@ -40,11 +38,11 @@ namespace DD_WorkTab
 
 			this.QuickFindByDef.Clear();
 
-			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
+			foreach (DraggableWorkType primary in PrimaryTypes.primaryDraggablesList)
 			{
-				if (!this.pawn.story.WorkTypeIsDisabled(def))
+				if (!this.pawn.story.WorkTypeIsDisabled(primary.def))
 				{
-					DraggableWorkType newChild = new DraggableWorkType(def, this, false);
+					DraggableWorkType newChild = new DraggableWorkType(primary.def, this, false);
 
 					this.children.Add(newChild);
 				}
@@ -199,7 +197,7 @@ namespace DD_WorkTab
 
 			foreach (DraggableWorkType draggable in this.children)
 			{
-				if (!draggable.IsDragging)
+				if (!draggable.draggingNow)
 				{
 					draggable.position = draggablePositionSetter;
 

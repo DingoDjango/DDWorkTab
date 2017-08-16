@@ -69,19 +69,19 @@ namespace DD_WorkTab
 		{
 			foreach (WorkTypeDef def in DefDatabase<WorkTypeDef>.AllDefs)
 			{
-				HashSet<PawnCapacityDef> capacities = new HashSet<PawnCapacityDef>();
+				HashSet<PawnCapacityDef> allRequiredCapacities = new HashSet<PawnCapacityDef>();
 
 				foreach (WorkGiverDef workGiver in def.workGiversByPriority)
 				{
 					foreach (PawnCapacityDef capacity in workGiver.requiredCapacities)
 					{
-						capacities.Add(capacity);
+						allRequiredCapacities.Add(capacity);
 					}
 				}
 
 				WorkDefAttributes[def] = new DD_WorkTypeInfo(ContentFinder<Texture2D>.Get("Draggables/" + def.defName, true), //Greyscale texture
 					ContentFinder<Texture2D>.Get("Draggables/Primaries/" + def.defName, true), //Coloured texture (for primaries)
-					capacities);
+					allRequiredCapacities);
 
 				if (def.relevantSkills.Count > 0)
 				{
@@ -219,17 +219,7 @@ namespace DD_WorkTab
 			if (passion > Passion.None)
 			{
 				Rect passionRect = new Rect(drawRect.center.x, drawRect.center.y, 14f, 14f);
-				Texture passionTex;
-
-				if (passion == Passion.Minor)
-				{
-					passionTex = PassionMinorIcon;
-				}
-
-				else
-				{
-					passionTex = PassionMajorIcon;
-				}
+				Texture passionTex = passion == Passion.Minor ? PassionMinorIcon : PassionMajorIcon;
 
 				GUI.DrawTexture(passionRect, passionTex, ScaleMode.ScaleToFit);
 			}

@@ -19,9 +19,7 @@ namespace DD_WorkTab
 
 		private static readonly float standardSurfaceWidth = DD_Widgets.PawnSurfaceWidth;
 
-		private static List<DraggableWorkType> primaryTypes = new List<DraggableWorkType>(); //Draggables source containing all work types
-
-		public static List<DraggableWorkType> PrimaryDraggablesList => primaryTypes;
+		public static readonly List<DraggableWorkType> primaryDraggablesList = new List<DraggableWorkType>(); //Draggables source containing all work types
 
 		static PrimaryTypes()
 		{
@@ -29,7 +27,7 @@ namespace DD_WorkTab
 			{
 				DraggableWorkType primeDraggable = new DraggableWorkType(def, null, true);
 
-				primaryTypes.Add(primeDraggable);
+				primaryDraggablesList.Add(primeDraggable);
 			}
 		}
 
@@ -42,6 +40,8 @@ namespace DD_WorkTab
 			Rect disableWorkRect = new Rect(compareSkillsRect.xMax + standardSpacing, compareSkillsRect.y, draggableTextureDiameter, draggableTextureDiameter);
 			Rect resetWorkRect = new Rect(disableWorkRect.xMax + standardSpacing, disableWorkRect.y, draggableTextureDiameter, draggableTextureDiameter);
 
+			Vector2 positionSetter = new Vector2(compareSkillsRect.xMax + spaceForWorkButtons + standardSpacing + (draggableTextureDiameter / 2f), rect.center.y);
+
 			if (Widgets.ButtonText(compareSkillsRect, "DD_WorkTab_ButtonColonistStats".CachedTranslation(), true, false, true))
 			{
 				Find.WindowStack.Add(new Window_ColonistStats(DD_Settings.ColonistStatsOnlyVisibleMap));
@@ -51,13 +51,11 @@ namespace DD_WorkTab
 
 			DD_Widgets.Button(ButtonType.ResetAllWork, null, resetWorkRect, mousePosition);
 
-			Vector2 positionSetter = new Vector2(compareSkillsRect.xMax + spaceForWorkButtons + standardSpacing + (draggableTextureDiameter / 2f), rect.center.y);
-
-			foreach (DraggableWorkType primary in primaryTypes)
+			foreach (DraggableWorkType primary in primaryDraggablesList)
 			{
 				Rect drawRect = positionSetter.ToDraggableRect();
 
-				if (!primary.IsDragging)
+				if (!primary.draggingNow)
 				{
 					primary.position = positionSetter;
 
@@ -70,14 +68,14 @@ namespace DD_WorkTab
 					primary.DrawTexture(drawRect, false);
 				}
 
-				int shiftClick = primary.DoWorkTabGUI(mousePosition);
+				int clickInt = primary.DoWorkTabGUI(mousePosition);
 
 				//Shift-click functionality to manipulate specific work type priority for all pawns
-				if (shiftClick != 0)
+				if (clickInt != 0)
 				{
 					foreach (Pawn pawn in Find.VisibleMap.mapPawns.FreeColonists)
 					{
-						DragManager.GetPawnSurface(pawn).InsertFromPrimaryShiftClick(shiftClick, primary.def);
+						DragManager.GetPawnSurface(pawn).InsertFromPrimaryShiftClick(clickInt, primary.def);
 					}
 				}
 

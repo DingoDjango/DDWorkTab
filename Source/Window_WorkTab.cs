@@ -31,7 +31,7 @@ namespace DD_WorkTab
 			return count;
 		}
 
-		protected override IEnumerable<PawnSurface> CurrentSurfacesList()
+		protected override IEnumerable<PawnSurface> GetCachedSurfaces()
 		{
 			foreach (Pawn pawn in this.currentMap.mapPawns.FreeColonists.OrderBy(p => p.CachedPawnLabel()))
 			{
