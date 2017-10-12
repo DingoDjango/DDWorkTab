@@ -14,7 +14,7 @@ namespace DD_WorkTab
 
 		protected const float spaceForWorkButtons = DD_Widgets.SpaceForWorkButtons;
 
-		protected const float standardSpacing = DD_Widgets.StandardSpacing;
+		protected const float standardSpacing = DD_Widgets.ShortSpacing;
 
 		protected const float standardRowHeight = DD_Widgets.StandardRowHeight;
 
@@ -58,11 +58,11 @@ namespace DD_WorkTab
 		{
 			if (this.mustRecacheColonists)
 			{
-				this.mustRecacheColonists = false;
-
 				this.cachedColonistCount = this.GetColonistCount();
 
 				this.cachedPawnSurfaces = this.GetCachedSurfaces().ToList();
+
+				this.mustRecacheColonists = false;
 			}
 
 			base.WindowOnGUI();
@@ -108,7 +108,6 @@ namespace DD_WorkTab
 		public DD_Window()
 		{
 			this.layer = WindowLayer.GameUI;
-			this.closeOnClickedOutside = true;
 			this.preventCameraMotion = false;
 		}
 	}

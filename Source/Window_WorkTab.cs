@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 using Verse;
@@ -57,6 +58,10 @@ namespace DD_WorkTab
 
 		public override void DoWindowContents(Rect inRect)
 		{
+#if DEBUG
+			Stopwatch msProfile = Stopwatch.StartNew();
+#endif
+
 			base.DoWindowContents(inRect);
 
 			Rect indicatorsRect = new Rect(inRect.x + standardSpacing + spaceForPawnLabel + spaceForWorkButtons, inRect.y, inRect.width - 2 * standardSpacing - spaceForPawnLabel - spaceForWorkButtons, DD_Widgets.TinyTextLineHeight);
@@ -67,7 +72,7 @@ namespace DD_WorkTab
 
 			this.DrawPriorityIndicators(indicatorsRect);
 
-			PrimaryTypes.DoWorkTabGUI(primaryTypesRect, this.eventMousePosition);
+			DD_Widgets.PrimaryTypesWorkTabGUI(primaryTypesRect, this.eventMousePosition);
 
 			DD_Widgets.BoxOutline(scrollViewBox);
 
@@ -77,8 +82,10 @@ namespace DD_WorkTab
 			float currentVerticalPosition = scrollViewInnerRect.yMin;
 			bool firstPawnDrawn = false;
 
-			foreach (PawnSurface surface in this.cachedPawnSurfaces)
+			for (int i = 0; i < this.cachedPawnSurfaces.Count; i++)
 			{
+				PawnSurface surface = this.cachedPawnSurfaces[i];
+
 				if (firstPawnDrawn)
 				{
 					DD_Widgets.ListSeparator(scrollViewInnerRect, currentVerticalPosition);
@@ -115,6 +122,11 @@ namespace DD_WorkTab
 			{
 				this.invalidDrag = true;
 			}
+
+#if DEBUG
+			msProfile.Stop();
+			Log.Message($"WorkTab_Frame_{Time.frameCount}_{Event.current.type.ToString()}: {msProfile.ElapsedMilliseconds}ms");
+#endif
 		}
 
 		public override void PostClose()

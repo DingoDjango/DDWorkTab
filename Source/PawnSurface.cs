@@ -15,7 +15,7 @@ namespace DD_WorkTab
 
 		private const float spaceForWorkButtons = DD_Widgets.SpaceForWorkButtons;
 
-		private const float standardSpacing = DD_Widgets.StandardSpacing;
+		private const float standardSpacing = DD_Widgets.ShortSpacing;
 
 		private const float standardRowHeight = DD_Widgets.StandardRowHeight;
 
@@ -38,11 +38,13 @@ namespace DD_WorkTab
 
 			this.QuickFindByDef.Clear();
 
-			foreach (DraggableWorkType primary in PrimaryTypes.primaryDraggablesList)
+			for (int i = 0; i < DD_Widgets.PrimaryDraggablesList.Count; i++)
 			{
-				if (!this.pawn.story.WorkTypeIsDisabled(primary.def))
+				WorkTypeDef primaryDef = DD_Widgets.PrimaryDraggablesList[i].def;
+
+				if (!this.pawn.story.WorkTypeIsDisabled(primaryDef))
 				{
-					DraggableWorkType newChild = new DraggableWorkType(primary.def, this, false);
+					DraggableWorkType newChild = new DraggableWorkType(primaryDef, this, false);
 
 					this.children.Add(newChild);
 				}
@@ -130,26 +132,30 @@ namespace DD_WorkTab
 		private void DrawDynamicPosition(Rect listRect, DraggableWorkType nomad, float xVector)
 		{
 			GUI.color = !this.pawn.story.WorkTypeIsDisabled(nomad.def) ? Color.white : Color.red;
-			float xPosition = listRect.xMin + (standardSpacing / 2f) - 1f;
-			float yPosition = listRect.yMin + (standardSpacing / 2f);
+			int childrenCount = this.children.Count;
+			float xPosition = 0f;
 
-			if (this.children.Count > 0)
+			if (childrenCount > 0)
 			{
-				for (int i = this.children.Count - 1; i >= 0; i--)
+				for (int i = childrenCount - 1; i >= 0; i--)
 				{
 					DraggableWorkType child = this.children[i];
 
 					if (child.position.x < xVector)
 					{
-						xPosition = child.position.x + (draggableTextureDiameter / 2f) + (standardSpacing / 2f) - 1f;
-						yPosition = child.position.y - (draggableTextureDiameter / 2f) - (standardSpacing / 2f);
+						xPosition = child.position.x + draggableTextureDiameter / 2f + standardSpacing / 2f - 1f;
 
 						break;
 					}
 				}
 			}
 
-			Rect lineRect = new Rect(xPosition, yPosition, 2f, draggableTextureDiameter + standardSpacing);
+			if (xPosition == 0f)
+			{
+				xPosition = listRect.xMin + (standardSpacing / 2f) - 1f;
+			}
+
+			Rect lineRect = new Rect(xPosition, listRect.yMin + (standardSpacing / 2f), 2f, draggableTextureDiameter + standardSpacing);
 
 			GUI.DrawTexture(lineRect, BaseContent.WhiteTex);
 
@@ -193,17 +199,17 @@ namespace DD_WorkTab
 		public void DoWorkTabGUI(Rect surfaceRect, Vector2 scrollOffset, Vector2 mousePosition)
 		{
 			//Draw draggables, perform drag checks
-			Vector2 draggablePositionSetter = new Vector2(surfaceRect.xMin + standardSpacing + (draggableTextureDiameter / 2f), surfaceRect.center.y);
+			Vector2 draggablePositionSetter = new Vector2(surfaceRect.xMin + standardSpacing + draggableTextureDiameter / 2f, surfaceRect.center.y);
 
-			foreach (DraggableWorkType draggable in this.children)
+			for (int j = 0; j < this.children.Count; j++)
 			{
+				DraggableWorkType draggable = this.children[j];
+
 				if (!draggable.draggingNow)
 				{
 					draggable.position = draggablePositionSetter;
 
 					draggable.dragRect = draggablePositionSetter.ToDraggableRect();
-
-					DD_Widgets.DrawPassion(this.pawn, draggable.def, draggable.dragRect);
 				}
 
 				draggable.DoWorkTabGUI(mousePosition);

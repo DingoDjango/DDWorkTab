@@ -81,13 +81,13 @@ namespace DD_WorkTab
 			return DD_Widgets.ExcellentSkillColour; //16-20
 		}
 
-		public void DrawTexture(Rect drawRect, bool drawPassion)
+		public void DrawTexture(Rect drawRect)
 		{
 			DD_Widgets.DraggableOutline(drawRect, this.GetDynamicColour());
 
 			GUI.DrawTexture(drawRect.ContractedBy(2f), this.texture);
 
-			if (drawPassion)
+			if (!this.primary)
 			{
 				DD_Widgets.DrawPassion(this.parent.pawn, this.def, drawRect);
 			}
@@ -97,14 +97,14 @@ namespace DD_WorkTab
 		{
 			int clickInt = 0;
 
-			this.DrawTexture(this.dragRect, !this.primary);
+			this.DrawTexture(this.dragRect);
 
 			if (Event.current.type == EventType.MouseUp)
 			{
 				this.draggingNow = false;
 			}
 
-			if (dragRect.Contains(mousePosition))
+			if (this.dragRect.Contains(mousePosition))
 			{
 				if (Event.current.type == EventType.MouseDown)
 				{
@@ -145,7 +145,7 @@ namespace DD_WorkTab
 				}
 			}
 
-			if (draggingNow)
+			if (this.draggingNow)
 			{
 				this.position = mousePosition - this.dragOffsetVector;
 

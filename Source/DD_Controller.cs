@@ -9,9 +9,7 @@ namespace DD_WorkTab
 	{
 		public DD_Controller(ModContentPack content) : base(content)
 		{
-			HarmonyInstance harmony = HarmonyInstance.Create("dingo.rimworld.dd_worktab");
-
-			harmony.PatchAll(Assembly.GetExecutingAssembly());
+			HarmonyInstance.Create("dingo.rimworld.dd_worktab").PatchAll(Assembly.GetExecutingAssembly());
 
 			this.GetSettings<DD_Settings>();
 		}
@@ -40,9 +38,6 @@ namespace DD_WorkTab
 			list.End();
 		}
 
-		public override string SettingsCategory()
-		{
-			return "Drag and Drop Work Tab";
-		}
+		public override string SettingsCategory() => "Drag and Drop Work Tab";
 	}
 }

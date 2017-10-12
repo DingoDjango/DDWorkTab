@@ -20,8 +20,10 @@ namespace DD_WorkTab
 			{
 				bool foundPawn = false;
 
-				foreach (PawnSurface listSurface in AllPawnSurfaces)
+				for (int i = 0; i < AllPawnSurfaces.Count; i++)
 				{
+					PawnSurface listSurface = AllPawnSurfaces[i];
+
 					if (listSurface.pawn == pawn)
 					{
 						surface = listSurface;

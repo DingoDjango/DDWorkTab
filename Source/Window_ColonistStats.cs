@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using RimWorld;
 using UnityEngine;
@@ -40,9 +41,9 @@ namespace DD_WorkTab
 
 			else
 			{
-				foreach (Map currentMap in Find.Maps)
+				for (int i = 0; i < Find.Maps.Count; i++)
 				{
-					count += currentMap.mapPawns.FreeColonistsCount;
+					count += Find.Maps[i].mapPawns.FreeColonistsCount;
 				}
 			}
 
@@ -81,6 +82,10 @@ namespace DD_WorkTab
 
 		public override void DoWindowContents(Rect inRect)
 		{
+#if DEBUG
+			Stopwatch msProfile2 = Stopwatch.StartNew();
+#endif
+
 			base.DoWindowContents(inRect);
 
 			Rect toggleMapRect = new Rect(inRect.x - this.horizontalOffset, inRect.y, standardSpacing + spaceForPawnLabel, standardRowHeight);
@@ -105,13 +110,15 @@ namespace DD_WorkTab
 				}
 			}
 
-			foreach (DraggableWorkType prime in PrimaryTypes.primaryDraggablesList)
+			for (int j = 0; j < DD_Widgets.PrimaryDraggablesList.Count; j++)
 			{
-				primePositions[prime.def] = primePositionVector.x;
+				DraggableWorkType prime = DD_Widgets.PrimaryDraggablesList[j];
+
+				this.primePositions[prime.def] = primePositionVector.x;
 
 				Rect primeRect = primePositionVector.ToDraggableRect();
 
-				prime.DrawTexture(primeRect, false);
+				prime.DrawTexture(primeRect);
 
 				if (primeRect.Contains(this.eventMousePosition))
 				{
@@ -206,8 +213,10 @@ namespace DD_WorkTab
 			float currentVerticalPosition = scrollViewInnerRect.yMin;
 			bool firstPawnDrawn = false;
 
-			foreach (PawnSurface surface in this.cachedPawnSurfaces)
+			for (int k = 0; k < this.cachedPawnSurfaces.Count; k++)
 			{
+				PawnSurface surface = this.cachedPawnSurfaces[k];
+
 				Pawn pawn = surface.pawn;
 
 				if (firstPawnDrawn)
@@ -223,16 +232,16 @@ namespace DD_WorkTab
 
 				DD_Widgets.PawnLabel(nameRect, pawn, this.listMousePosition);
 
-				foreach (DraggableWorkType primary in PrimaryTypes.primaryDraggablesList)
+				for (int p = 0; p < DD_Widgets.PrimaryDraggablesList.Count; p++)
 				{
-					WorkTypeDef def = primary.def;
-					Rect drawRect = new Vector2(primePositions[def], surfaceRectCenterY).ToDraggableRect();
+					WorkTypeDef def = DD_Widgets.PrimaryDraggablesList[p].def;
+					Rect drawRect = new Vector2(this.primePositions[def], surfaceRectCenterY).ToDraggableRect();
 					int tooltipSelector = 1;
 
 					//Pawn is assigned to the work type
 					if (surface.QuickFindByDef.TryGetValue(def, out DraggableWorkType matchingDraggable))
 					{
-						matchingDraggable.DrawTexture(drawRect, true);
+						matchingDraggable.DrawTexture(drawRect);
 					}
 
 					else
@@ -282,6 +291,11 @@ namespace DD_WorkTab
 			}
 
 			Widgets.EndScrollView();
+
+#if DEBUG
+			msProfile2.Stop();
+			Log.Message($"ColonistsTab_Frame_{Time.frameCount}_{Event.current.type.ToString()}: {msProfile2.ElapsedMilliseconds}ms");
+#endif
 		}
 
 		public override void PostClose()
@@ -294,6 +308,7 @@ namespace DD_WorkTab
 
 		public Window_ColonistStats(bool visibleMap) : base()
 		{
+			this.closeOnClickedOutside = true;
 			DD_Settings.ColonistStatsOnlyVisibleMap = visibleMap;
 		}
 	}

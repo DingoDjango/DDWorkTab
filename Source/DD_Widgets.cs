@@ -16,11 +16,11 @@ namespace DD_WorkTab
 
 		public const float SpaceForWorkButtons = 80f;
 
-		public const float StandardSpacing = 8f;
+		public const float ShortSpacing = 8f;
 
-		public const float StandardRowHeight = 2f * StandardSpacing + DraggableTextureDiameter;
+		public const float StandardRowHeight = 2f * ShortSpacing + DraggableTextureDiameter;
 
-		public static readonly float PawnSurfaceWidth = StandardSpacing + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (DraggableTextureDiameter + StandardSpacing);
+		public static readonly float PawnSurfaceWidth = ShortSpacing + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (DraggableTextureDiameter + ShortSpacing);
 
 		public static readonly float TinyTextLineHeight;
 
@@ -54,6 +54,8 @@ namespace DD_WorkTab
 
 		public static readonly Color ExcellentSkillColour = new Color(1f, 0.85f, 0f); /* GOLD http://whenisnlss.com/assets/sounds/GOLD.mp3 */
 
+		public static readonly List<DraggableWorkType> PrimaryDraggablesList = new List<DraggableWorkType>(); //Draggables source containing all work types
+
 		public static readonly Dictionary<WorkTypeDef, DD_WorkTypeInfo> WorkDefAttributes = new Dictionary<WorkTypeDef, DD_WorkTypeInfo>();
 
 		//CachedStrings[string] => cached translation
@@ -67,15 +69,18 @@ namespace DD_WorkTab
 
 		static DD_Widgets()
 		{
-			foreach (WorkTypeDef def in DefDatabase<WorkTypeDef>.AllDefs)
+			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
 			{
+				//Populate render attributes struct
 				HashSet<PawnCapacityDef> allRequiredCapacities = new HashSet<PawnCapacityDef>();
 
-				foreach (WorkGiverDef workGiver in def.workGiversByPriority)
+				for (int i = 0; i < def.workGiversByPriority.Count; i++)
 				{
-					foreach (PawnCapacityDef capacity in workGiver.requiredCapacities)
+					WorkGiverDef workGiver = def.workGiversByPriority[i];
+
+					for (int j = 0; j < workGiver.requiredCapacities.Count; j++)
 					{
-						allRequiredCapacities.Add(capacity);
+						allRequiredCapacities.Add(workGiver.requiredCapacities[j]);
 					}
 				}
 
@@ -83,17 +88,23 @@ namespace DD_WorkTab
 					ContentFinder<Texture2D>.Get("Draggables/Primaries/" + def.defName, true), //Coloured texture (for primaries)
 					allRequiredCapacities);
 
+				//Cache "relevant skills:" string
 				if (def.relevantSkills.Count > 0)
 				{
 					string relevantSkills = string.Empty;
 
-					foreach (SkillDef skill in def.relevantSkills)
+					for (int k = 0; k < def.relevantSkills.Count; k++)
 					{
-						relevantSkills += skill.skillLabel + ", ";
+						relevantSkills += def.relevantSkills[k].skillLabel + ", ";
 					}
 
 					CachedStrings[def] = relevantSkills.Substring(0, relevantSkills.Length - 2);
 				}
+
+				//Populate all primary draggables
+				DraggableWorkType primeDraggable = new DraggableWorkType(def, null, true);
+
+				PrimaryDraggablesList.Add(primeDraggable);
 			}
 
 			//Strings from vanilla
@@ -270,6 +281,60 @@ namespace DD_WorkTab
 			}
 
 			return tooltip.ToString();
+		}
+
+		public static void PrimaryTypesWorkTabGUI(Rect rect, Vector2 mousePosition)
+		{
+			GUI.color = Color.white;
+			Text.Font = GameFont.Small;
+
+			Rect compareSkillsRect = new Rect(rect.x, rect.y + ShortSpacing, ShortSpacing + SpaceForPawnLabel, DraggableTextureDiameter);
+			Rect disableWorkRect = new Rect(compareSkillsRect.xMax + ShortSpacing, compareSkillsRect.y, DraggableTextureDiameter, DraggableTextureDiameter);
+			Rect resetWorkRect = new Rect(disableWorkRect.xMax + ShortSpacing, disableWorkRect.y, DraggableTextureDiameter, DraggableTextureDiameter);
+
+			Vector2 positionSetter = new Vector2(compareSkillsRect.xMax + SpaceForWorkButtons + ShortSpacing + (DraggableTextureDiameter / 2f), rect.center.y);
+
+			if (Widgets.ButtonText(compareSkillsRect, "DD_WorkTab_ButtonColonistStats".CachedTranslation(), true, false, true))
+			{
+				Find.WindowStack.Add(new Window_ColonistStats(DD_Settings.ColonistStatsOnlyVisibleMap));
+			}
+
+			Button(ButtonType.DisableAllWork, null, disableWorkRect, mousePosition);
+
+			Button(ButtonType.ResetAllWork, null, resetWorkRect, mousePosition);
+
+			for (int p = 0; p < PrimaryDraggablesList.Count; p++)
+			{
+				DraggableWorkType primary = PrimaryDraggablesList[p];
+
+				Rect drawRect = positionSetter.ToDraggableRect();
+
+				if (!primary.draggingNow)
+				{
+					primary.position = positionSetter;
+
+					primary.dragRect = drawRect;
+				}
+
+				//Draw a copied texture in the primary type's natural position
+				else
+				{
+					primary.DrawTexture(drawRect);
+				}
+
+				int clickInt = primary.DoWorkTabGUI(mousePosition);
+
+				//Shift-click functionality to manipulate specific work type priority for all pawns
+				if (clickInt != 0)
+				{
+					foreach (Pawn pawn in Find.VisibleMap.mapPawns.FreeColonists)
+					{
+						DragManager.GetPawnSurface(pawn).InsertFromPrimaryShiftClick(clickInt, primary.def);
+					}
+				}
+
+				positionSetter.x += DraggableTextureDiameter + ShortSpacing;
+			}
 		}
 
 		public static void Button(ButtonType buttonType, PawnSurface surface, Rect buttonRect, Vector2 mousePosition)
