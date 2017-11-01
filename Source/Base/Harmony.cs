@@ -2,7 +2,7 @@
 using RimWorld;
 using Verse;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Base
 {
 	class Harmony
 	{

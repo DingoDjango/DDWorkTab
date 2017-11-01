@@ -1,12 +1,16 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using DD_WorkTab.Base;
+using DD_WorkTab.Draggables;
+using DD_WorkTab.Miscellaneous;
+using DD_WorkTab.Primaries;
+using DD_WorkTab.Tools;
 using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.Sound;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Windows
 {
 	public class Window_ColonistStats : MainTabWindow_DD
 	{

@@ -1,11 +1,11 @@
-﻿using UnityEngine;
+﻿using DD_WorkTab.Miscellaneous;
+using DD_WorkTab.Tools;
+using DD_WorkTab.Windows;
+using UnityEngine;
 using Verse;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Primaries
 {
-	/* Based on the work of Emil Johansen aka AngryAnt
-	* https://github.com/AngryAnt */
-
 	public class PrimaryWork
 	{
 		private WorkTypeInfo workInfo;

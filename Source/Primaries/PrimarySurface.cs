@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Linq;
-using RimWorld;
+﻿using System.Collections.Generic;
+using DD_WorkTab.Miscellaneous;
+using DD_WorkTab.Tools;
 using UnityEngine;
 using Verse;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Primaries
 {
 	public class PrimarySurface
 	{

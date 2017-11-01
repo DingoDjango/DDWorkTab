@@ -2,7 +2,7 @@
 using UnityEngine;
 using Verse;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Miscellaneous
 {
 	public class WorkTypeInfo
 	{

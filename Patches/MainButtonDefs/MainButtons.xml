@@ -4,7 +4,7 @@
 	<Operation Class="PatchOperationReplace">
 		<xpath>/Defs/MainButtonDef[defName = "Work"]/tabWindowClass</xpath>
 		<value>
-			<tabWindowClass>DD_WorkTab.Window_WorkTab</tabWindowClass>
+			<tabWindowClass>DD_WorkTab.Windows.Window_WorkTab</tabWindowClass>
 		</value>
 	</Operation>
 

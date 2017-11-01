@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
+using DD_WorkTab.Base;
+using DD_WorkTab.Draggables;
+using DD_WorkTab.Miscellaneous;
+using DD_WorkTab.Primaries;
+using DD_WorkTab.Windows;
 using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.Sound;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Tools
 {
 	[StaticConstructorOnStartup]
 	public static class Utilities
@@ -296,12 +300,12 @@ namespace DD_WorkTab
 
 					if (disabled)
 					{
-						tooltip.Append("DD_WorkTab_Tooltip_CurrentlyUnassigned".CachedTranslation().AdjustedFor(worker));
+						tooltip.Append("DD_WorkTab_Tooltip_CurrentlyUnassigned".CachedTranslation(new string[] { def.labelShort }).AdjustedFor(worker));
 					}
 
 					if (CapacitiesCompromisedForWorkType(worker, def))
 					{
-						tooltip.Append("DD_WorkTab_Tooltip_IncapacitatedWorker".CachedTranslation().AdjustedFor(worker));
+						tooltip.Append("DD_WorkTab_Tooltip_IncapacitatedWorker".CachedTranslation(new string[] { def.labelShort }).AdjustedFor(worker));
 					}
 				}
 

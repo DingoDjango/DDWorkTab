@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
-using HugsLib;
-using HugsLib.Utils;
-using RimWorld.Planet;
 using Verse;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Draggables
 {
 	public class SurfaceManager : GameComponent
 	{

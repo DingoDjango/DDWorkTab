@@ -1,4 +1,4 @@
-﻿namespace DD_WorkTab
+﻿namespace DD_WorkTab.Miscellaneous
 {
 	public enum SortOrder : byte
 	{

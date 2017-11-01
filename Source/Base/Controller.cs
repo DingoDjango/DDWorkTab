@@ -1,10 +1,11 @@
-﻿using HugsLib;
+﻿using DD_WorkTab.Draggables;
+using DD_WorkTab.Primaries;
+using DD_WorkTab.Tools;
+using HugsLib;
 using HugsLib.Settings;
-using HugsLib.Utils;
-using RimWorld;
 using Verse;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Base
 {
 	public class Controller : ModBase
 	{

@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using DD_WorkTab.Base;
+using DD_WorkTab.Miscellaneous;
+using DD_WorkTab.Tools;
 using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.Sound;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Draggables
 {
 	public class PawnSurface : IExposable
 	{
@@ -119,7 +122,7 @@ namespace DD_WorkTab
 
 		private void OrderChildrenByPosition()
 		{
-			this.children = this.children.OrderBy(child => child.position.x).ToList();
+			this.children = this.children.OrderByDescending(child => !child.CompletelyDisabled).ThenBy(child => child.position.x).ToList();
 		}
 
 		private void RefreshChildrenDictionary()
@@ -185,9 +188,9 @@ namespace DD_WorkTab
 
 								if (Controller.VerboseMessages)
 								{
-									string shiftCompletedText = "DD_WorkTab_Message_DraggedIncapableWork".CachedTranslation(new string[] { nomad.Def.labelShort }).AdjustedFor(this.pawn);
+									string draggedIncapableWork = "DD_WorkTab_Message_DraggedIncapableWork".CachedTranslation(new string[] { nomad.Def.labelShort }).AdjustedFor(this.pawn);
 
-									Messages.Message(shiftCompletedText, MessageTypeDefOf.SilentInput);
+									Messages.Message(draggedIncapableWork, MessageTypeDefOf.SilentInput);
 								}
 							}
 						}
@@ -325,7 +328,7 @@ namespace DD_WorkTab
 
 			this.RefreshChildrenDictionary();
 
-			this.children.OrderBy(d => workSettings.GetPriority(d.Def)).ThenBy(d => workSettings.GetPriority(d.Def) != 0); //Account for pre-existing priorities
+			this.children = this.children.OrderByDescending(d => !d.CompletelyDisabled).ThenByDescending(d => workSettings.GetPriority(d.Def) != 0).ThenBy(d => workSettings.GetPriority(d.Def)).ToList(); //Account for pre-existing priorities
 
 			this.UpdatePawnPriorities();
 		}

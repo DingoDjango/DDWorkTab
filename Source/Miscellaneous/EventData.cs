@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Miscellaneous
 {
 	public struct EventData
 	{

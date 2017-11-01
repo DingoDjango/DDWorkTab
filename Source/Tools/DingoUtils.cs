@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Linq;
-using RimWorld;
 using UnityEngine;
 using Verse;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Tools
 {
 	public static class DingoUtils
 	{
@@ -46,13 +42,12 @@ namespace DD_WorkTab
 			return finalString;
 		}
 
-		/* Verse.ModContentLoader<T> */
 		/// <summary>
 		/// Generates a high quality texture from a PNG file.
 		/// </summary>
 		public static Texture2D GetHQTexture(string fileName, string folderName = null)
 		{
-			Texture2D texture = null;
+			Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, false); //Mipmaps off;
 
 			ModContentPack content = null;
 
@@ -68,7 +63,7 @@ namespace DD_WorkTab
 			{
 				Log.Error("Could not find specific mod :: " + ModFolderName);
 
-				return new Texture2D(1, 1);
+				return texture;
 			}
 
 			string texturesPath = Path.Combine(content.RootDir, GenFilePaths.ContentPath<Texture2D>());
@@ -81,7 +76,7 @@ namespace DD_WorkTab
 			{
 				Log.Error("Could not find specific textures folder");
 
-				return new Texture2D(1, 1);
+				return texture;
 			}
 
 			FileInfo image = null;
@@ -98,25 +93,22 @@ namespace DD_WorkTab
 			{
 				Log.Error("Could not find specific file name :: " + fileName);
 
-				return new Texture2D(1, 1);
+				return texture;
 			}
 
 			byte[] fileData = File.ReadAllBytes(image.FullName);
 
-			texture = new Texture2D(2, 2, TextureFormat.ARGB32, false); //Mipmaps off
-			texture.LoadImage(fileData); //Loads image and resizes texture
+			texture.LoadImage(fileData); //Loads PNG data, sets format to ARGB32 and resizes texture by the source image size
 			texture.name = "DD_" + Path.GetFileNameWithoutExtension(fileName);
 			texture.filterMode = FilterMode.Trilinear;
 			texture.anisoLevel = 9; //default 2, max 9
 
-			/*	texture.Compress(true); //??? lowers quality
-			 *	texture.Apply(false, true); //??? applies compression */
+			/* texture.Compress(true); //Compresses texture
+			 * texture.Apply(false, false); //Saves the compressed texture */
 
-			if (texture == null)
+			if (texture.width == 2)
 			{
 				Log.Error("Could not load high quality texture :: " + fileName);
-
-				return new Texture2D(1, 1);
 			}
 
 			return texture;

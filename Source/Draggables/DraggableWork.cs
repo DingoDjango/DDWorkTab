@@ -1,9 +1,12 @@
-﻿using UnityEngine;
+﻿using DD_WorkTab.Base;
+using DD_WorkTab.Miscellaneous;
+using DD_WorkTab.Tools;
 using RimWorld;
+using UnityEngine;
 using Verse;
 using Verse.Sound;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Draggables
 {
 	/* Based on the work of Emil Johansen aka AngryAnt
 	* https://github.com/AngryAnt */

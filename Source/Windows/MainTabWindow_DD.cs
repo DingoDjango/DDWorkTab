@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using DD_WorkTab.Draggables;
+using DD_WorkTab.Tools;
 using RimWorld;
 using UnityEngine;
 using Verse;
 
-namespace DD_WorkTab
+namespace DD_WorkTab.Windows
 {
 	public abstract class MainTabWindow_DD : MainTabWindow
 	{
