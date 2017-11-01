@@ -3,14 +3,14 @@
 	<name>Drag and Drop Work Tab</name>
 	<author>Dingo</author>
 	<url>https://ludeon.com/forums/index.php?topic=26077</url>
-	<targetVersion>0.17.0</targetVersion>
-	<description>Replaces the Work tab with an overhauled version incorporating a drag and drop interface.
+	<targetVersion>0.18.0</targetVersion>
+	<description>&lt;color=red&gt;Requires HugsLib. Incompatible with other Work Tab mods.&lt;/color&gt;
 
-Includes a Colonist Stats secondary window for easy sorting and stats comparison.
+Replaces the Work tab with an overhauled version incorporating a drag and drop interface.
 
-There are tooltips for nearly everything in the new interface, from drag tips to stats, disabilities etc. (similar to the vanilla tab).
+Includes a Compare Skills window to easily sort colonists by skill for a specific work type.
 
-Includes an options menu (&lt;color=orange&gt;Options > Mod Settings&lt;/color&gt;).
+There are tooltips for nearly everything in the new interface: drag tips, stats, disabilities etc.
 
-&lt;color=red&gt;This mod is incompatible with other Work Tab mods.&lt;/color&gt;</description>
+Includes an options menu - &lt;color=orange&gt;Options => Mod Settings&lt;/color&gt;</description>
 </ModMetaData>

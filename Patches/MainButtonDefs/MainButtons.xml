@@ -2,10 +2,10 @@
 <Patch>
 
 	<Operation Class="PatchOperationReplace">
-		<xpath>/MainButtonDefs/MainButtonDef[defName = "Work"]/tabWindowClass</xpath>
+		<xpath>/Defs/MainButtonDef[defName = "Work"]/tabWindowClass</xpath>
 		<value>
 			<tabWindowClass>DD_WorkTab.Window_WorkTab</tabWindowClass>
 		</value>
-	</Operation>	
+	</Operation>
 
 </Patch>

@@ -13,30 +13,37 @@
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>C:\Program Files %28x86%29\Steam\steamapps\common\RimWorld\Mods\DD WorkTab\Assemblies\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <OutputPath>C:\Program Files %28x86%29\Steam\steamapps\common\RimWorld\Mods\DD WorkTab\Assemblies\</OutputPath>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>..\..\..\Projects\0Harmony.dll</HintPath>
+    <Reference Include="0Harmony, Version=1.0.9.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\HugsLib\Assemblies\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\RimWorldWin_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="HugsLib">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\HugsLib\Assemblies\HugsLib.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -55,19 +62,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DD_Controller.cs" />
-    <Compile Include="DD_Window.cs" />
-    <Compile Include="DD_WorkTypeInfo.cs" />
-    <Compile Include="DragManager.cs" />
-    <Compile Include="DD_Enums.cs" />
-    <Compile Include="Window_WorkTab.cs" />
-    <Compile Include="Patch_Pawn_WorkSettings.cs" />
+    <Compile Include="Base\Controller.cs" />
+    <Compile Include="Draggables\DraggableObject.cs" />
+    <Compile Include="Primaries\PrimaryWork.cs" />
+    <Compile Include="Tools\DingoUtils.cs" />
+    <Compile Include="Primaries\PrimarySurface.cs" />
+    <Compile Include="Miscellaneous\EventData.cs" />
+    <Compile Include="Windows\MainTabWindow_DD.cs" />
+    <Compile Include="Miscellaneous\WorkTypeInfo.cs" />
+    <Compile Include="Draggables\SurfaceManager.cs" />
+    <Compile Include="Miscellaneous\Enums.cs" />
+    <Compile Include="Windows\Window_WorkTab.cs" />
+    <Compile Include="Base\Harmony.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="DD_Widgets.cs" />
-    <Compile Include="DraggableWorkType.cs" />
-    <Compile Include="DD_Settings.cs" />
-    <Compile Include="PawnSurface.cs" />
-    <Compile Include="Window_ColonistStats.cs" />
+    <Compile Include="Tools\Utilities.cs" />
+    <Compile Include="Draggables\DraggableWork.cs" />
+    <Compile Include="Draggables\PawnSurface.cs" />
+    <Compile Include="Windows\Window_ColonistStats.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,61 +1,75 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
 
-	<!-- Settings window -->
+	<!-- Mod Settings -->
 
 	<DD_WorkTab_UseSounds_Label>Use sounds</DD_WorkTab_UseSounds_Label>
-	<DD_WorkTab_UseSounds_Desc>Play sounds when performing various actions, such as adding/removing work or when messages are displayed.</DD_WorkTab_UseSounds_Desc>
+	<DD_WorkTab_UseSounds_Desc>Play sounds on various triggers, such as enabling/disabling work or displaying messages.</DD_WorkTab_UseSounds_Desc>
 
 	<DD_WorkTab_ShowPrompt_Label>Show prompts</DD_WorkTab_ShowPrompt_Label>
-	<DD_WorkTab_ShowPrompt_Desc>When disabling or resetting work via buttons, open an 'Are you sure?' dialogue window.</DD_WorkTab_ShowPrompt_Desc>
+	<DD_WorkTab_ShowPrompt_Desc>When using disable/reset work buttons, open an 'Are you sure?' dialogue window.</DD_WorkTab_ShowPrompt_Desc>
 
-	<DD_WorkTab_MessageOnRemoval_Label>Show message on work removal</DD_WorkTab_MessageOnRemoval_Label>
-	<DD_WorkTab_MessageOnRemoval_Desc>If a work type is dragged away from a colonist's work list (and thus removed), display a message.</DD_WorkTab_MessageOnRemoval_Desc>
+	<DD_WorkTab_VerboseMessages_Label>Show messages</DD_WorkTab_VerboseMessages_Label>
+	<DD_WorkTab_VerboseMessages_Desc>Display various messages such as "Jenny has been assigned to Cooking".</DD_WorkTab_VerboseMessages_Desc>
 
-	<!-- General tooltips -->
+	<!-- Tooltips -->
 
-	<DD_WorkTab_ButtonText_DisablePrompt>\n\nIf you disable this prompt, you can re-enable it in Options > Mod Settings.</DD_WorkTab_ButtonText_DisablePrompt>
+	<DD_WorkTab_Tooltip_Primary>\n\nShift + left-click: increase priority for everyone.\n\nShift + right-click: decrease priority for everyone.</DD_WorkTab_Tooltip_Primary>
+
+	<DD_WorkTab_Tooltip_DraggableWork>\n\nDrag left or right to adjust priority.\n\nShift-click: enable or disable.</DD_WorkTab_Tooltip_DraggableWork>
+
+	<DD_WorkTab_Tooltip_IncapacitatedWorker>&lt;color=red&gt;\n\nNAME is unable to do work of this type because of HIS health condition.&lt;/color&gt;</DD_WorkTab_Tooltip_IncapacitatedWorker>
+
+	<DD_WorkTab_Tooltip_ButtonDisableWork>Disable Work</DD_WorkTab_Tooltip_ButtonDisableWork>
+
+	<DD_WorkTab_Tooltip_ButtonResetWork>Reset Work</DD_WorkTab_Tooltip_ButtonResetWork>
+
+	<DD_WorkTab_Tooltip_ButtonDisableWork_AllPawns>Disable Work for Everyone</DD_WorkTab_Tooltip_ButtonDisableWork_AllPawns>
+
+	<DD_WorkTab_Tooltip_ButtonResetWork_AllPawns>Reset Work for Everyone</DD_WorkTab_Tooltip_ButtonResetWork_AllPawns>
+
+	<DD_WorkTab_Tooltip_CurrentlyUnassigned>\n\nNAME is not assigned to this work type.</DD_WorkTab_Tooltip_CurrentlyUnassigned>
+
+	<!-- Messages -->
+
+	<DD_WorkTab_Message_IncapablePawn>Cannot assign NAME to {0}. HECAP is incapable of doing it.</DD_WorkTab_Message_IncapablePawn>
+
+	<DD_WorkTab_Message_DraggedIncapableWork>Tried to adjust {0}. Will have no effect because NAME is incapable of doing it.</DD_WorkTab_Message_DraggedIncapableWork>
+
+	<DD_WorkTab_Message_WorkEnabled>NAME has been assigned to {0}.</DD_WorkTab_Message_WorkEnabled>
+
+	<DD_WorkTab_Message_WorkDisabled>NAME has been unassigned from {0}.</DD_WorkTab_Message_WorkDisabled>
+
+	<DD_WorkTab_Message_PrimaryShiftClick>{0} has been adjusted for all colonists on this map.</DD_WorkTab_Message_PrimaryShiftClick>
+
+	<!-- Prompts -->
 
 	<DD_WorkTab_ButtonOption_Accept>Accept</DD_WorkTab_ButtonOption_Accept>
 	<DD_WorkTab_ButtonOption_Cancel>Cancel</DD_WorkTab_ButtonOption_Cancel>
-	<DD_WorkTab_ButtonOption_AcceptDisablePrompt>Accept (Disable Prompt)</DD_WorkTab_ButtonOption_AcceptDisablePrompt>
+	<DD_WorkTab_ButtonOption_AcceptDisablePrompt>Accept (Disable Prompts)</DD_WorkTab_ButtonOption_AcceptDisablePrompt>
 
-	<DD_WorkTab_ColonistHealthCompromised>&lt;color=red&gt;\n\nNAME is unable to do work of this type because of HIS health condition.&lt;/color&gt;</DD_WorkTab_ColonistHealthCompromised>
+	<DD_WorkTab_PromptText_DisablePrompt>\n\nIf you disable prompts, you can re-enable them in Options > Mod Settings.</DD_WorkTab_PromptText_DisablePrompt>
+
+	<DD_WorkTab_PromptTitle_DisableWork_AllPawns>Disable Work (All Map Colonists)</DD_WorkTab_PromptTitle_DisableWork_AllPawns>
+	<DD_WorkTab_PromptText_DisableWork_AllPawns>All work will be disabled for &lt;color=red&gt;ALL colonists on this map&lt;/color&gt;.</DD_WorkTab_PromptText_DisableWork_AllPawns>
+
+	<DD_WorkTab_PromptTitle_ResetWork_AllPawns>Reset Work (All Map Colonists)</DD_WorkTab_PromptTitle_ResetWork_AllPawns>
+	<DD_WorkTab_PromptText_ResetWork_AllPawns>All work will be reset for &lt;color=red&gt;ALL colonists on this map&lt;/color&gt;.</DD_WorkTab_PromptText_ResetWork_AllPawns>
+
+	<DD_WorkTab_PromptTitle_DisableWork>Disable Work for NAME</DD_WorkTab_PromptTitle_DisableWork>
+	<DD_WorkTab_PromptText_DisableWork>All active work for NAME will be removed.\n\nNAME will become idle if you don't assign new work for HIM.</DD_WorkTab_PromptText_DisableWork>
+
+	<DD_WorkTab_PromptTitle_ResetWork>Reset Work for NAME</DD_WorkTab_PromptTitle_ResetWork>
+	<DD_WorkTab_PromptText_ResetWork>All possible work for NAME will be enabled and sorted by natural priority.</DD_WorkTab_PromptText_ResetWork>
 
 	<!-- Work tab -->
 
 	<DD_WorkTab_ButtonColonistStats>Compare Skills</DD_WorkTab_ButtonColonistStats>
 
-	<DD_WorkTab_PrimeDraggable_DragTip>\n\nDrag into any row to add/re-prioritize this work type.\n\nShift-click to adjust priority for all assigned colonists.</DD_WorkTab_PrimeDraggable_DragTip>
-
-	<DD_WorkTab_PawnDraggable_DragTip>\n\nDrag left or right to adjust priority.\n\nDrag out of this row to remove.</DD_WorkTab_PawnDraggable_DragTip>
-
-	<DD_WorkTab_DisableWork_Tooltip>Disable All Work</DD_WorkTab_DisableWork_Tooltip>
-	<DD_WorkTab_DisableWork_Title>Disable All Work for NAME</DD_WorkTab_DisableWork_Title>
-	<DD_WorkTab_DisableWork_Text>All active work for NAME will be removed.\n\nNAME will become idle if you don't assign new work for HIM.</DD_WorkTab_DisableWork_Text>
-
-	<DD_WorkTab_ResetWork_Tooltip>Reset Work Priorities</DD_WorkTab_ResetWork_Tooltip>
-	<DD_WorkTab_ResetWork_Title>Reset All Work for NAME</DD_WorkTab_ResetWork_Title>
-	<DD_WorkTab_ResetWork_Text>All possible work types for NAME will be enabled and sorted by natural priority.</DD_WorkTab_ResetWork_Text>
-
-	<DD_WorkTab_PawnSurface_WorkTypeForbidden>Cannot assign NAME to {0}. HECAP is incapable of doing it.</DD_WorkTab_PawnSurface_WorkTypeForbidden>
-	<DD_WorkTab_PawnSurface_WorkRemoved>NAME has been unassigned from {0}.</DD_WorkTab_PawnSurface_WorkRemoved>
-
 	<!-- Colonist stats window -->
 
-	<DD_WorkTab_ColonistStats_ToggleButton_VisibleMap>Current Map</DD_WorkTab_ColonistStats_ToggleButton_VisibleMap>
-	<DD_WorkTab_ColonistStats_ToggleButton_AllMaps>All Maps</DD_WorkTab_ColonistStats_ToggleButton_AllMaps>
+	<DD_WorkTab_ColonistStats_ButtonVisibleMap>Current Map</DD_WorkTab_ColonistStats_ButtonVisibleMap>
 
-	<DD_WorkTab_ColonistStats_CurrentlyUnassigned>\n\nNAME is not assigned to this work type.</DD_WorkTab_ColonistStats_CurrentlyUnassigned>
-
-	<DD_WorkTab_ColonistStats_WorkTypeForbidden>Cannot assign NAME to this work type. HECAP is incapable of doing it.</DD_WorkTab_ColonistStats_WorkTypeForbidden>
-
-	<DD_WorkTab_DisableWorkVisibleMap_Tooltip>Disable All Work for Everyone</DD_WorkTab_DisableWorkVisibleMap_Tooltip>
-	<DD_WorkTab_DisableWorkVisibleMap_Title>Disable All Work (All Visible Colonists)</DD_WorkTab_DisableWorkVisibleMap_Title>
-	<DD_WorkTab_DisableWorkVisibleMap_Text>All work will be disabled for &lt;color=red&gt;ALL of the colonists on this map&lt;/color&gt;.</DD_WorkTab_DisableWorkVisibleMap_Text>
-
-	<DD_WorkTab_ResetWorkVisibleMap_Tooltip>Reset Work Priorities for Everyone</DD_WorkTab_ResetWorkVisibleMap_Tooltip>
-	<DD_WorkTab_ResetWorkVisibleMap_Title>Reset All Work (All Visible Colonists)</DD_WorkTab_ResetWorkVisibleMap_Title>
-	<DD_WorkTab_ResetWorkVisibleMap_Text>All work will be reset for &lt;color=red&gt;ALL of the colonists on this map&lt;/color&gt;.</DD_WorkTab_ResetWorkVisibleMap_Text>
+	<DD_WorkTab_ColonistStats_ButtonAllMaps>All Maps</DD_WorkTab_ColonistStats_ButtonAllMaps>
 
 </LanguageData>
