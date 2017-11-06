@@ -87,5 +87,17 @@ namespace DD_WorkTab.Tools
 
 			return texture;
 		}
+
+		/// <summary>
+		/// Determines which list indexes to render when using a Unity scroll view and fixed item height.
+		/// </summary>
+		public void VisibleScrollviewIndexes(float scrolledY, float outRectHeight, float itemHeight, int totalItems, out int FirstIndex, out int LastIndex)
+		{
+			int totalRenderedIndexes = (int)(outRectHeight / itemHeight) + 2; //Account for partly rendered surfaces on top/bottom of the Rect
+
+			FirstIndex = (int)(scrolledY / itemHeight); //Get the first list item that should be at least partly visible
+
+			LastIndex = Mathf.Min(FirstIndex + totalRenderedIndexes, totalItems); //Get the last item to render, don't go over list.Count
+		}
 	}
 }

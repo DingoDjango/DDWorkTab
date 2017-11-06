@@ -7,6 +7,17 @@
 		Ascending
 	}
 
+	public enum WorkSound : byte
+	{
+		TaskCompleted,
+		TaskFailed,
+		WorkEnabled,
+		WorkDisabled,
+		SortedSkills,
+		UnsortedSkills,
+		CompareSkillsMapChanged
+	}
+
 	public enum WorkFunction : byte
 	{
 		AllPawns_EnableWork,

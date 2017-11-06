@@ -16,7 +16,9 @@ namespace DD_WorkTab.Tools
 	[StaticConstructorOnStartup]
 	public static class Utilities
 	{
-		public const float DraggableTextureDiameter = 48f;
+		public const float DraggableDiameter = 48f;
+
+		public const float SmallDraggableDiameter = 32f;
 
 		public const float PassionDrawSize = 14f;
 
@@ -26,11 +28,15 @@ namespace DD_WorkTab.Tools
 
 		public const float SpaceForScrollBar = 22f;
 
-		public const float SpaceForWorkButtons = 3f * ShortSpacing + DraggableTextureDiameter;
+		public const float SpaceForWorkButtons = 2f * ShortSpacing + DraggableDiameter;
 
-		public const float StandardRowHeight = 2f * ShortSpacing + DraggableTextureDiameter;
+		public const float StandardRowHeight = 2f * ShortSpacing + DraggableDiameter;
 
-		public static readonly float PawnSurfaceWidth = 2f * ShortSpacing + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (DraggableTextureDiameter + ShortSpacing);
+		public const float SmallRowHeight = 2f * ShortSpacing + SmallDraggableDiameter;
+
+		public static readonly float PawnSurfaceWidth = 2f * ShortSpacing + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (DraggableDiameter + ShortSpacing);
+
+		public static readonly float SmallSurfaceWidth = ShortSpacing + DefDatabase<WorkTypeDef>.AllDefsListForReading.Count * (SmallDraggableDiameter + ShortSpacing);
 
 		public static readonly float TinyTextLineHeight;
 
@@ -76,19 +82,24 @@ namespace DD_WorkTab.Tools
 
 		public static readonly SoundDef WorkDisabled = SoundDefOf.LessonDeactivated;
 
+		public static readonly SoundDef SortedSkills = SoundDefOf.TickHigh;
+
+		public static readonly SoundDef UnsortedSkills = SoundDefOf.TickLow;
+
+		public static readonly SoundDef CompareSkillsMapChanged = SoundDefOf.DialogBoxAppear;
+
 		public static readonly Dictionary<WorkTypeDef, WorkTypeInfo> WorkDefAttributes = new Dictionary<WorkTypeDef, WorkTypeInfo>();
-
-		public static float MaxWindowWidth => (float)UI.screenWidth * 0.8f;
-
-		public static float MaxWindowHeight => (float)UI.screenHeight * 0.8f;
 
 		//CachedStrings[string] => cached translation
 		//CachedStrings[WorkTypeDef] => relevant skills for def
 		//CachedStrings[Pawn] => pawn label
-		/// <summary>
-		/// Provides caching for various key types.
-		/// </summary>
 		public static Dictionary<object, string> CachedStrings = new Dictionary<object, string>();
+
+		public static DingoUtils ExtraUtilities = new DingoUtils();
+
+		public static float MaxWindowWidth => (float)UI.screenWidth * 0.8f;
+
+		public static float MaxWindowHeight => (float)UI.screenHeight * 0.8f;
 
 		static Utilities()
 		{
@@ -101,16 +112,14 @@ namespace DD_WorkTab.Tools
 			CachedStrings["RelevantSkills"] = "\n\n" + "RelevantSkills".Translate();
 			CachedStrings["ClickToJumpTo"] = "ClickToJumpTo".Translate() + "\n\n";
 
-			DingoUtils dingoUtils = new DingoUtils();
-
-			DraggableOutlineTexture = dingoUtils.GetHQTexture("DraggableOutline");
-			DisableWorkTexture = dingoUtils.GetHQTexture("DisableWork");
-			ResetWorkTexture = dingoUtils.GetHQTexture("ResetWork");
-			SortingDescendingIcon = dingoUtils.GetHQTexture("SortingDescending");
-			SortingAscendingIcon = dingoUtils.GetHQTexture("Sorting");
-			PassionMinorIcon = dingoUtils.GetHQTexture("PassionMinor");
-			PassionMajorIcon = dingoUtils.GetHQTexture("PassionMajor");
-			IncapableWorkerX = dingoUtils.GetHQTexture("IncapableWorkerX");
+			DraggableOutlineTexture = ExtraUtilities.GetHQTexture("DraggableOutline");
+			DisableWorkTexture = ExtraUtilities.GetHQTexture("DisableWork");
+			ResetWorkTexture = ExtraUtilities.GetHQTexture("ResetWork");
+			SortingDescendingIcon = ExtraUtilities.GetHQTexture("SortingDescending");
+			SortingAscendingIcon = ExtraUtilities.GetHQTexture("Sorting");
+			PassionMinorIcon = ExtraUtilities.GetHQTexture("PassionMinor");
+			PassionMajorIcon = ExtraUtilities.GetHQTexture("PassionMajor");
+			IncapableWorkerX = ExtraUtilities.GetHQTexture("IncapableWorkerX");
 
 			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
 			{
@@ -126,16 +135,16 @@ namespace DD_WorkTab.Tools
 					}
 				}
 
-				Texture2D enabledTex = dingoUtils.GetHQTexture(def.defName, "Work");
-				Texture2D disabledTex = dingoUtils.GetHQTexture(def.defName, "Work_Disabled");
-				Texture2D greyscaleTex = dingoUtils.GetHQTexture(def.defName, "Work_Greyscale");
+				Texture2D enabledTex = ExtraUtilities.GetHQTexture(def.defName, "Work");
+				Texture2D disabledTex = ExtraUtilities.GetHQTexture(def.defName, "Work_Disabled");
+				Texture2D greyscaleTex = ExtraUtilities.GetHQTexture(def.defName, "Work_Greyscale");
 
 				WorkDefAttributes[def] = new WorkTypeInfo(enabledTex, disabledTex, greyscaleTex, allRequiredCapacities);
 
 				//Cache "relevant skills:" string
 				if (def.relevantSkills.Count > 0)
 				{
-					string relevantSkills = string.Empty;
+					string relevantSkills = "";
 
 					for (int k = 0; k < def.relevantSkills.Count; k++)
 					{
@@ -147,8 +156,6 @@ namespace DD_WorkTab.Tools
 			}
 
 			Controller.GetPrimaries = new PrimarySurface();
-
-			dingoUtils = null;
 		}
 
 		/// <summary>
@@ -174,7 +181,7 @@ namespace DD_WorkTab.Tools
 		/// <summary>
 		/// Provides a Draggable-sized square whose center point is the provided position.
 		/// </summary>
-		public static Rect ToDraggableRect(this Vector2 position, float diameter = DraggableTextureDiameter)
+		public static Rect ToDraggableRect(this Vector2 position, float diameter = DraggableDiameter)
 		{
 			float draggableRadius = diameter / 2f;
 
@@ -203,6 +210,49 @@ namespace DD_WorkTab.Tools
 			}
 
 			return pawnLabel;
+		}
+
+		/// <summary>
+		/// Centralised method to send messages and sounds to the user.
+		/// </summary>
+		public static void UserFeedbackChain(WorkSound workSound, string message = "")
+		{
+			if (Controller.UseSounds)
+			{
+				SoundDef audio = null;
+
+				switch (workSound)
+				{
+					case (WorkSound.TaskCompleted):
+						audio = TaskCompleted;
+						break;
+					case (WorkSound.TaskFailed):
+						audio = TaskFailed;
+						break;
+					case (WorkSound.WorkEnabled):
+						audio = WorkEnabled;
+						break;
+					case (WorkSound.WorkDisabled):
+						audio = WorkDisabled;
+						break;
+					case (WorkSound.SortedSkills):
+						audio = SortedSkills;
+						break;
+					case (WorkSound.UnsortedSkills):
+						audio = UnsortedSkills;
+						break;
+					case (WorkSound.CompareSkillsMapChanged):
+						audio = CompareSkillsMapChanged;
+						break;
+				}
+
+				audio.PlayOneShotOnCamera(null);
+			}
+
+			if (Controller.VerboseMessages && message != "")
+			{
+				Messages.Message(message, MessageTypeDefOf.SilentInput);
+			}
 		}
 
 		/// <summary>
@@ -257,7 +307,26 @@ namespace DD_WorkTab.Tools
 			Widgets.Label(rect, pawn.CachedPawnLabel());
 
 			Text.Anchor = TextAnchor.UpperLeft; //Reset
-			Text.WordWrap = true; //Reset			
+			Text.WordWrap = true; //Reset
+
+			if (rect.Contains(Event.current.mousePosition))
+			{
+				if (Event.current.type == EventType.Repaint)
+				{
+					Widgets.DrawHighlight(rect);
+
+					TooltipHandler.TipRegion(rect, "ClickToJumpTo".CachedTranslation() + pawn.GetTooltip().text);
+				}
+
+				else if (Event.current.type == EventType.MouseDown)
+				{
+					CameraJumper.TryJumpAndSelect(pawn);
+
+					//Close active Work windows
+					Find.WindowStack.TryRemove(typeof(Window_WorkTab), false);
+					Find.WindowStack.TryRemove(typeof(Window_ColonistSkills), false);
+				}
+			}
 		}
 
 		/// <summary>
@@ -402,8 +471,8 @@ namespace DD_WorkTab.Tools
 		/// </summary>
 		public static FloatMenuOption WorkOption(WorkFunction function, PawnSurface surface)
 		{
-			string title;
-			Action buttonAction;
+			string title = "";
+			Action buttonAction = default(Action);
 
 			switch (function)
 			{
@@ -472,10 +541,6 @@ namespace DD_WorkTab.Tools
 						surface.PastePriorities(Controller.CopyPrioritiesReference);
 					};
 					break;
-				default:
-					title = string.Empty;
-					buttonAction = default(Action);
-					break;
 			}
 
 			if (Controller.ShowPrompts && function != WorkFunction.CopySettings && function != WorkFunction.PasteSettings)
@@ -490,10 +555,7 @@ namespace DD_WorkTab.Tools
 			{
 				buttonAction();
 
-				if (Controller.UseSounds)
-				{
-					TaskCompleted.PlayOneShotOnCamera(null);
-				}
+				UserFeedbackChain(WorkSound.TaskCompleted);
 			});
 		}
 
@@ -502,7 +564,7 @@ namespace DD_WorkTab.Tools
 		/// </summary>
 		public static void WorkPrompt(WorkFunction function, Action buttonAction, string title, PawnSurface surface)
 		{
-			string text;
+			string text = "";
 
 			switch (function)
 			{
@@ -523,9 +585,6 @@ namespace DD_WorkTab.Tools
 					break;
 				case WorkFunction.ResetWork:
 					text = "DD_WorkTab_PromptText_ResetWork".CachedTranslation().AdjustedFor(surface.pawn);
-					break;
-				default:
-					text = string.Empty;
 					break;
 			}
 

@@ -9,6 +9,16 @@ namespace DD_WorkTab.Base
 {
 	public class Controller : ModBase
 	{
+		//Saved in XML
+		public static SettingHandle<bool> UseSounds;
+
+		public static SettingHandle<bool> ShowPrompts;
+
+		public static SettingHandle<bool> VerboseMessages;
+
+		//Unsaved
+		public static bool ColonistSkillsVisibleMap = true;
+
 		public static SurfaceManager GetManager;
 
 		public static PrimarySurface GetPrimaries;
@@ -16,14 +26,6 @@ namespace DD_WorkTab.Base
 		public static DraggableWork CurrentDraggable;
 
 		public static PawnSurface CopyPrioritiesReference;
-
-		public static SettingHandle<bool> UseSounds;
-
-		public static SettingHandle<bool> ShowPrompts;
-
-		public static SettingHandle<bool> VerboseMessages;
-
-		public static bool ColonistStatsOnlyVisibleMap = true; //Unsaved
 
 		public override string ModIdentifier => "DD_WorkTab";
 

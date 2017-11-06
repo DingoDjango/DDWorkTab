@@ -1,10 +1,8 @@
 ﻿using DD_WorkTab.Base;
 using DD_WorkTab.Miscellaneous;
 using DD_WorkTab.Tools;
-using RimWorld;
 using UnityEngine;
 using Verse;
-using Verse.Sound;
 
 namespace DD_WorkTab.Draggables
 {
@@ -31,10 +29,7 @@ namespace DD_WorkTab.Draggables
 
 		public bool Disabled
 		{
-			get
-			{
-				return this.disabled;
-			}
+			get => this.disabled;
 
 			set
 			{
@@ -45,21 +40,11 @@ namespace DD_WorkTab.Draggables
 
 				else if (value == false)
 				{
-					string failedEnableText = "DD_WorkTab_Message_IncapablePawn".CachedTranslation(new string[] { this.def.labelShort }).AdjustedFor(this.parent.pawn);
+					string incapablePawn = "DD_WorkTab_Message_IncapablePawn".CachedTranslation(new string[] { this.def.labelShort }).AdjustedFor(this.parent.pawn);
 
-					Messages.Message(failedEnableText, MessageTypeDefOf.SilentInput);
-
-					if (Controller.UseSounds)
-					{
-						Utilities.TaskFailed.PlayOneShotOnCamera(null);
-					}
+					Utilities.UserFeedbackChain(WorkSound.TaskFailed, incapablePawn);
 				}
 			}
-		}
-
-		private void FetchUtilityValues()
-		{
-			this.workInfo = Utilities.WorkDefAttributes[this.def];
 		}
 
 		private Color ColourFromSkillRange(float skillAverage)
@@ -125,19 +110,16 @@ namespace DD_WorkTab.Draggables
 				GUI.DrawTexture(contractedDrawRect, this.workInfo.texture64); //Normal texture indicates enabled work
 			}
 
+			else if (!this.completelyIncapable)
+			{
+				GUI.DrawTexture(contractedDrawRect, this.workInfo.texture64_Disabled); //Outline texture indicates intentionally disabled work
+			}
+
 			else
 			{
-				if (!this.completelyIncapable)
-				{
-					GUI.DrawTexture(contractedDrawRect, this.workInfo.texture64_Disabled); //Outline texture indicates intentionally disabled work
-				}
+				GUI.DrawTexture(contractedDrawRect, this.workInfo.texture64_Greyscale); //Greyscale texture indicates incapability
 
-				else
-				{
-					GUI.DrawTexture(contractedDrawRect, this.workInfo.texture64_Greyscale); //Greyscale texture indicates incapability
-
-					GUI.DrawTexture(drawRect, Utilities.IncapableWorkerX); //Red X on top of greyscale texture
-				}
+				GUI.DrawTexture(drawRect, Utilities.IncapableWorkerX); //Red X on top of greyscale texture
 			}
 
 			Utilities.DrawPassion(drawRect, this.parent.pawn, this.def);
@@ -207,7 +189,7 @@ namespace DD_WorkTab.Draggables
 				this.disabled = true;
 			}
 
-			this.FetchUtilityValues();
+			this.workInfo = Utilities.WorkDefAttributes[this.def];
 		}
 
 		public void ExposeData()
@@ -218,7 +200,7 @@ namespace DD_WorkTab.Draggables
 
 			if (Scribe.mode == LoadSaveMode.LoadingVars)
 			{
-				this.FetchUtilityValues();
+				this.workInfo = Utilities.WorkDefAttributes[this.def];
 			}
 		}
 	}

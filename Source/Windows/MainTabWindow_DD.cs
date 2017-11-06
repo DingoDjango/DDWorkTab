@@ -14,11 +14,7 @@ namespace DD_WorkTab.Windows
 
 		protected float horizontalOffset = 0f;
 
-		protected Map currentMap = Find.VisibleMap;
-
-		protected List<PawnSurface> cachedPawnSurfaces;
-
-		protected int cachedColonistCount = 1;
+		protected List<PawnSurface> cachedPawnSurfaces = new List<PawnSurface>();
 
 		protected bool mustRecacheColonists = true;
 
@@ -32,9 +28,7 @@ namespace DD_WorkTab.Windows
 
 		public override void PreOpen()
 		{
-			this.currentMap = Find.VisibleMap;
-
-			if (this.cachedColonistCount != this.GetColonistCount())
+			if (this.cachedPawnSurfaces.Count != this.GetColonistCount())
 			{
 				this.mustRecacheColonists = true;
 			}
@@ -44,8 +38,6 @@ namespace DD_WorkTab.Windows
 		{
 			if (this.mustRecacheColonists)
 			{
-				this.cachedColonistCount = this.GetColonistCount();
-
 				this.cachedPawnSurfaces = this.GetCachedSurfaces().ToList();
 
 				this.mustRecacheColonists = false;

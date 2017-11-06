@@ -1,38 +1,27 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using DD_WorkTab.Base;
 using DD_WorkTab.Draggables;
-using DD_WorkTab.Miscellaneous;
 using DD_WorkTab.Tools;
-using RimWorld;
 using UnityEngine;
 using Verse;
-using Verse.Sound;
 
 namespace DD_WorkTab.Windows
 {
 	public class Window_WorkTab : MainTabWindow_DD
 	{
-		protected override float NaturalWindowWidth() => Utilities.SpaceForPawnLabel + Utilities.SpaceForWorkButtons + Utilities.PawnSurfaceWidth + 2f * Utilities.ShortSpacing + 2f * StandardMargin + Utilities.SpaceForScrollBar;
+		protected override float NaturalWindowWidth() => 2f * StandardMargin + 2f * Utilities.ShortSpacing + Utilities.SpaceForPawnLabel + Utilities.SpaceForWorkButtons + Utilities.PawnSurfaceWidth + Utilities.SpaceForScrollBar;
 
-		protected override float NaturalWindowHeight() => Utilities.TinyTextLineHeight + Utilities.StandardRowHeight * (this.cachedColonistCount + 1f) + 2f * Utilities.ShortSpacing + 2f * StandardMargin;
+		protected override float NaturalWindowHeight() => 2f * StandardMargin + 2f * Utilities.ShortSpacing + Utilities.TinyTextLineHeight + Utilities.StandardRowHeight * (this.cachedPawnSurfaces.Count + 1f);
 
 		protected override int GetColonistCount()
 		{
-			int count = this.currentMap.mapPawns.FreeColonistsCount;
-
-			if (count == 0)
-			{
-				return 1;
-			}
-
-			return count;
+			return Find.VisibleMap.mapPawns.FreeColonistsCount;
 		}
 
 		protected override IEnumerable<PawnSurface> GetCachedSurfaces()
 		{
-			foreach (Pawn pawn in this.currentMap.mapPawns.FreeColonists.OrderBy(p => p.CachedPawnLabel()))
+			foreach (Pawn pawn in Find.VisibleMap.mapPawns.FreeColonists.OrderBy(p => p.CachedPawnLabel()))
 			{
 				yield return Controller.GetManager.GetPawnSurface(pawn);
 			}
@@ -57,6 +46,7 @@ namespace DD_WorkTab.Windows
 
 		public override void WindowUpdate()
 		{
+			//Check for invalid drag
 			if (Controller.CurrentDraggable != null && !Input.GetMouseButton(0) && Event.current.type != EventType.MouseUp)
 			{
 				Controller.CurrentDraggable.OnDrop();
@@ -72,13 +62,13 @@ namespace DD_WorkTab.Windows
 
 			float topControlsY = indicatorsRect.yMax + Utilities.ShortSpacing;
 
-			Rect compareSkillsButtonRect = new Rect(inRect.x - this.horizontalOffset + Utilities.ShortSpacing, topControlsY, Utilities.SpaceForPawnLabel, Utilities.DraggableTextureDiameter);
-			Rect primaryWorkButtonRect = new Rect(compareSkillsButtonRect.xMax + 2f * Utilities.ShortSpacing, topControlsY, Utilities.DraggableTextureDiameter, Utilities.DraggableTextureDiameter);
-			Rect primariesRect = new Rect(primaryWorkButtonRect.xMax + Utilities.ShortSpacing, topControlsY, Utilities.PawnSurfaceWidth, Utilities.DraggableTextureDiameter);
+			Rect compareSkillsButtonRect = new Rect(inRect.x - this.horizontalOffset + Utilities.ShortSpacing, topControlsY, Utilities.SpaceForPawnLabel, Utilities.DraggableDiameter);
+			Rect primaryWorkButtonRect = new Rect(compareSkillsButtonRect.xMax + 2f * Utilities.ShortSpacing, topControlsY, Utilities.DraggableDiameter, Utilities.DraggableDiameter);
+			Rect primariesRect = new Rect(primaryWorkButtonRect.xMax, topControlsY, Utilities.PawnSurfaceWidth, Utilities.DraggableDiameter);
 
 			Rect scrollViewBox = new Rect(inRect.x, indicatorsRect.yMax + Utilities.StandardRowHeight, inRect.width, inRect.height - indicatorsRect.height - Utilities.StandardRowHeight);
 			Rect scrollViewOuterRect = scrollViewBox.ContractedBy(Utilities.ShortSpacing);
-			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, Utilities.SpaceForPawnLabel + Utilities.SpaceForWorkButtons + Utilities.PawnSurfaceWidth, this.cachedColonistCount * Utilities.StandardRowHeight);
+			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, Utilities.SpaceForPawnLabel + Utilities.SpaceForWorkButtons + Utilities.PawnSurfaceWidth, this.cachedPawnSurfaces.Count * Utilities.StandardRowHeight);
 
 			if (scrollViewInnerRect.width > scrollViewOuterRect.width)
 			{
@@ -98,9 +88,9 @@ namespace DD_WorkTab.Windows
 			//Compare Skills button
 			Text.Font = GameFont.Small;
 
-			if (Widgets.ButtonText(compareSkillsButtonRect, "DD_WorkTab_ButtonColonistStats".CachedTranslation(), true, false, true))
+			if (Widgets.ButtonText(compareSkillsButtonRect, "DD_WorkTab_Work_CompareSkills".CachedTranslation(), true, false, true))
 			{
-				Find.WindowStack.Add(new Window_ColonistStats());
+				Find.WindowStack.Add(new Window_ColonistSkills());
 			}
 
 			//Float menu button
@@ -111,22 +101,21 @@ namespace DD_WorkTab.Windows
 
 			Widgets.BeginScrollView(scrollViewOuterRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
-			Controller.CurrentDraggable?.OnDrag();
+			Controller.CurrentDraggable?.OnDrag(); //Update draggable position within the list
 
-			//Determine which surfaces will actually be seen and ignore all others
-			int FirstIndexToRender = (int)(this.scrollPosition.y / Utilities.StandardRowHeight); //Get the first list item that should be visible
-			int TotalIndexesToRender = (int)(scrollViewOuterRect.height / Utilities.StandardRowHeight) + 2; //Account for partly rendered surfaces on top/bottom
-			int LastIndexToRender = Mathf.Min(FirstIndexToRender + TotalIndexesToRender, this.cachedPawnSurfaces.Count); //Get the last item to render, don't go over list.Count
-			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstIndexToRender * Utilities.StandardRowHeight; //The .y value of the first rendered surface
+			//Determine which surfaces will actually be seen
+			Utilities.ExtraUtilities.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.StandardRowHeight, this.cachedPawnSurfaces.Count, out int FirstIndex, out int LastIndex);
 
-			for (int i = FirstIndexToRender; i < LastIndexToRender; i++)
+			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstIndex * Utilities.StandardRowHeight; //The .y value of the first rendered surface
+
+			for (int i = FirstIndex; i < LastIndex; i++)
 			{
 				PawnSurface surface = this.cachedPawnSurfaces[i];
 				Pawn pawn = surface.pawn;
 
 				Rect pawnLabelRect = new Rect(scrollViewInnerRect.x, dynamicVerticalY, Utilities.SpaceForPawnLabel, Utilities.StandardRowHeight);
-				Rect workButtonRect = new Rect(pawnLabelRect.xMax + 2f * Utilities.ShortSpacing, dynamicVerticalY + Utilities.ShortSpacing, Utilities.DraggableTextureDiameter, Utilities.DraggableTextureDiameter);
-				Rect surfaceRect = new Rect(workButtonRect.xMax + Utilities.ShortSpacing, dynamicVerticalY, Utilities.PawnSurfaceWidth, Utilities.StandardRowHeight);
+				Rect workButtonRect = new Rect(pawnLabelRect.xMax + 2f * Utilities.ShortSpacing, dynamicVerticalY + Utilities.ShortSpacing, Utilities.DraggableDiameter, Utilities.DraggableDiameter);
+				Rect surfaceRect = new Rect(workButtonRect.xMax, dynamicVerticalY, Utilities.PawnSurfaceWidth, Utilities.StandardRowHeight);
 
 				if (Event.current.type == EventType.Repaint)
 				{
@@ -136,30 +125,9 @@ namespace DD_WorkTab.Windows
 					}
 
 					surface.DrawSurface(surfaceRect);
-
-					Utilities.PawnLabel(pawnLabelRect, pawn);
-
-					if (pawnLabelRect.Contains(Event.current.mousePosition))
-					{
-						Widgets.DrawHighlight(pawnLabelRect);
-
-						TooltipHandler.TipRegion(pawnLabelRect, "ClickToJumpTo".CachedTranslation() + pawn.GetTooltip().text);
-					}
 				}
 
-				else
-				{
-					if (Event.current.type == EventType.MouseDown)
-					{
-						if (pawnLabelRect.Contains(Event.current.mousePosition))
-						{
-							CameraJumper.TryJumpAndSelect(pawn);
-
-							this.Close(false);
-							Find.WindowStack.TryRemove(typeof(Window_ColonistStats), false); //Close Skills window if open
-						}
-					}
-				}
+				Utilities.PawnLabel(pawnLabelRect, pawn);
 
 				Utilities.WorkButton(workButtonRect, surface);
 
@@ -168,9 +136,9 @@ namespace DD_WorkTab.Windows
 				dynamicVerticalY += Utilities.StandardRowHeight;
 			}
 
+			//Render current Draggable on top of other textures
 			DraggableWork currentDraggable = Controller.CurrentDraggable;
 
-			//Render current Draggable on top of other textures
 			if (Event.current.type == EventType.Repaint && currentDraggable != null)
 			{
 				Rect dragRect = currentDraggable.position.ToDraggableRect();
@@ -185,9 +153,15 @@ namespace DD_WorkTab.Windows
 		{
 			base.PostClose();
 
-			Controller.CurrentDraggable = null;
+			//Make sure drag gets reset
+			if (Controller.CurrentDraggable != null)
+			{
+				Controller.CurrentDraggable.OnDrop();
+				Controller.CurrentDraggable = null;
+			}
+
 			Controller.CopyPrioritiesReference = null;
-		}		
+		}
 
 		public Window_WorkTab() : base()
 		{

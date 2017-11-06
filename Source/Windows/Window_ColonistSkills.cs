@@ -8,23 +8,16 @@ using DD_WorkTab.Tools;
 using RimWorld;
 using UnityEngine;
 using Verse;
-using Verse.Sound;
 
 namespace DD_WorkTab.Windows
 {
-	public class Window_ColonistStats : MainTabWindow_DD
+	public class Window_ColonistSkills : MainTabWindow_DD
 	{
-		protected override float NaturalWindowWidth() => Utilities.SpaceForPawnLabel + this.statsSurfaceWidth + 2f * Utilities.ShortSpacing + 2f * StandardMargin + Utilities.SpaceForScrollBar;
+		protected override float NaturalWindowWidth() => 2f * StandardMargin + 2f * Utilities.ShortSpacing + Utilities.SpaceForPawnLabel + Utilities.SmallSurfaceWidth + Utilities.SpaceForScrollBar;
 
-		protected override float NaturalWindowHeight() => Utilities.TinyTextLineHeight + statsRowHeight * (this.cachedColonistCount + 1f) + 2f * Utilities.ShortSpacing + 2f * StandardMargin;
+		protected override float NaturalWindowHeight() => 2f * StandardMargin + 2f * Utilities.ShortSpacing + Utilities.TinyTextLineHeight + Utilities.SmallRowHeight * (this.cachedPawnSurfaces.Count + 1f);
 
-		private const float smallDraggableDiameter = 32f;
-
-		private const float statsRowHeight = 2f * Utilities.ShortSpacing + smallDraggableDiameter;
-
-		private float statsSurfaceWidth = Utilities.ShortSpacing + Controller.GetPrimaries.PrimaryWorkList.Count * (smallDraggableDiameter + Utilities.ShortSpacing);
-
-		private string ToggleButtonText => (Controller.ColonistStatsOnlyVisibleMap ? "DD_WorkTab_ColonistStats_ButtonVisibleMap" : "DD_WorkTab_ColonistStats_ButtonAllMaps").CachedTranslation();
+		private string ToggleButtonText => (Controller.ColonistSkillsVisibleMap ? "DD_WorkTab_ColonistSkills_VisibleMap" : "DD_WorkTab_ColonistSkills_AllMaps").CachedTranslation();
 
 		private Dictionary<WorkTypeDef, float> primariesPositions = new Dictionary<WorkTypeDef, float>();
 
@@ -34,27 +27,20 @@ namespace DD_WorkTab.Windows
 
 		protected override int GetColonistCount()
 		{
-			if (Controller.ColonistStatsOnlyVisibleMap)
+			if (Controller.ColonistSkillsVisibleMap)
 			{
-				return this.currentMap.mapPawns.FreeColonistsCount;
+				return Find.VisibleMap.mapPawns.FreeColonistsCount;
 			}
 
 			else
 			{
-				int count = 0;
-
-				for (int i = 0; i < Find.Maps.Count; i++)
-				{
-					count += Find.Maps[i].mapPawns.FreeColonistsCount;
-				}
-
-				return count;
+				return PawnsFinder.AllMaps_FreeColonists.Count();
 			}
 		}
 
 		protected override IEnumerable<PawnSurface> GetCachedSurfaces()
 		{
-			IEnumerable<Pawn> pawnsList = Controller.ColonistStatsOnlyVisibleMap ? this.currentMap.mapPawns.FreeColonists : PawnsFinder.AllMaps_FreeColonists;
+			IEnumerable<Pawn> pawnsList = Controller.ColonistSkillsVisibleMap ? Find.VisibleMap.mapPawns.FreeColonists : PawnsFinder.AllMaps_FreeColonists;
 
 			if (this.sortingOrder == SortOrder.Undefined || this.sortingDef == null)
 			{
@@ -144,14 +130,14 @@ namespace DD_WorkTab.Windows
 					changedState = true;
 				}
 
-				if (Controller.UseSounds && changedState)
+				if (changedState)
 				{
-					SoundDef soundToUse = this.sortingOrder == SortOrder.Undefined ? SoundDefOf.TickLow : SoundDefOf.TickHigh;
+					WorkSound sound = this.sortingOrder != SortOrder.Undefined ? WorkSound.SortedSkills : WorkSound.UnsortedSkills;
 
-					soundToUse.PlayOneShotOnCamera(null);
+					Utilities.UserFeedbackChain(sound);
+
+					this.mustRecacheColonists = true;
 				}
-
-				this.mustRecacheColonists = true;
 
 				Event.current.Use();
 			}
@@ -164,26 +150,26 @@ namespace DD_WorkTab.Windows
 			List<PrimaryWork> primariesList = Controller.GetPrimaries.PrimaryWorkList;
 
 			//Build rects
-			Rect toggleMapRect = new Rect(inRect.x - this.horizontalOffset, inRect.y + Utilities.TinyTextLineHeight, Utilities.ShortSpacing + Utilities.SpaceForPawnLabel, statsRowHeight);
-			Rect primaryTypesRect = new Rect(toggleMapRect.xMax, toggleMapRect.y, inRect.width - toggleMapRect.width, statsRowHeight);
+			Rect toggleMapRect = new Rect(inRect.x - this.horizontalOffset, inRect.y + Utilities.TinyTextLineHeight, Utilities.ShortSpacing + Utilities.SpaceForPawnLabel, Utilities.SmallRowHeight);
+			Rect primaryTypesRect = new Rect(toggleMapRect.xMax, toggleMapRect.y, inRect.width - toggleMapRect.width, Utilities.SmallRowHeight);
 
-			Rect scrollViewBox = new Rect(inRect.x, primaryTypesRect.yMax, inRect.width, inRect.height - statsRowHeight - Utilities.TinyTextLineHeight);
+			Rect scrollViewBox = new Rect(inRect.x, primaryTypesRect.yMax, inRect.width, inRect.height - Utilities.SmallRowHeight - Utilities.TinyTextLineHeight);
 			Rect scrollViewOuterRect = scrollViewBox.ContractedBy(Utilities.ShortSpacing);
-			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, Utilities.SpaceForPawnLabel + this.statsSurfaceWidth, this.cachedColonistCount * statsRowHeight);
+			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, Utilities.SpaceForPawnLabel + Utilities.SmallSurfaceWidth, this.cachedPawnSurfaces.Count * Utilities.SmallRowHeight);
 
 			if (scrollViewInnerRect.width > scrollViewOuterRect.width)
 			{
 				scrollViewInnerRect.yMax += Utilities.SpaceForScrollBar;
 			}
 
-			//Draw list outline
+			//Draw window title and list outline
 			if (Event.current.type == EventType.Repaint)
 			{
 				GUI.color = Utilities.Orange;
 				Text.Anchor = TextAnchor.UpperCenter;
 				Text.Font = GameFont.Tiny;
 
-				Widgets.Label(inRect, "Compare Colonist Skills");
+				Widgets.Label(inRect, "DD_WorkTab_ColonistSkills_Title".CachedTranslation());
 
 				Text.Font = GameFont.Small; //Reset
 				Text.Anchor = TextAnchor.UpperLeft; //Reset
@@ -196,18 +182,15 @@ namespace DD_WorkTab.Windows
 
 			if (Widgets.ButtonText(toggleMapRect.ContractedBy(Utilities.ShortSpacing), this.ToggleButtonText, true, false, true))
 			{
-				Controller.ColonistStatsOnlyVisibleMap = !Controller.ColonistStatsOnlyVisibleMap;
+				Controller.ColonistSkillsVisibleMap = !Controller.ColonistSkillsVisibleMap;
 
 				this.mustRecacheColonists = true;
 
-				if (Controller.UseSounds)
-				{
-					SoundDefOf.DialogBoxAppear.PlayOneShotOnCamera(null);
-				}
+				Utilities.UserFeedbackChain(WorkSound.CompareSkillsMapChanged);
 			}
 
 			//Draw primaries
-			Vector2 primaryPositions = new Vector2(primaryTypesRect.x + Utilities.ShortSpacing + (smallDraggableDiameter / 2f), primaryTypesRect.center.y);
+			Vector2 primaryPositions = new Vector2(primaryTypesRect.x + Utilities.ShortSpacing + (Utilities.SmallDraggableDiameter / 2f), primaryTypesRect.center.y);
 
 			for (int j = 0; j < primariesList.Count; j++)
 			{
@@ -216,7 +199,7 @@ namespace DD_WorkTab.Windows
 
 				this.primariesPositions[primaryDef] = primaryPositions.x;
 
-				Rect primeRect = primaryPositions.ToDraggableRect(smallDraggableDiameter);
+				Rect primeRect = primaryPositions.ToDraggableRect(Utilities.SmallDraggableDiameter);
 
 				primary.DrawTexture(primeRect);
 
@@ -240,18 +223,17 @@ namespace DD_WorkTab.Windows
 					Widgets.DrawHighlight(new Rect(primeRect.xMin - 3f, primeRect.yMin - 3f, primeRect.width + 6f, primeRect.height + 6f));
 				}
 
-				primaryPositions.x += Utilities.ShortSpacing + smallDraggableDiameter;
+				primaryPositions.x += Utilities.ShortSpacing + Utilities.SmallDraggableDiameter;
 			}
 
 			Widgets.BeginScrollView(scrollViewOuterRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
-			//Determine which surfaces will actually be seen and ignore all others
-			int FirstIndexToRender = (int)(this.scrollPosition.y / statsRowHeight); //Get the first list item that should be visible
-			int TotalIndexesToRender = (int)(scrollViewOuterRect.height / statsRowHeight) + 2; //Account for partly rendered surfaces on top/bottom
-			int LastIndexToRender = Mathf.Min(FirstIndexToRender + TotalIndexesToRender, this.cachedPawnSurfaces.Count); //Get the last item to render, don't go over list.Count
-			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstIndexToRender * statsRowHeight; //The .y value of the first rendered surface
+			//Determine which surfaces will actually be seen
+			Utilities.ExtraUtilities.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.SmallRowHeight, this.cachedPawnSurfaces.Count, out int FirstIndex, out int LastIndex);
 
-			for (int k = FirstIndexToRender; k < LastIndexToRender; k++)
+			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstIndex * Utilities.SmallRowHeight; //The .y value of the first rendered surface
+
+			for (int k = FirstIndex; k < LastIndex; k++)
 			{
 				PawnSurface surface = this.cachedPawnSurfaces[k];
 
@@ -262,8 +244,8 @@ namespace DD_WorkTab.Windows
 					Utilities.ListSeparator(scrollViewInnerRect, dynamicVerticalY);
 				}
 
-				Rect nameRect = new Rect(scrollViewInnerRect.x, dynamicVerticalY, Utilities.SpaceForPawnLabel, statsRowHeight);
-				Rect surfaceRect = new Rect(nameRect.xMax, dynamicVerticalY, this.statsSurfaceWidth, statsRowHeight);
+				Rect nameRect = new Rect(scrollViewInnerRect.x, dynamicVerticalY, Utilities.SpaceForPawnLabel, Utilities.SmallRowHeight);
+				Rect surfaceRect = new Rect(nameRect.xMax, dynamicVerticalY, Utilities.SmallSurfaceWidth, Utilities.SmallRowHeight);
 				float surfaceRectCenterY = surfaceRect.center.y;
 
 				Utilities.PawnLabel(nameRect, pawn);
@@ -272,7 +254,7 @@ namespace DD_WorkTab.Windows
 				{
 					WorkTypeDef def = primariesList[p].def;
 					DraggableWork matchingDraggable = surface.childByDef[def];
-					Rect drawRect = new Vector2(this.primariesPositions[def], surfaceRectCenterY).ToDraggableRect(smallDraggableDiameter);
+					Rect drawRect = new Vector2(this.primariesPositions[def], surfaceRectCenterY).ToDraggableRect(Utilities.SmallDraggableDiameter);
 
 					matchingDraggable.DrawTexture(drawRect);
 
@@ -286,7 +268,7 @@ namespace DD_WorkTab.Windows
 					}
 				}
 
-				dynamicVerticalY += statsRowHeight;
+				dynamicVerticalY += Utilities.SmallRowHeight;
 			}
 
 			Widgets.EndScrollView();
@@ -300,7 +282,7 @@ namespace DD_WorkTab.Windows
 			this.sortingOrder = SortOrder.Undefined;
 		}
 
-		public Window_ColonistStats() : base()
+		public Window_ColonistSkills() : base()
 		{
 			this.closeOnClickedOutside = true;
 		}

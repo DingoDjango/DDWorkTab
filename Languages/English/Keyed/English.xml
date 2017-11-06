@@ -90,12 +90,14 @@
 
 	<!-- Work -->
 
-	<DD_WorkTab_ButtonColonistStats>Compare Skills</DD_WorkTab_ButtonColonistStats>
+	<DD_WorkTab_Work_CompareSkills>Compare Skills</DD_WorkTab_Work_CompareSkills>
 
 	<!-- Compare Skills -->
 
-	<DD_WorkTab_ColonistStats_ButtonVisibleMap>Current Map</DD_WorkTab_ColonistStats_ButtonVisibleMap>
+	<DD_WorkTab_ColonistSkills_Title>Compare Colonist Skills</DD_WorkTab_ColonistSkills_Title>
 
-	<DD_WorkTab_ColonistStats_ButtonAllMaps>All Maps</DD_WorkTab_ColonistStats_ButtonAllMaps>
+	<DD_WorkTab_ColonistSkills_VisibleMap>Current Map</DD_WorkTab_ColonistSkills_VisibleMap>
+
+	<DD_WorkTab_ColonistSkills_AllMaps>All Maps</DD_WorkTab_ColonistSkills_AllMaps>
 
 </LanguageData>

@@ -6,7 +6,6 @@ using DD_WorkTab.Tools;
 using RimWorld;
 using UnityEngine;
 using Verse;
-using Verse.Sound;
 
 namespace DD_WorkTab.Draggables
 {
@@ -69,7 +68,7 @@ namespace DD_WorkTab.Draggables
 
 					if (child != nomad && child.position.x < nomad.position.x)
 					{
-						xPosition = child.position.x + Utilities.DraggableTextureDiameter / 2f + Utilities.ShortSpacing / 2f - 1f;
+						xPosition = child.position.x + Utilities.DraggableDiameter / 2f + Utilities.ShortSpacing / 2f - 1f;
 
 						break;
 					}
@@ -81,7 +80,7 @@ namespace DD_WorkTab.Draggables
 				xPosition = listRect.xMin + Utilities.ShortSpacing / 2f - 1f;
 			}
 
-			Rect lineRect = new Rect(xPosition, listRect.yMin + (Utilities.ShortSpacing / 2f), 2f, Utilities.DraggableTextureDiameter + Utilities.ShortSpacing);
+			Rect lineRect = new Rect(xPosition, listRect.yMin + (Utilities.ShortSpacing / 2f), 2f, Utilities.DraggableDiameter + Utilities.ShortSpacing);
 
 			GUI.DrawTexture(lineRect, BaseContent.WhiteTex);
 
@@ -130,7 +129,7 @@ namespace DD_WorkTab.Draggables
 
 				if (!current.Disabled)
 				{
-					this.pawn.workSettings.SetPriority(this.children[i].Def, i + 1);
+					this.pawn.workSettings.SetPriority(current.Def, i + 1);
 				}
 
 				else
@@ -157,7 +156,7 @@ namespace DD_WorkTab.Draggables
 
 		public void DrawSurface(Rect surfaceRect)
 		{
-			Vector2 positionSetter = new Vector2(surfaceRect.x + 2f * Utilities.ShortSpacing + Utilities.DraggableTextureDiameter / 2f, surfaceRect.center.y);
+			Vector2 positionSetter = new Vector2(surfaceRect.x + 2f * Utilities.ShortSpacing + Utilities.DraggableDiameter / 2f, surfaceRect.center.y);
 
 			for (int i = 0; i < this.children.Count; i++)
 			{
@@ -177,7 +176,7 @@ namespace DD_WorkTab.Draggables
 					this.DrawDynamicPosition(surfaceRect, draggable);
 				}
 
-				positionSetter.x += Utilities.DraggableTextureDiameter + Utilities.ShortSpacing;
+				positionSetter.x += Utilities.DraggableDiameter + Utilities.ShortSpacing;
 			}
 		}
 
@@ -187,7 +186,7 @@ namespace DD_WorkTab.Draggables
 
 			if (nomad != null)
 			{
-				if (nomad.parent == this && Event.current.type == EventType.MouseUp)
+				if (Event.current.type == EventType.MouseUp && nomad.parent == this)
 				{
 					nomad.OnDrop();
 
@@ -195,25 +194,10 @@ namespace DD_WorkTab.Draggables
 					{
 						this.OnDrop();
 
-						if (Controller.UseSounds)
-						{
-							if (!nomad.CompletelyDisabled)
-							{
-								Utilities.TaskCompleted.PlayOneShotOnCamera(null);
-							}
+						string badDrag = !nomad.CompletelyDisabled ? "" : "DD_WorkTab_Message_DraggedIncapableWork".CachedTranslation(new string[] { nomad.Def.labelShort }).AdjustedFor(this.pawn);
+						WorkSound sound = !nomad.CompletelyDisabled ? WorkSound.TaskCompleted : WorkSound.TaskFailed;
 
-							else
-							{
-								Utilities.TaskFailed.PlayOneShotOnCamera(null);
-
-								if (Controller.VerboseMessages)
-								{
-									string draggedIncapableWork = "DD_WorkTab_Message_DraggedIncapableWork".CachedTranslation(new string[] { nomad.Def.labelShort }).AdjustedFor(this.pawn);
-
-									Messages.Message(draggedIncapableWork, MessageTypeDefOf.SilentInput);
-								}
-							}
-						}
+						Utilities.UserFeedbackChain(sound, badDrag);
 					}
 
 				}
@@ -235,11 +219,9 @@ namespace DD_WorkTab.Draggables
 
 		public void OnPrimaryShiftClick(int change, WorkTypeDef def)
 		{
-			int index = this.children.FindIndex(dr => dr.Def == def);
+			DraggableWork affectedWork = this.childByDef[def];
 
-			DraggableWork affectedWork = this.children[index];
-
-			int postChange = index + change;
+			int postChange = this.children.FindIndex(c => c == affectedWork) + change;
 
 			if (postChange >= 0 && postChange < this.children.Count)
 			{
@@ -251,52 +233,52 @@ namespace DD_WorkTab.Draggables
 			}
 		}
 
+		public void OnPrimaryCtrlClick(bool state, WorkTypeDef def)
+		{
+			DraggableWork work = this.childByDef[def];
+
+			if (!work.CompletelyDisabled)
+			{
+				if (state)
+				{
+					this.EnableWorkType(work, true);
+				}
+
+				else
+				{
+					this.DisableWorkType(work, true);
+				}
+			}
+		}
+
 		public void EnableWorkType(DraggableWork draggable, bool suppressVerbosity = false)
 		{
-			int index = this.children.FindIndex(d => d == draggable);
-
 			draggable.Disabled = false; //Will stop and notify the user if they're trying to enable a CompletelyDisabled type
 
 			if (!draggable.Disabled) //Check state post-change
 			{
-				this.pawn.workSettings.SetPriority(draggable.Def, index + 1);
+				this.UpdatePawnPriorities();
 
 				if (!suppressVerbosity)
 				{
-					if (Controller.VerboseMessages)
-					{
-						string enabledWorkText = "DD_WorkTab_Message_WorkEnabled".CachedTranslation(new string[] { draggable.Def.labelShort }).AdjustedFor(this.pawn);
+					string workEnabled = "DD_WorkTab_Message_WorkEnabled".CachedTranslation(new string[] { draggable.Def.labelShort }).AdjustedFor(this.pawn);
 
-						Messages.Message(enabledWorkText, MessageTypeDefOf.SilentInput);
-					}
-
-					if (Controller.UseSounds)
-					{
-						Utilities.WorkEnabled.PlayOneShotOnCamera(null);
-					}
+					Utilities.UserFeedbackChain(WorkSound.WorkEnabled, workEnabled);
 				}
 			}
 		}
 
 		public void DisableWorkType(DraggableWork draggable, bool suppressVerbosity = false)
 		{
-			this.pawn.workSettings.Disable(draggable.Def);
-
 			draggable.Disabled = true;
+
+			this.UpdatePawnPriorities();
 
 			if (!suppressVerbosity)
 			{
-				if (Controller.VerboseMessages)
-				{
-					string disabledWorkText = "DD_WorkTab_Message_WorkDisabled".CachedTranslation(new string[] { draggable.Def.labelShort }).AdjustedFor(this.pawn);
+				string workDisabled = "DD_WorkTab_Message_WorkDisabled".CachedTranslation(new string[] { draggable.Def.labelShort }).AdjustedFor(this.pawn);
 
-					Messages.Message(disabledWorkText, MessageTypeDefOf.SilentInput);
-				}
-
-				if (Controller.UseSounds)
-				{
-					Utilities.WorkDisabled.PlayOneShotOnCamera(null);
-				}
+				Utilities.UserFeedbackChain(WorkSound.WorkDisabled, workDisabled);
 			}
 		}
 
@@ -344,41 +326,27 @@ namespace DD_WorkTab.Draggables
 		{
 			Controller.CopyPrioritiesReference = this;
 
-			if (Controller.VerboseMessages)
-			{
-				Messages.Message("DD_WorkTab_Message_CopiedPriorities".CachedTranslation().AdjustedFor(this.pawn), MessageTypeDefOf.SilentInput);
-			}
+			string copiedPriorities = "DD_WorkTab_Message_CopiedPriorities".CachedTranslation().AdjustedFor(this.pawn);
 
-			if (Controller.UseSounds)
-			{
-				Utilities.TaskCompleted.PlayOneShotOnCamera(null);
-			}
+			Utilities.UserFeedbackChain(WorkSound.TaskCompleted, copiedPriorities);
 		}
 
 		public void PastePriorities(PawnSurface referencedSurface)
 		{
 			if (referencedSurface == null)
 			{
-				Messages.Message("DD_WorkTab_Message_NoCopyPasteReference".CachedTranslation(), MessageTypeDefOf.SilentInput);
+				string noReference = "DD_WorkTab_Message_NoCopyPasteReference".CachedTranslation();
 
-				Utilities.TaskFailed.PlayOneShotOnCamera(null);
+				Utilities.UserFeedbackChain(WorkSound.TaskFailed, noReference);
 
 				return;
 			}
 
 			this.ConformWorkToList(referencedSurface.children);
 
-			if (Controller.VerboseMessages)
-			{
-				string message = "DD_WorkTab_Message_PastedPriorities".CachedTranslation(new string[] { referencedSurface.pawn.NameStringShort }).AdjustedFor(this.pawn);
+			string pastedPriorities = "DD_WorkTab_Message_PastedPriorities".CachedTranslation(new string[] { referencedSurface.pawn.NameStringShort }).AdjustedFor(this.pawn);
 
-				Messages.Message(message, MessageTypeDefOf.SilentInput);
-			}
-
-			if (Controller.UseSounds)
-			{
-				Utilities.TaskCompleted.PlayOneShotOnCamera(null);
-			}
+			Utilities.UserFeedbackChain(WorkSound.TaskCompleted, pastedPriorities);
 		}
 
 		public void RecacheDraggableOutlines()

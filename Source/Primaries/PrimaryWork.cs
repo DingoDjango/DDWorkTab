@@ -1,12 +1,8 @@
 ﻿using DD_WorkTab.Base;
-using DD_WorkTab.Draggables;
 using DD_WorkTab.Miscellaneous;
 using DD_WorkTab.Tools;
-using DD_WorkTab.Windows;
-using RimWorld;
 using UnityEngine;
 using Verse;
-using Verse.Sound;
 
 namespace DD_WorkTab.Primaries
 {
@@ -27,17 +23,9 @@ namespace DD_WorkTab.Primaries
 				Controller.GetManager.GetPawnSurface(pawn).OnPrimaryShiftClick(clickInt, this.def);
 			}
 
-			if (Controller.VerboseMessages)
-			{
-				string shiftCompletedText = "DD_WorkTab_Message_PrimaryShiftClick".CachedTranslation(new string[] { this.def.labelShort });
+			string shiftClickDone = "DD_WorkTab_Message_PrimaryShiftClick".CachedTranslation(new string[] { this.def.labelShort });
 
-				Messages.Message(shiftCompletedText, MessageTypeDefOf.SilentInput);
-			}
-
-			if (Controller.UseSounds)
-			{
-				Utilities.TaskCompleted.PlayOneShotOnCamera(null);
-			}
+			Utilities.UserFeedbackChain(WorkSound.TaskCompleted, shiftClickDone);
 		}
 
 		private void OnPrimaryCtrlClick()
@@ -46,44 +34,13 @@ namespace DD_WorkTab.Primaries
 
 			foreach (Pawn pawn in Find.VisibleMap.mapPawns.FreeColonists)
 			{
-				PawnSurface surface = Controller.GetManager.GetPawnSurface(pawn);
-				DraggableWork work = surface.childByDef[this.def];
-
-				if (!work.CompletelyDisabled)
-				{
-					if (this.ctrlState)
-					{
-						surface.EnableWorkType(work, true);
-					}
-
-					else
-					{
-						surface.DisableWorkType(work, true);
-					}
-				}
+				Controller.GetManager.GetPawnSurface(pawn).OnPrimaryCtrlClick(this.ctrlState, this.def);
 			}
 
-			if (Controller.VerboseMessages)
-			{
-				string message;
+			string message = (this.ctrlState ? "DD_WorkTab_Message_PrimaryCtrlEnabledAll" : "DD_WorkTab_Message_PrimaryCtrlDisabledAll").CachedTranslation(new string[] { this.def.labelShort });
+			WorkSound sound = this.ctrlState ? WorkSound.WorkEnabled : WorkSound.WorkDisabled;
 
-				if (this.ctrlState)
-				{
-					message = "DD_WorkTab_Message_PrimaryCtrlEnabledAll".CachedTranslation(new string[] { this.def.labelShort });
-				}
-
-				else
-				{
-					message = "DD_WorkTab_Message_PrimaryCtrlDisabledAll".CachedTranslation(new string[] { this.def.labelShort });
-				}
-
-				Messages.Message(message, MessageTypeDefOf.SilentInput);
-			}
-
-			if (Controller.UseSounds)
-			{
-				Utilities.TaskCompleted.PlayOneShotOnCamera(null);
-			}
+			Utilities.UserFeedbackChain(sound, message);
 		}
 
 		public void DrawTexture(Rect rect)
@@ -108,7 +65,7 @@ namespace DD_WorkTab.Primaries
 				}
 			}
 
-			if (Event.current.control)
+			else if (Event.current.control)
 			{
 				this.OnPrimaryCtrlClick();
 			}

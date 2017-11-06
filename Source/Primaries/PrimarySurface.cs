@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using DD_WorkTab.Miscellaneous;
 using DD_WorkTab.Tools;
 using UnityEngine;
 using Verse;
@@ -42,7 +41,7 @@ namespace DD_WorkTab.Primaries
 
 		public void DrawPrimaryDraggables(Rect rect)
 		{
-			Vector2 positionSetter = new Vector2(rect.x + 2f * Utilities.ShortSpacing + Utilities.DraggableTextureDiameter / 2f, rect.center.y);
+			Vector2 positionSetter = new Vector2(rect.x + 2f * Utilities.ShortSpacing + Utilities.DraggableDiameter / 2f, rect.center.y);
 
 			for (int i = 0; i < this.PrimaryWorkList.Count; i++)
 			{
@@ -52,7 +51,7 @@ namespace DD_WorkTab.Primaries
 
 				primary.DrawTexture(primary.drawRect);
 
-				positionSetter.x += Utilities.DraggableTextureDiameter + Utilities.ShortSpacing;
+				positionSetter.x += Utilities.DraggableDiameter + Utilities.ShortSpacing;
 			}
 		}
 
@@ -60,14 +59,14 @@ namespace DD_WorkTab.Primaries
 		{
 			if (surfaceRect.Contains(Event.current.mousePosition))
 			{
-				if (Event.current.type == EventType.MouseDown)
-				{
-					this.OnClicked();
-				}
-
-				else
+				if (Event.current.type == EventType.Repaint)
 				{
 					this.OnHover();
+				}
+
+				else if (Event.current.type == EventType.MouseDown)
+				{
+					this.OnClicked();
 				}
 			}
 		}

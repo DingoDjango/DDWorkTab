@@ -77,7 +77,7 @@
     <Compile Include="Tools\Utilities.cs" />
     <Compile Include="Draggables\DraggableWork.cs" />
     <Compile Include="Draggables\PawnSurface.cs" />
-    <Compile Include="Windows\Window_ColonistStats.cs" />
+    <Compile Include="Windows\Window_ColonistSkills.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

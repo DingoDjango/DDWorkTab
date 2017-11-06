@@ -6,6 +6,7 @@ namespace DD_WorkTab.Base
 {
 	class Harmony
 	{
+		//Patch to allow any priority value in Pawn_WorkSettings
 		[HarmonyPatch(typeof(Pawn_WorkSettings))]
 		[HarmonyPatch(nameof(Pawn_WorkSettings.SetPriority))]
 		class Patch_Pawn_WorkSettings
@@ -23,13 +24,14 @@ namespace DD_WorkTab.Base
 			{
 				if (__state != null)
 				{
-					DefMap<WorkTypeDef, int> prios = (DefMap<WorkTypeDef, int>)AccessTools.Field(__instance.GetType(), "priorities").GetValue(__instance);
+					DefMap<WorkTypeDef, int> pawnPriorities = AccessTools.Field(typeof(Pawn_WorkSettings), "priorities").GetValue(__instance) as DefMap<WorkTypeDef, int>;
 
-					prios[w] = (int)__state;
+					pawnPriorities[w] = (int)__state;
 				}
 			}
 		}
 
+		//Saves some performance by recaching draggable colours only when skills change in value
 		[HarmonyPatch(typeof(SkillRecord))]
 		[HarmonyPatch(nameof(SkillRecord.Learn))]
 		class Patch_SkillRecord
@@ -43,9 +45,9 @@ namespace DD_WorkTab.Base
 			{
 				if ((int)__state != __instance.levelInt)
 				{
-					Pawn p = AccessTools.Field(typeof(SkillRecord), "pawn").GetValue(__instance) as Pawn;
+					Pawn pawn = AccessTools.Field(typeof(SkillRecord), "pawn").GetValue(__instance) as Pawn;
 
-					Controller.GetManager.GetPawnSurface(p)?.RecacheDraggableOutlines();
+					Controller.GetManager.GetPawnSurface(pawn)?.RecacheDraggableOutlines();
 				}
 			}
 		}
