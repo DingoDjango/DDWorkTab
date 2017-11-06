@@ -67,7 +67,6 @@
     <Compile Include="Primaries\PrimaryWork.cs" />
     <Compile Include="Tools\DingoUtils.cs" />
     <Compile Include="Primaries\PrimarySurface.cs" />
-    <Compile Include="Miscellaneous\EventData.cs" />
     <Compile Include="Windows\MainTabWindow_DD.cs" />
     <Compile Include="Miscellaneous\WorkTypeInfo.cs" />
     <Compile Include="Draggables\SurfaceManager.cs" />

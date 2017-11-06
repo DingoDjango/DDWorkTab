@@ -15,9 +15,11 @@ namespace DD_WorkTab.Base
 
 		public static DraggableWork CurrentDraggable;
 
+		public static PawnSurface CopyPrioritiesReference;
+
 		public static SettingHandle<bool> UseSounds;
 
-		public static SettingHandle<bool> ShowPrompt;
+		public static SettingHandle<bool> ShowPrompts;
 
 		public static SettingHandle<bool> VerboseMessages;
 
@@ -29,7 +31,7 @@ namespace DD_WorkTab.Base
 		{
 			UseSounds = this.Settings.GetHandle("UseSounds", "DD_WorkTab_UseSounds_Label".CachedTranslation(), "DD_WorkTab_UseSounds_Desc".CachedTranslation(), true);
 
-			ShowPrompt = this.Settings.GetHandle("ShowPrompt", "DD_WorkTab_ShowPrompt_Label".CachedTranslation(), "DD_WorkTab_ShowPrompt_Desc".CachedTranslation(), true);
+			ShowPrompts = this.Settings.GetHandle("ShowPrompt", "DD_WorkTab_ShowPrompt_Label".CachedTranslation(), "DD_WorkTab_ShowPrompt_Desc".CachedTranslation(), true);
 
 			VerboseMessages = this.Settings.GetHandle("VerboseMessages", "DD_WorkTab_VerboseMessages_Label".CachedTranslation(), "DD_WorkTab_VerboseMessages_Desc".CachedTranslation(), false);
 		}

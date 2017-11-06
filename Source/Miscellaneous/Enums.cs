@@ -7,11 +7,15 @@
 		Ascending
 	}
 
-	public enum ButtonType : byte
+	public enum WorkFunction : byte
 	{
+		AllPawns_EnableWork,
+		AllPawns_DisableWork,
+		AllPawns_ResetWork,
+		EnableWork,
 		DisableWork,
 		ResetWork,
-		DisableAllWork,
-		ResetAllWork
+		CopySettings,
+		PasteSettings
 	}
 }

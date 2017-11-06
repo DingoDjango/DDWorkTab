@@ -6,11 +6,23 @@
 	<targetVersion>0.18.0</targetVersion>
 	<description>&lt;color=red&gt;Requires HugsLib. Incompatible with other Work Tab mods.&lt;/color&gt;
 
-Replaces the Work tab with an overhauled version incorporating a drag and drop interface.
+Replaces the Work tab with an overhauled version incorporating a drag-and-drop interface:
 
-Includes a Compare Skills window to easily sort colonists by skill for a specific work type.
+• Enable/disable work with ctrl-click.
 
-There are tooltips for nearly everything in the new interface: drag tips, stats, disabilities etc.
+• Prioritise work by dragging and dropping.
 
-Includes an options menu - &lt;color=orange&gt;Options => Mod Settings&lt;/color&gt;</description>
+• Mass-prioritise by shift-clicking a work type from the top row.
+
+• Mass-enable/disable by ctrl-clicking on a work type from the top row.
+
+• Work Functions button: enable/disable/reset work, copy and paste priorities.
+
+• Colour-coded interface allows you to estimate colonist skill at a glance.
+
+• Compare Skills window lets you sort colonists by skill for more convenient comparison.
+
+• Familiar tooltips for nearly everything in the interface including descriptions, skill level, disability warning etc.
+
+• Mod options for extra user experience adjustments (Options -> Mod Settings).</description>
 </ModMetaData>

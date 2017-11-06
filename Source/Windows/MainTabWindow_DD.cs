@@ -66,7 +66,7 @@ namespace DD_WorkTab.Windows
 				if (width > maxWidth)
 				{
 					width = maxWidth;
-					this.horizontalOffset = this.scrollPosition.x;
+					this.horizontalOffset = this.scrollPosition.x; //Using scrollPosition.x directly leads to a glitch when scrolling "past" the bottom of the scroll view
 				}
 
 				if (height > maxHeight)

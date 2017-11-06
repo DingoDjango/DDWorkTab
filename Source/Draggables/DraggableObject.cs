@@ -18,9 +18,9 @@ namespace DD_WorkTab.Draggables
 
 		public bool DraggingNow => this.draggingNow;
 
-		public abstract void OnClicked(EventData eventData);
+		public abstract void OnClicked();
 
-		public abstract void OnDrag(EventData eventData);
+		public abstract void OnDrag();
 
 		public abstract void OnDrop();
 

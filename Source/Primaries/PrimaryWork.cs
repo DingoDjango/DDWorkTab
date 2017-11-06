@@ -1,8 +1,12 @@
-﻿using DD_WorkTab.Miscellaneous;
+﻿using DD_WorkTab.Base;
+using DD_WorkTab.Draggables;
+using DD_WorkTab.Miscellaneous;
 using DD_WorkTab.Tools;
 using DD_WorkTab.Windows;
+using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.Sound;
 
 namespace DD_WorkTab.Primaries
 {
@@ -10,9 +14,77 @@ namespace DD_WorkTab.Primaries
 	{
 		private WorkTypeInfo workInfo;
 
+		private bool ctrlState;
+
 		public readonly WorkTypeDef def;
 
 		public Rect drawRect;
+
+		private void OnPrimaryShiftClick(int clickInt)
+		{
+			foreach (Pawn pawn in Find.VisibleMap.mapPawns.FreeColonists)
+			{
+				Controller.GetManager.GetPawnSurface(pawn).OnPrimaryShiftClick(clickInt, this.def);
+			}
+
+			if (Controller.VerboseMessages)
+			{
+				string shiftCompletedText = "DD_WorkTab_Message_PrimaryShiftClick".CachedTranslation(new string[] { this.def.labelShort });
+
+				Messages.Message(shiftCompletedText, MessageTypeDefOf.SilentInput);
+			}
+
+			if (Controller.UseSounds)
+			{
+				Utilities.TaskCompleted.PlayOneShotOnCamera(null);
+			}
+		}
+
+		private void OnPrimaryCtrlClick()
+		{
+			this.ctrlState = !this.ctrlState;
+
+			foreach (Pawn pawn in Find.VisibleMap.mapPawns.FreeColonists)
+			{
+				PawnSurface surface = Controller.GetManager.GetPawnSurface(pawn);
+				DraggableWork work = surface.childByDef[this.def];
+
+				if (!work.CompletelyDisabled)
+				{
+					if (this.ctrlState)
+					{
+						surface.EnableWorkType(work, true);
+					}
+
+					else
+					{
+						surface.DisableWorkType(work, true);
+					}
+				}
+			}
+
+			if (Controller.VerboseMessages)
+			{
+				string message;
+
+				if (this.ctrlState)
+				{
+					message = "DD_WorkTab_Message_PrimaryCtrlEnabledAll".CachedTranslation(new string[] { this.def.labelShort });
+				}
+
+				else
+				{
+					message = "DD_WorkTab_Message_PrimaryCtrlDisabledAll".CachedTranslation(new string[] { this.def.labelShort });
+				}
+
+				Messages.Message(message, MessageTypeDefOf.SilentInput);
+			}
+
+			if (Controller.UseSounds)
+			{
+				Utilities.TaskCompleted.PlayOneShotOnCamera(null);
+			}
+		}
 
 		public void DrawTexture(Rect rect)
 		{
@@ -21,26 +93,27 @@ namespace DD_WorkTab.Primaries
 			GUI.DrawTexture(rect.ContractedBy(2f), this.workInfo.texture64);
 		}
 
-		public void OnClicked(EventData data)
+		public void OnClicked()
 		{
-			if (data.shift)
+			if (Event.current.shift)
 			{
-				int clickInt = 0;
-
-				if (data.button == 0)
+				if (Event.current.button == 0)
 				{
-					clickInt = -1;
+					this.OnPrimaryShiftClick(-1);
 				}
 
-				if (data.button == 1)
+				if (Event.current.button == 1)
 				{
-					clickInt = 1;
+					this.OnPrimaryShiftClick(1);
 				}
-
-				Find.WindowStack.WindowOfType<Window_WorkTab>()?.OnPrimaryShiftClick(clickInt, this.def);
-
-				Event.current.Use();
 			}
+
+			if (Event.current.control)
+			{
+				this.OnPrimaryCtrlClick();
+			}
+
+			Event.current.Use();
 		}
 
 		public void OnHover()

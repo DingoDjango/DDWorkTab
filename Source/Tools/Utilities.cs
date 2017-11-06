@@ -24,9 +24,9 @@ namespace DD_WorkTab.Tools
 
 		public const float SpaceForPawnLabel = 140f;
 
-		public const float SpaceForScrollBar = 20f;
+		public const float SpaceForScrollBar = 22f;
 
-		public const float SpaceForWorkButtons = 2f * DraggableTextureDiameter + 3f * ShortSpacing;
+		public const float SpaceForWorkButtons = 3f * ShortSpacing + DraggableTextureDiameter;
 
 		public const float StandardRowHeight = 2f * ShortSpacing + DraggableTextureDiameter;
 
@@ -34,21 +34,21 @@ namespace DD_WorkTab.Tools
 
 		public static readonly float TinyTextLineHeight;
 
-		public static readonly Texture2D DraggableOutlineTexture = DingoUtils.GetHQTexture("DraggableOutline");
+		public static readonly Texture2D DraggableOutlineTexture;
 
-		public static readonly Texture2D DisableWorkTexture = DingoUtils.GetHQTexture("DisableWork");
+		public static readonly Texture2D DisableWorkTexture;
 
-		public static readonly Texture2D ResetWorkTexture = DingoUtils.GetHQTexture("ResetWork");
+		public static readonly Texture2D ResetWorkTexture;
 
-		public static readonly Texture2D SortingDescendingIcon = DingoUtils.GetHQTexture("SortingDescending");
+		public static readonly Texture2D SortingDescendingIcon;
 
-		public static readonly Texture2D SortingAscendingIcon = DingoUtils.GetHQTexture("Sorting");
+		public static readonly Texture2D SortingAscendingIcon;
 
-		public static readonly Texture2D PassionMinorIcon = DingoUtils.GetHQTexture("PassionMinor");
+		public static readonly Texture2D PassionMinorIcon;
 
-		public static readonly Texture2D PassionMajorIcon = DingoUtils.GetHQTexture("PassionMajor");
+		public static readonly Texture2D PassionMajorIcon;
 
-		public static readonly Texture2D IncapableWorkerX = DingoUtils.GetHQTexture("IncapableWorkerX");
+		public static readonly Texture2D IncapableWorkerX;
 
 		public static readonly Color OutlineColour = new Color(0.6f, 0.6f, 0.6f); //Light grey
 
@@ -66,6 +66,8 @@ namespace DD_WorkTab.Tools
 
 		public static readonly Color ExcellentSkillColour = new Color(1f, 0.85f, 0f); /* GOLD http://whenisnlss.com/assets/sounds/GOLD.mp3 */
 
+		public static readonly Color Orange = new Color(1f, 0.65f, 0f);
+
 		public static readonly SoundDef TaskCompleted = MessageTypeDefOf.PositiveEvent.sound;
 
 		public static readonly SoundDef TaskFailed = SoundDefOf.ClickReject;
@@ -80,12 +82,36 @@ namespace DD_WorkTab.Tools
 
 		public static float MaxWindowHeight => (float)UI.screenHeight * 0.8f;
 
-		//DingoUtils.CachedStrings[string] => cached translation
-		//DingoUtils.CachedStrings[WorkTypeDef] => relevant skills for def
-		//DingoUtils.CachedStrings[Pawn] => pawn label
+		//CachedStrings[string] => cached translation
+		//CachedStrings[WorkTypeDef] => relevant skills for def
+		//CachedStrings[Pawn] => pawn label
+		/// <summary>
+		/// Provides caching for various key types.
+		/// </summary>
+		public static Dictionary<object, string> CachedStrings = new Dictionary<object, string>();
 
 		static Utilities()
 		{
+			Text.Font = GameFont.Tiny;
+			TinyTextLineHeight = Text.LineHeight;
+			Text.Font = GameFont.Small; //Reset
+
+			//Modify vanilla translations for better tooltip building
+			CachedStrings["ClickToSortByThisColumn"] = "\n\n" + "ClickToSortByThisColumn".Translate();
+			CachedStrings["RelevantSkills"] = "\n\n" + "RelevantSkills".Translate();
+			CachedStrings["ClickToJumpTo"] = "ClickToJumpTo".Translate() + "\n\n";
+
+			DingoUtils dingoUtils = new DingoUtils();
+
+			DraggableOutlineTexture = dingoUtils.GetHQTexture("DraggableOutline");
+			DisableWorkTexture = dingoUtils.GetHQTexture("DisableWork");
+			ResetWorkTexture = dingoUtils.GetHQTexture("ResetWork");
+			SortingDescendingIcon = dingoUtils.GetHQTexture("SortingDescending");
+			SortingAscendingIcon = dingoUtils.GetHQTexture("Sorting");
+			PassionMinorIcon = dingoUtils.GetHQTexture("PassionMinor");
+			PassionMajorIcon = dingoUtils.GetHQTexture("PassionMajor");
+			IncapableWorkerX = dingoUtils.GetHQTexture("IncapableWorkerX");
+
 			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
 			{
 				HashSet<PawnCapacityDef> allRequiredCapacities = new HashSet<PawnCapacityDef>();
@@ -100,9 +126,9 @@ namespace DD_WorkTab.Tools
 					}
 				}
 
-				Texture2D enabledTex = DingoUtils.GetHQTexture(def.defName, "Work");
-				Texture2D disabledTex = DingoUtils.GetHQTexture(def.defName, "Work_Disabled");
-				Texture2D greyscaleTex = DingoUtils.GetHQTexture(def.defName, "Work_Greyscale");
+				Texture2D enabledTex = dingoUtils.GetHQTexture(def.defName, "Work");
+				Texture2D disabledTex = dingoUtils.GetHQTexture(def.defName, "Work_Disabled");
+				Texture2D greyscaleTex = dingoUtils.GetHQTexture(def.defName, "Work_Greyscale");
 
 				WorkDefAttributes[def] = new WorkTypeInfo(enabledTex, disabledTex, greyscaleTex, allRequiredCapacities);
 
@@ -116,20 +142,33 @@ namespace DD_WorkTab.Tools
 						relevantSkills += def.relevantSkills[k].skillLabel + ", ";
 					}
 
-					DingoUtils.CachedStrings[def] = relevantSkills.Substring(0, relevantSkills.Length - 2);
+					CachedStrings[def] = relevantSkills.Substring(0, relevantSkills.Length - 2);
 				}
 			}
 
-			//Modify vanilla translations for better tooltip building
-			DingoUtils.CachedStrings["ClickToSortByThisColumn"] = "\n\n" + "ClickToSortByThisColumn".Translate();
-			DingoUtils.CachedStrings["RelevantSkills"] = "\n\n" + "RelevantSkills".Translate();
-			DingoUtils.CachedStrings["ClickToJumpTo"] = "ClickToJumpTo".Translate() + "\n\n";
-
-			Text.Font = GameFont.Tiny;
-			TinyTextLineHeight = Text.LineHeight;
-			Text.Font = GameFont.Small; //Reset
-
 			Controller.GetPrimaries = new PrimarySurface();
+
+			dingoUtils = null;
+		}
+
+		/// <summary>
+		/// Provides quick storage and access to translations. Circumvents calling the .Translate() chain more than once.
+		/// </summary>
+		public static string CachedTranslation(this string inputText, object[] args = null)
+		{
+			if (!CachedStrings.TryGetValue(inputText, out string finalString))
+			{
+				finalString = inputText.Translate();
+
+				CachedStrings[inputText] = finalString;
+			}
+
+			if (args != null)
+			{
+				return string.Format(finalString, args);
+			}
+
+			return finalString;
 		}
 
 		/// <summary>
@@ -147,7 +186,7 @@ namespace DD_WorkTab.Tools
 		/// </summary>
 		public static string CachedPawnLabel(this Pawn pawn)
 		{
-			if (!DingoUtils.CachedStrings.TryGetValue(pawn, out string pawnLabel))
+			if (!CachedStrings.TryGetValue(pawn, out string pawnLabel))
 			{
 				//RimWorld.PawnColumnWorker_Label.DoCell
 				if (!pawn.RaceProps.Humanlike && pawn.Name != null && !pawn.Name.Numerical)
@@ -160,7 +199,7 @@ namespace DD_WorkTab.Tools
 					pawnLabel = pawn.LabelCap;
 				}
 
-				DingoUtils.CachedStrings[pawn] = pawnLabel;
+				CachedStrings[pawn] = pawnLabel;
 			}
 
 			return pawnLabel;
@@ -207,9 +246,9 @@ namespace DD_WorkTab.Tools
 		}
 
 		/// <summary>
-		/// Draws a pawn label and provides context-sensitive JumpSelect, highlighting and tooltip handling.
+		/// Draws a pawn label using a cached name string.
 		/// </summary>
-		public static void PawnLabel(Rect rect, Pawn pawn, EventData data)
+		public static void PawnLabel(Rect rect, Pawn pawn)
 		{
 			Text.Font = GameFont.Small;
 			Text.Anchor = TextAnchor.MiddleLeft;
@@ -218,23 +257,7 @@ namespace DD_WorkTab.Tools
 			Widgets.Label(rect, pawn.CachedPawnLabel());
 
 			Text.Anchor = TextAnchor.UpperLeft; //Reset
-			Text.WordWrap = true; //Reset
-
-			if (rect.Contains(data.mousePosition))
-			{
-				if (data.type == EventType.MouseDown && data.button == 0)
-				{
-					CameraJumper.TryJumpAndSelect(pawn);
-
-					//Close open DD windows (vanilla does not close on jump-select, but it seems natural)
-					//Find.WindowStack.TryRemove(typeof(Window_ColonistStats), false);
-					Find.WindowStack.TryRemove(typeof(Window_WorkTab), false);
-				}
-
-				Widgets.DrawHighlight(rect);
-
-				TooltipHandler.TipRegion(rect, "ClickToJumpTo".CachedTranslation() + pawn.GetTooltip().text);
-			}
+			Text.WordWrap = true; //Reset			
 		}
 
 		/// <summary>
@@ -287,7 +310,7 @@ namespace DD_WorkTab.Tools
 					{
 						tooltip.Append("RelevantSkills".CachedTranslation(new object[]
 						{
-						DingoUtils.CachedStrings[def],
+						CachedStrings[def],
 						worker.skills.AverageOfRelevantSkillsFor(def).ToString(),
 						SkillRecord.MaxLevel
 						}));
@@ -321,138 +344,219 @@ namespace DD_WorkTab.Tools
 		}
 
 		/// <summary>
-		/// Provides work-related buttons with 'Are you sure?' prompts.
+		/// A master button for all WorkFunction options.
 		/// </summary>
-		public static void Button(Rect buttonRect, ButtonType buttonType, EventData data, PawnSurface surface)
+		public static void WorkButton(Rect buttonRect, PawnSurface surface)
 		{
-			if (data.type == EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
 				DraggableOutline(buttonRect, MediumSkillColour);
 
-				Rect textureRect = buttonRect.ContractedBy(2f);
-
-				switch (buttonType)
-				{
-					case ButtonType.DisableWork:
-						GUI.DrawTexture(textureRect, DisableWorkTexture);
-						break;
-					case ButtonType.ResetWork:
-						GUI.DrawTexture(textureRect, ResetWorkTexture);
-						break;
-					case ButtonType.DisableAllWork:
-						GUI.DrawTexture(textureRect, DisableWorkTexture);
-						break;
-					case ButtonType.ResetAllWork:
-						GUI.DrawTexture(textureRect, ResetWorkTexture);
-						break;
-				}
+				GUI.DrawTexture(buttonRect.ContractedBy(2f), ResetWorkTexture);
 			}
 
-			if (buttonRect.Contains(data.mousePosition))
+			if (buttonRect.Contains(Event.current.mousePosition))
 			{
-				string tooltip;
-				string text;
-				string title;
-				Action buttonAction;
-
-				switch (buttonType)
-				{
-					case ButtonType.DisableWork:
-						tooltip = "DD_WorkTab_Tooltip_ButtonDisableWork".CachedTranslation();
-						text = "DD_WorkTab_PromptText_DisableWork".CachedTranslation().AdjustedFor(surface.pawn);
-						title = "DD_WorkTab_PromptTitle_DisableWork".CachedTranslation().AdjustedFor(surface.pawn);
-						buttonAction = delegate { surface.DisableAllPawnWork(); };
-						break;
-					case ButtonType.ResetWork:
-						tooltip = "DD_WorkTab_Tooltip_ButtonResetWork".CachedTranslation();
-						text = "DD_WorkTab_PromptText_ResetWork".CachedTranslation().AdjustedFor(surface.pawn);
-						title = "DD_WorkTab_PromptTitle_ResetWork".CachedTranslation().AdjustedFor(surface.pawn);
-						buttonAction = delegate { surface.ResetWorkToDefaultState(); };
-						break;
-					case ButtonType.DisableAllWork:
-						tooltip = "DD_WorkTab_Tooltip_ButtonDisableWork_AllPawns".CachedTranslation();
-						text = "DD_WorkTab_PromptText_DisableWork_AllPawns".CachedTranslation();
-						title = "DD_WorkTab_PromptTitle_DisableWork_AllPawns".CachedTranslation();
-						buttonAction = delegate
-						{
-							foreach (Pawn p in Find.VisibleMap.mapPawns.FreeColonists)
-							{
-								Controller.GetManager.GetPawnSurface(p).DisableAllPawnWork();
-							}
-						};
-						break;
-					case ButtonType.ResetAllWork:
-						tooltip = "DD_WorkTab_Tooltip_ButtonResetWork_AllPawns".CachedTranslation();
-						text = "DD_WorkTab_PromptText_ResetWork_AllPawns".CachedTranslation();
-						title = "DD_WorkTab_PromptTitle_ResetWork_AllPawns".CachedTranslation();
-						buttonAction = delegate
-						{
-							foreach (Pawn p in Find.VisibleMap.mapPawns.FreeColonists)
-							{
-								Controller.GetManager.GetPawnSurface(p).ResetWorkToDefaultState();
-							}
-						};
-						break;
-					default:
-						tooltip = string.Empty;
-						text = string.Empty;
-						title = string.Empty;
-						buttonAction = default(Action);
-						break;
-				}
-
-				if (data.type == EventType.Repaint)
+				if (Event.current.type == EventType.Repaint)
 				{
 					Widgets.DrawHighlight(buttonRect);
 
-					TooltipHandler.TipRegion(buttonRect, tooltip);
+					TooltipHandler.TipRegion(buttonRect, "DD_WorkTab_Tooltip_WorkButton".CachedTranslation());
 				}
 
-				else if (data.type == EventType.MouseDown && data.button == 0)
+				else if (Event.current.type == EventType.MouseDown)
 				{
-					if (Controller.ShowPrompt)
-					{
-						DiaOption acceptButton = new DiaOption("DD_WorkTab_ButtonOption_Accept".CachedTranslation())
-						{
-							action = buttonAction,
-							resolveTree = true
-						};
-
-						DiaOption rejectButton = new DiaOption("DD_WorkTab_ButtonOption_Cancel".CachedTranslation())
-						{
-							resolveTree = true
-						};
-
-						DiaOption acceptDoNotShowAgain = new DiaOption("DD_WorkTab_ButtonOption_AcceptDisablePrompt".CachedTranslation())
-						{
-							action = delegate
-							{
-								Controller.ShowPrompt.Value = false;
-
-								buttonAction();
-							},
-							resolveTree = true
-						};
-
-						DiaNode prompt = new DiaNode(text + "DD_WorkTab_PromptText_DisablePrompt".CachedTranslation())
-						{
-							options = new List<DiaOption> { acceptButton, rejectButton, acceptDoNotShowAgain }
-						};
-
-						Find.WindowStack.Add(new Dialog_NodeTree(prompt, false, false, title));
-					}
-
-					else
-					{
-						buttonAction();
-
-						if (Controller.UseSounds)
-						{
-							TaskCompleted.PlayOneShotOnCamera(null);
-						}
-					}
+					Find.WindowStack.Add(WorkMenu(surface));
 				}
 			}
+		}
+
+		/// <summary>
+		/// Creates a FloatMenu based on Primary/PawnSurface options.
+		/// </summary>
+		public static FloatMenu WorkMenu(PawnSurface surface)
+		{
+			List<FloatMenuOption> floatOptions = new List<FloatMenuOption>();
+
+			if (surface == null)
+			{
+				floatOptions.Add(WorkOption(WorkFunction.AllPawns_EnableWork, null));
+				floatOptions.Add(WorkOption(WorkFunction.AllPawns_DisableWork, null));
+				floatOptions.Add(WorkOption(WorkFunction.AllPawns_ResetWork, null));
+			}
+
+			else
+			{
+				floatOptions.Add(WorkOption(WorkFunction.EnableWork, surface));
+				floatOptions.Add(WorkOption(WorkFunction.DisableWork, surface));
+				floatOptions.Add(WorkOption(WorkFunction.ResetWork, surface));
+				floatOptions.Add(WorkOption(WorkFunction.CopySettings, surface));
+				floatOptions.Add(WorkOption(WorkFunction.PasteSettings, surface));
+			}
+
+			return new FloatMenu(floatOptions);
+		}
+
+		/// <summary>
+		/// Builds a Float Menu entry to perform various work functions. 
+		/// </summary>
+		public static FloatMenuOption WorkOption(WorkFunction function, PawnSurface surface)
+		{
+			string title;
+			Action buttonAction;
+
+			switch (function)
+			{
+				case WorkFunction.AllPawns_EnableWork:
+					title = "DD_WorkTab_Title_AllPawns_EnableWork".CachedTranslation();
+					buttonAction = delegate
+					{
+						foreach (Pawn p in Find.VisibleMap.mapPawns.FreeColonists)
+						{
+							Controller.GetManager.GetPawnSurface(p).EnableAllPawnWork();
+						}
+					};
+					break;
+				case WorkFunction.AllPawns_DisableWork:
+					title = "DD_WorkTab_Title_AllPawns_DisableWork".CachedTranslation();
+					buttonAction = delegate
+					{
+						foreach (Pawn p in Find.VisibleMap.mapPawns.FreeColonists)
+						{
+							Controller.GetManager.GetPawnSurface(p).DisableAllPawnWork();
+						}
+					};
+					break;
+				case WorkFunction.AllPawns_ResetWork:
+					title = "DD_WorkTab_Title_AllPawns_ResetWork".CachedTranslation();
+					buttonAction = delegate
+					{
+						foreach (Pawn p in Find.VisibleMap.mapPawns.FreeColonists)
+						{
+							Controller.GetManager.GetPawnSurface(p).ResetWorkToDefaultState();
+						}
+					};
+					break;
+				case WorkFunction.EnableWork:
+					title = "DD_WorkTab_Title_EnableWork".CachedTranslation();
+					buttonAction = delegate
+					{
+						surface.EnableAllPawnWork();
+					};
+					break;
+				case WorkFunction.DisableWork:
+					title = "DD_WorkTab_Title_DisableWork".CachedTranslation();
+					buttonAction = delegate
+					{
+						surface.DisableAllPawnWork();
+					};
+					break;
+				case WorkFunction.ResetWork:
+					title = "DD_WorkTab_Title_ResetWork".CachedTranslation();
+					buttonAction = delegate
+					{
+						surface.ResetWorkToDefaultState();
+					};
+					break;
+				case WorkFunction.CopySettings:
+					title = "DD_WorkTab_Title_CopyWorkPriorities".CachedTranslation();
+					buttonAction = delegate
+					{
+						surface.CopyPriorities();
+					};
+					break;
+				case WorkFunction.PasteSettings:
+					title = "DD_WorkTab_Title_PasteWorkPriorities".CachedTranslation();
+					buttonAction = delegate
+					{
+						surface.PastePriorities(Controller.CopyPrioritiesReference);
+					};
+					break;
+				default:
+					title = string.Empty;
+					buttonAction = default(Action);
+					break;
+			}
+
+			if (Controller.ShowPrompts && function != WorkFunction.CopySettings && function != WorkFunction.PasteSettings)
+			{
+				return new FloatMenuOption(title, delegate
+				{
+					WorkPrompt(function, buttonAction, title, surface);
+				});
+			}
+
+			return new FloatMenuOption(title, delegate
+			{
+				buttonAction();
+
+				if (Controller.UseSounds)
+				{
+					TaskCompleted.PlayOneShotOnCamera(null);
+				}
+			});
+		}
+
+		/// <summary>
+		/// Open a pop-up prompt window for button functions.
+		/// </summary>
+		public static void WorkPrompt(WorkFunction function, Action buttonAction, string title, PawnSurface surface)
+		{
+			string text;
+
+			switch (function)
+			{
+				case WorkFunction.AllPawns_EnableWork:
+					text = "DD_WorkTab_PromptText_AllPawns_EnableWork".CachedTranslation();
+					break;
+				case WorkFunction.AllPawns_DisableWork:
+					text = "DD_WorkTab_PromptText_AllPawns_DisableWork".CachedTranslation();
+					break;
+				case WorkFunction.AllPawns_ResetWork:
+					text = "DD_WorkTab_PromptText_AllPawns_ResetWork".CachedTranslation();
+					break;
+				case WorkFunction.EnableWork:
+					text = "DD_WorkTab_PromptText_EnableWork".CachedTranslation().AdjustedFor(surface.pawn);
+					break;
+				case WorkFunction.DisableWork:
+					text = "DD_WorkTab_PromptText_DisableWork".CachedTranslation().AdjustedFor(surface.pawn);
+					break;
+				case WorkFunction.ResetWork:
+					text = "DD_WorkTab_PromptText_ResetWork".CachedTranslation().AdjustedFor(surface.pawn);
+					break;
+				default:
+					text = string.Empty;
+					break;
+			}
+
+			DiaOption accept = new DiaOption("DD_WorkTab_PromptOption_Accept".CachedTranslation())
+			{
+				action = buttonAction,
+				resolveTree = true
+			};
+
+			DiaOption cancel = new DiaOption("DD_WorkTab_PromptOption_Cancel".CachedTranslation())
+			{
+				resolveTree = true
+			};
+
+			DiaOption acceptDisablePrompt = new DiaOption("DD_WorkTab_PromptOption_AcceptDisablePrompt".CachedTranslation())
+			{
+				action = delegate
+				{
+					Controller.ShowPrompts.Value = false;
+
+					buttonAction();
+				},
+				resolveTree = true
+			};
+
+			DiaNode prompt = new DiaNode(text + "DD_WorkTab_PromptText_DisablePrompt".CachedTranslation())
+			{
+				options = new List<DiaOption> { accept, cancel, acceptDisablePrompt }
+			};
+
+			Find.WindowStack.Add(new Dialog_NodeTree(prompt, false, false, title));
 		}
 
 		/// <summary>

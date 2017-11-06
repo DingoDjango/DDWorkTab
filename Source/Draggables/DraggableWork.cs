@@ -143,14 +143,14 @@ namespace DD_WorkTab.Draggables
 			Utilities.DrawPassion(drawRect, this.parent.pawn, this.def);
 		}
 
-		public override void OnClicked(EventData data)
+		public override void OnClicked()
 		{
-			if (!data.shift)
+			if (!Event.current.control)
 			{
-				if (data.button == 0)
+				if (Event.current.button == 0)
 				{
 					this.draggingNow = true;
-					this.dragOffsetFromMouse = data.mousePosition - this.position;
+					this.dragOffsetFromMouse = Event.current.mousePosition - this.position;
 
 					Controller.CurrentDraggable = this;
 				}
@@ -172,9 +172,9 @@ namespace DD_WorkTab.Draggables
 			Event.current.Use();
 		}
 
-		public override void OnDrag(EventData data)
+		public override void OnDrag()
 		{
-			this.position = data.mousePosition - this.dragOffsetFromMouse;
+			this.position = Event.current.mousePosition - this.dragOffsetFromMouse;
 		}
 
 		public override void OnDrop()

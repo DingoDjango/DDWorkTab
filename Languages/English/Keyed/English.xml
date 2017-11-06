@@ -14,19 +14,13 @@
 
 	<!-- Tooltips -->
 
-	<DD_WorkTab_Tooltip_Primary>\n\nShift + left-click: increase priority for everyone.\n\nShift + right-click: decrease priority for everyone.</DD_WorkTab_Tooltip_Primary>
+	<DD_WorkTab_Tooltip_WorkButton>Work Functions\n\nClick: open the functions menu.</DD_WorkTab_Tooltip_WorkButton>
 
-	<DD_WorkTab_Tooltip_DraggableWork>\n\nLeft-click &amp; drag: adjust priority.\n\nShift + left-click: enable or disable.</DD_WorkTab_Tooltip_DraggableWork>
+	<DD_WorkTab_Tooltip_Primary>\n\nShift-click: adjust priority for everyone.\n\nCtrl-click: enable or disable for everyone.</DD_WorkTab_Tooltip_Primary>
+
+	<DD_WorkTab_Tooltip_DraggableWork>\n\nClick &amp; drag: adjust priority.\n\Ctrl-click: enable or disable.</DD_WorkTab_Tooltip_DraggableWork>
 
 	<DD_WorkTab_Tooltip_IncapacitatedWorker>&lt;color=red&gt;\n\nNAME is unable to do {0} work because of HIS health condition.&lt;/color&gt;</DD_WorkTab_Tooltip_IncapacitatedWorker>
-
-	<DD_WorkTab_Tooltip_ButtonDisableWork>Disable Work</DD_WorkTab_Tooltip_ButtonDisableWork>
-
-	<DD_WorkTab_Tooltip_ButtonResetWork>Reset Work</DD_WorkTab_Tooltip_ButtonResetWork>
-
-	<DD_WorkTab_Tooltip_ButtonDisableWork_AllPawns>Disable Work for Everyone</DD_WorkTab_Tooltip_ButtonDisableWork_AllPawns>
-
-	<DD_WorkTab_Tooltip_ButtonResetWork_AllPawns>Reset Work for Everyone</DD_WorkTab_Tooltip_ButtonResetWork_AllPawns>
 
 	<DD_WorkTab_Tooltip_CurrentlyUnassigned>\n\nNAME is not assigned to {0}.</DD_WorkTab_Tooltip_CurrentlyUnassigned>
 
@@ -40,33 +34,65 @@
 
 	<DD_WorkTab_Message_WorkDisabled>NAME has been unassigned from {0}.</DD_WorkTab_Message_WorkDisabled>
 
+	<DD_WorkTab_Message_CopiedPriorities>Copied work priorities from NAME.</DD_WorkTab_Message_CopiedPriorities>
+
+	<DD_WorkTab_Message_PastedPriorities>Adjusted NAME's work priorities according to {0}'s.</DD_WorkTab_Message_PastedPriorities>
+
+	<DD_WorkTab_Message_NoCopyPasteReference>There are no priorities in memory. Copy priorities first.</DD_WorkTab_Message_NoCopyPasteReference>
+
 	<DD_WorkTab_Message_PrimaryShiftClick>{0} has been adjusted for all colonists on this map.</DD_WorkTab_Message_PrimaryShiftClick>
 
-	<!-- Prompts -->
+	<DD_WorkTab_Message_PrimaryCtrlEnabledAll>Enabled all possible {0} work.</DD_WorkTab_Message_PrimaryCtrlEnabledAll>
 
-	<DD_WorkTab_ButtonOption_Accept>Accept</DD_WorkTab_ButtonOption_Accept>
-	<DD_WorkTab_ButtonOption_Cancel>Cancel</DD_WorkTab_ButtonOption_Cancel>
-	<DD_WorkTab_ButtonOption_AcceptDisablePrompt>Accept (Disable Prompts)</DD_WorkTab_ButtonOption_AcceptDisablePrompt>
+	<DD_WorkTab_Message_PrimaryCtrlDisabledAll>Disabled all {0} work.</DD_WorkTab_Message_PrimaryCtrlDisabledAll>
 
-	<DD_WorkTab_PromptText_DisablePrompt>\n\nIf you disable prompts, you can re-enable them in Options => Mod Settings.</DD_WorkTab_PromptText_DisablePrompt>
+	<!-- FloatMenuOption / DiaNode Titles -->
 
-	<DD_WorkTab_PromptTitle_DisableWork_AllPawns>Disable Work (All Map Colonists)</DD_WorkTab_PromptTitle_DisableWork_AllPawns>
-	<DD_WorkTab_PromptText_DisableWork_AllPawns>All work will be disabled for &lt;color=red&gt;every colonist on this map&lt;/color&gt;.</DD_WorkTab_PromptText_DisableWork_AllPawns>
+	<DD_WorkTab_Title_AllPawns_EnableWork>Enable All Work (All Colonists)</DD_WorkTab_Title_AllPawns_EnableWork>
 
-	<DD_WorkTab_PromptTitle_ResetWork_AllPawns>Reset Work (All Map Colonists)</DD_WorkTab_PromptTitle_ResetWork_AllPawns>
-	<DD_WorkTab_PromptText_ResetWork_AllPawns>All work will be reset for &lt;color=red&gt;every colonist on this map&lt;/color&gt;.</DD_WorkTab_PromptText_ResetWork_AllPawns>
+	<DD_WorkTab_Title_AllPawns_DisableWork>Disable All Work (All Colonists)</DD_WorkTab_Title_AllPawns_DisableWork>
 
-	<DD_WorkTab_PromptTitle_DisableWork>Disable Work for NAME</DD_WorkTab_PromptTitle_DisableWork>
+	<DD_WorkTab_Title_AllPawns_ResetWork>Reset Work (All Colonists)</DD_WorkTab_Title_AllPawns_ResetWork>
+
+	<DD_WorkTab_Title_EnableWork>Enable All Work</DD_WorkTab_Title_EnableWork>
+
+	<DD_WorkTab_Title_DisableWork>Disable All Work</DD_WorkTab_Title_DisableWork>
+
+	<DD_WorkTab_Title_ResetWork>Reset Work</DD_WorkTab_Title_ResetWork>
+
+	<DD_WorkTab_Title_CopyWorkPriorities>Copy Priorities</DD_WorkTab_Title_CopyWorkPriorities>
+
+	<DD_WorkTab_Title_PasteWorkPriorities>Paste Priorities</DD_WorkTab_Title_PasteWorkPriorities>
+
+	<!-- DiaNode Contents -->
+
+	<DD_WorkTab_PromptText_AllPawns_EnableWork>All work will be enabled for &lt;color=red&gt;every colonist on this map&lt;/color&gt;.</DD_WorkTab_PromptText_AllPawns_EnableWork>
+
+	<DD_WorkTab_PromptText_AllPawns_DisableWork>All work will be disabled for &lt;color=red&gt;every colonist on this map&lt;/color&gt;.</DD_WorkTab_PromptText_AllPawns_DisableWork>
+
+	<DD_WorkTab_PromptText_AllPawns_ResetWork>All work will be reset for &lt;color=red&gt;every colonist on this map&lt;/color&gt;.</DD_WorkTab_PromptText_AllPawns_ResetWork>
+
+	<DD_WorkTab_PromptText_EnableWork>All possible work for NAME will be enabled.</DD_WorkTab_PromptText_EnableWork>
+
 	<DD_WorkTab_PromptText_DisableWork>All active work for NAME will be disabled.\n\nNAME will become idle if you don't assign new work for HIM.</DD_WorkTab_PromptText_DisableWork>
 
-	<DD_WorkTab_PromptTitle_ResetWork>Reset Work for NAME</DD_WorkTab_PromptTitle_ResetWork>
 	<DD_WorkTab_PromptText_ResetWork>All possible work for NAME will be enabled and sorted by natural priority.</DD_WorkTab_PromptText_ResetWork>
 
-	<!-- Work tab -->
+	<DD_WorkTab_PromptText_DisablePrompt>\n\nIf you disable prompts, you can re-enable them in Options -> Mod Settings.</DD_WorkTab_PromptText_DisablePrompt>
+
+	<!-- DiaOptions -->
+
+	<DD_WorkTab_PromptOption_Accept>Accept</DD_WorkTab_PromptOption_Accept>
+
+	<DD_WorkTab_PromptOption_Cancel>Cancel</DD_WorkTab_PromptOption_Cancel>
+
+	<DD_WorkTab_PromptOption_AcceptDisablePrompt>Accept (Disable Prompts)</DD_WorkTab_PromptOption_AcceptDisablePrompt>
+
+	<!-- Work -->
 
 	<DD_WorkTab_ButtonColonistStats>Compare Skills</DD_WorkTab_ButtonColonistStats>
 
-	<!-- Colonist stats window -->
+	<!-- Compare Skills -->
 
 	<DD_WorkTab_ColonistStats_ButtonVisibleMap>Current Map</DD_WorkTab_ColonistStats_ButtonVisibleMap>
 

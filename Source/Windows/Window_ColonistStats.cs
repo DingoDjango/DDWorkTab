@@ -16,7 +16,7 @@ namespace DD_WorkTab.Windows
 	{
 		protected override float NaturalWindowWidth() => Utilities.SpaceForPawnLabel + this.statsSurfaceWidth + 2f * Utilities.ShortSpacing + 2f * StandardMargin + Utilities.SpaceForScrollBar;
 
-		protected override float NaturalWindowHeight() => statsRowHeight * (this.cachedColonistCount + 1f) + 2f * Utilities.ShortSpacing + 2f * StandardMargin;
+		protected override float NaturalWindowHeight() => Utilities.TinyTextLineHeight + statsRowHeight * (this.cachedColonistCount + 1f) + 2f * Utilities.ShortSpacing + 2f * StandardMargin;
 
 		private const float smallDraggableDiameter = 32f;
 
@@ -84,11 +84,13 @@ namespace DD_WorkTab.Windows
 			this.windowRect = this.windowRect.Rounded();
 		}
 
-		private void DoSortingChecks(EventData data, WorkTypeDef sortDef)
+		private void DoSortingChecks(WorkTypeDef sortDef)
 		{
-			if (data.type == EventType.MouseDown)
+			if (Event.current.type == EventType.MouseDown)
 			{
-				if (data.button == 0)
+				bool changedState = false;
+
+				if (Event.current.button == 0)
 				{
 					if (this.sortingDef != sortDef)
 					{
@@ -111,9 +113,11 @@ namespace DD_WorkTab.Windows
 								break;
 						}
 					}
+
+					changedState = true;
 				}
 
-				if (data.button == 1)
+				if (Event.current.button == 1)
 				{
 					if (this.sortingDef != sortDef)
 					{
@@ -136,9 +140,11 @@ namespace DD_WorkTab.Windows
 								break;
 						}
 					}
+
+					changedState = true;
 				}
 
-				if (Controller.UseSounds)
+				if (Controller.UseSounds && changedState)
 				{
 					SoundDef soundToUse = this.sortingOrder == SortOrder.Undefined ? SoundDefOf.TickLow : SoundDefOf.TickHigh;
 
@@ -155,37 +161,33 @@ namespace DD_WorkTab.Windows
 		{
 			this.SetSizeAndPosition();
 
-			//Cache current event details
-			Event currentEvent = Event.current;
-			EventData data;
 			List<PrimaryWork> primariesList = Controller.GetPrimaries.PrimaryWorkList;
 
-			if (currentEvent.isMouse)
-			{
-				data = new EventData(currentEvent.type, currentEvent.mousePosition, currentEvent.button, currentEvent.shift);
-			}
-
-			else
-			{
-				data = new EventData(currentEvent.type, currentEvent.mousePosition, -1, false);
-			}
-
 			//Build rects
-			Rect toggleMapRect = new Rect(inRect.x - this.horizontalOffset, inRect.y, Utilities.ShortSpacing + Utilities.SpaceForPawnLabel, statsRowHeight);
-			Rect primaryTypesRect = new Rect(toggleMapRect.xMax, inRect.y, inRect.width - toggleMapRect.width, statsRowHeight);
+			Rect toggleMapRect = new Rect(inRect.x - this.horizontalOffset, inRect.y + Utilities.TinyTextLineHeight, Utilities.ShortSpacing + Utilities.SpaceForPawnLabel, statsRowHeight);
+			Rect primaryTypesRect = new Rect(toggleMapRect.xMax, toggleMapRect.y, inRect.width - toggleMapRect.width, statsRowHeight);
 
-			Rect scrollViewBox = new Rect(inRect.x, primaryTypesRect.yMax, inRect.width, inRect.height - statsRowHeight);
-			Rect scrollViewOutRect = scrollViewBox.ContractedBy(Utilities.ShortSpacing);
-			Rect scrollViewInnerRect = new Rect(scrollViewOutRect.x, scrollViewOutRect.y, Utilities.SpaceForPawnLabel + this.statsSurfaceWidth, this.cachedColonistCount * statsRowHeight);
+			Rect scrollViewBox = new Rect(inRect.x, primaryTypesRect.yMax, inRect.width, inRect.height - statsRowHeight - Utilities.TinyTextLineHeight);
+			Rect scrollViewOuterRect = scrollViewBox.ContractedBy(Utilities.ShortSpacing);
+			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, Utilities.SpaceForPawnLabel + this.statsSurfaceWidth, this.cachedColonistCount * statsRowHeight);
 
-			if (scrollViewInnerRect.width > scrollViewOutRect.width)
+			if (scrollViewInnerRect.width > scrollViewOuterRect.width)
 			{
 				scrollViewInnerRect.yMax += Utilities.SpaceForScrollBar;
 			}
 
 			//Draw list outline
-			if (data.type == EventType.Repaint)
+			if (Event.current.type == EventType.Repaint)
 			{
+				GUI.color = Utilities.Orange;
+				Text.Anchor = TextAnchor.UpperCenter;
+				Text.Font = GameFont.Tiny;
+
+				Widgets.Label(inRect, "Compare Colonist Skills");
+
+				Text.Font = GameFont.Small; //Reset
+				Text.Anchor = TextAnchor.UpperLeft; //Reset
+
 				Utilities.BoxOutline(scrollViewBox);
 			}
 
@@ -218,13 +220,13 @@ namespace DD_WorkTab.Windows
 
 				primary.DrawTexture(primeRect);
 
-				if (primeRect.Contains(data.mousePosition))
+				if (primeRect.Contains(Event.current.mousePosition))
 				{
 					Widgets.DrawHighlight(primeRect);
 
 					TooltipHandler.TipRegion(primeRect, Utilities.DraggableTooltip(primaryDef, true, true, false, false, null));
 
-					this.DoSortingChecks(data, primaryDef);
+					this.DoSortingChecks(primaryDef);
 				}
 
 				//Draw little arrow indicator below work type
@@ -241,32 +243,30 @@ namespace DD_WorkTab.Windows
 				primaryPositions.x += Utilities.ShortSpacing + smallDraggableDiameter;
 			}
 
-			Widgets.BeginScrollView(scrollViewOutRect, ref this.scrollPosition, scrollViewInnerRect, true);
+			Widgets.BeginScrollView(scrollViewOuterRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
-			data.mousePosition = Event.current.mousePosition;
+			//Determine which surfaces will actually be seen and ignore all others
+			int FirstIndexToRender = (int)(this.scrollPosition.y / statsRowHeight); //Get the first list item that should be visible
+			int TotalIndexesToRender = (int)(scrollViewOuterRect.height / statsRowHeight) + 2; //Account for partly rendered surfaces on top/bottom
+			int LastIndexToRender = Mathf.Min(FirstIndexToRender + TotalIndexesToRender, this.cachedPawnSurfaces.Count); //Get the last item to render, don't go over list.Count
+			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstIndexToRender * statsRowHeight; //The .y value of the first rendered surface
 
-			//All pawns and pawn surfaces
-			float currentVerticalPosition = scrollViewInnerRect.yMin;
-			bool firstPawnDrawn = false;
-
-			for (int k = 0; k < this.cachedPawnSurfaces.Count; k++)
+			for (int k = FirstIndexToRender; k < LastIndexToRender; k++)
 			{
 				PawnSurface surface = this.cachedPawnSurfaces[k];
 
 				Pawn pawn = surface.pawn;
 
-				if (firstPawnDrawn)
+				if (k != 0)
 				{
-					Utilities.ListSeparator(scrollViewInnerRect, currentVerticalPosition);
+					Utilities.ListSeparator(scrollViewInnerRect, dynamicVerticalY);
 				}
 
-				firstPawnDrawn = true;
-
-				Rect nameRect = new Rect(scrollViewInnerRect.x, currentVerticalPosition, Utilities.SpaceForPawnLabel, statsRowHeight);
-				Rect surfaceRect = new Rect(nameRect.xMax, currentVerticalPosition, this.statsSurfaceWidth, statsRowHeight);
+				Rect nameRect = new Rect(scrollViewInnerRect.x, dynamicVerticalY, Utilities.SpaceForPawnLabel, statsRowHeight);
+				Rect surfaceRect = new Rect(nameRect.xMax, dynamicVerticalY, this.statsSurfaceWidth, statsRowHeight);
 				float surfaceRectCenterY = surfaceRect.center.y;
 
-				Utilities.PawnLabel(nameRect, pawn, data);
+				Utilities.PawnLabel(nameRect, pawn);
 
 				for (int p = 0; p < primariesList.Count; p++)
 				{
@@ -276,15 +276,17 @@ namespace DD_WorkTab.Windows
 
 					matchingDraggable.DrawTexture(drawRect);
 
-					if (drawRect.Contains(data.mousePosition))
+					if (drawRect.Contains(Event.current.mousePosition))
 					{
 						string tipString = Utilities.DraggableTooltip(def, false, true, matchingDraggable.CompletelyDisabled, matchingDraggable.Disabled, pawn);
+
+						Widgets.DrawHighlight(drawRect);
 
 						TooltipHandler.TipRegion(drawRect, tipString);
 					}
 				}
 
-				currentVerticalPosition += statsRowHeight;
+				dynamicVerticalY += statsRowHeight;
 			}
 
 			Widgets.EndScrollView();

@@ -1,51 +1,25 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using UnityEngine;
 using Verse;
 
 namespace DD_WorkTab.Tools
 {
-	public static class DingoUtils
+	public class DingoUtils
 	{
 		/// <summary>
 		/// The alphanumeric name of the mod folder, as defined in RimWorld/Mods.
 		/// </summary>
-		private const string ModFolderName = "DD WorkTab";
+		private string ModFolderName = "DD WorkTab";
 
 		/// <summary>
 		/// The numeric folder name of the mod as a Workshop release, as defined in steamapps/workshop/content/294100.
 		/// </summary>
-		private const string WorkshopFolderName = "111111";
-
-		/// <summary>
-		/// Provides caching for various key types, depending on the mod's requirement.
-		/// </summary>
-		public static Dictionary<object, string> CachedStrings = new Dictionary<object, string>();
-
-		/// <summary>
-		/// Provides quick storage and access to translations. Circumvents calling the .Translate() chain more than once.
-		/// </summary>
-		public static string CachedTranslation(this string inputText, object[] args = null)
-		{
-			if (!CachedStrings.TryGetValue(inputText, out string finalString))
-			{
-				finalString = inputText.Translate();
-
-				CachedStrings[inputText] = finalString;
-			}
-
-			if (args != null)
-			{
-				return string.Format(finalString, args);
-			}
-
-			return finalString;
-		}
+		private string WorkshopFolderName = "111111";
 
 		/// <summary>
 		/// Generates a high quality texture from a PNG file.
 		/// </summary>
-		public static Texture2D GetHQTexture(string fileName, string folderName = null)
+		public Texture2D GetHQTexture(string fileName, string folderName = null)
 		{
 			Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, false); //Mipmaps off;
 
@@ -53,7 +27,7 @@ namespace DD_WorkTab.Tools
 
 			foreach (ModContentPack mod in LoadedModManager.RunningMods)
 			{
-				if (mod.Identifier == ModFolderName || mod.Identifier == WorkshopFolderName)
+				if (mod.Identifier == this.ModFolderName || mod.Identifier == this.WorkshopFolderName)
 				{
 					content = mod;
 				}
@@ -61,7 +35,7 @@ namespace DD_WorkTab.Tools
 
 			if (content == null)
 			{
-				Log.Error("Could not find specific mod :: " + ModFolderName);
+				Log.Error("Could not find specific mod :: " + this.ModFolderName);
 
 				return texture;
 			}

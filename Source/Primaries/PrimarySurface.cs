@@ -10,28 +10,28 @@ namespace DD_WorkTab.Primaries
 	{
 		public readonly List<PrimaryWork> PrimaryWorkList = new List<PrimaryWork>(); //Contains all work types
 
-		private void OnClicked(EventData data)
+		private void OnClicked()
 		{
 			for (int i = 0; i < this.PrimaryWorkList.Count; i++)
 			{
 				PrimaryWork prime = this.PrimaryWorkList[i];
 
-				if (prime.drawRect.Contains(data.mousePosition))
+				if (prime.drawRect.Contains(Event.current.mousePosition))
 				{
-					prime.OnClicked(data);
+					prime.OnClicked();
 
 					return;
 				}
 			}
 		}
 
-		private void OnHover(EventData data)
+		private void OnHover()
 		{
 			for (int i = 0; i < this.PrimaryWorkList.Count; i++)
 			{
 				PrimaryWork prime = this.PrimaryWorkList[i];
 
-				if (prime.drawRect.Contains(data.mousePosition))
+				if (prime.drawRect.Contains(Event.current.mousePosition))
 				{
 					prime.OnHover();
 
@@ -56,18 +56,18 @@ namespace DD_WorkTab.Primaries
 			}
 		}
 
-		public void DoEventChecks(Rect surfaceRect, EventData data)
+		public void DoEventChecks(Rect surfaceRect)
 		{
-			if (surfaceRect.Contains(data.mousePosition))
+			if (surfaceRect.Contains(Event.current.mousePosition))
 			{
-				if (data.shift && data.type == EventType.MouseDown)
+				if (Event.current.type == EventType.MouseDown)
 				{
-					this.OnClicked(data);
+					this.OnClicked();
 				}
 
 				else
 				{
-					this.OnHover(data);
+					this.OnHover();
 				}
 			}
 		}
