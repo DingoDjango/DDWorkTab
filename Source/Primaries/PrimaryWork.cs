@@ -16,7 +16,7 @@ namespace DD_WorkTab.Primaries
 
 		public Rect drawRect;
 
-		private void OnPrimaryShiftClick(int clickInt)
+		private void OnShiftClick(int clickInt)
 		{
 			foreach (Pawn pawn in Find.VisibleMap.mapPawns.FreeColonists)
 			{
@@ -28,7 +28,7 @@ namespace DD_WorkTab.Primaries
 			Utilities.UserFeedbackChain(WorkSound.TaskCompleted, shiftClickDone);
 		}
 
-		private void OnPrimaryCtrlClick()
+		private void OnCtrlClick()
 		{
 			this.ctrlState = !this.ctrlState;
 
@@ -56,28 +56,28 @@ namespace DD_WorkTab.Primaries
 			{
 				if (Event.current.button == 0)
 				{
-					this.OnPrimaryShiftClick(-1);
+					this.OnShiftClick(-1);
 				}
 
 				if (Event.current.button == 1)
 				{
-					this.OnPrimaryShiftClick(1);
+					this.OnShiftClick(1);
 				}
 			}
 
 			else if (Event.current.control)
 			{
-				this.OnPrimaryCtrlClick();
+				this.OnCtrlClick();
 			}
 
 			Event.current.Use();
 		}
 
-		public void OnHover()
+		public void OnHover(Rect rect, bool compareSkillsWindow)
 		{
-			Widgets.DrawHighlight(this.drawRect);
+			Widgets.DrawHighlight(rect);
 
-			TooltipHandler.TipRegion(this.drawRect, Utilities.DraggableTooltip(this.def, true, false, false, false, null));
+			TooltipHandler.TipRegion(rect, Utilities.PrimaryTooltip(this, compareSkillsWindow));
 		}
 
 		public PrimaryWork(WorkTypeDef def)

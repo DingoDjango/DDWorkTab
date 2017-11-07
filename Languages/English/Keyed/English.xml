@@ -4,10 +4,10 @@
 	<!-- Mod Settings -->
 
 	<DD_WorkTab_UseSounds_Label>Mod Sounds</DD_WorkTab_UseSounds_Label>
-	<DD_WorkTab_UseSounds_Desc>Play sounds on various triggers, such as enabling/disabling work or displaying messages.</DD_WorkTab_UseSounds_Desc>
+	<DD_WorkTab_UseSounds_Desc>Play sounds on various triggers, such as assigning work or displaying messages.</DD_WorkTab_UseSounds_Desc>
 
 	<DD_WorkTab_ShowPrompt_Label>Show Prompts</DD_WorkTab_ShowPrompt_Label>
-	<DD_WorkTab_ShowPrompt_Desc>When using Disable/Reset Work buttons, open an 'Are you sure?' dialogue window.</DD_WorkTab_ShowPrompt_Desc>
+	<DD_WorkTab_ShowPrompt_Desc>Open an 'Are you sure?' dialogue window when using Enable/Disable/Reset Work functions.</DD_WorkTab_ShowPrompt_Desc>
 
 	<DD_WorkTab_VerboseMessages_Label>Show Messages</DD_WorkTab_VerboseMessages_Label>
 	<DD_WorkTab_VerboseMessages_Desc>Display various messages such as "Jenny has been assigned to Cook".</DD_WorkTab_VerboseMessages_Desc>
@@ -16,19 +16,19 @@
 
 	<DD_WorkTab_Tooltip_WorkButton>Work Functions\n\nClick: open the functions menu.</DD_WorkTab_Tooltip_WorkButton>
 
-	<DD_WorkTab_Tooltip_Primary>\n\nShift-click: adjust priority for everyone.\n\nCtrl-click: enable or disable for everyone.</DD_WorkTab_Tooltip_Primary>
+	<DD_WorkTab_Tooltip_Primary>\n\nShift-click: adjust priority for everyone.\n\nCtrl-click: assign/unassign everyone.</DD_WorkTab_Tooltip_Primary>
 
-	<DD_WorkTab_Tooltip_DraggableWork>\n\nClick &amp; drag: adjust priority.\n\Ctrl-click: enable or disable.</DD_WorkTab_Tooltip_DraggableWork>
+	<DD_WorkTab_Tooltip_DraggableWork>\n\nDrag: adjust priority.\n\nCtrl-click: assign/unassign.</DD_WorkTab_Tooltip_DraggableWork>
 
-	<DD_WorkTab_Tooltip_IncapacitatedWorker>&lt;color=red&gt;\n\nNAME is unable to do {0} work because of HIS health condition.&lt;/color&gt;</DD_WorkTab_Tooltip_IncapacitatedWorker>
+	<DD_WorkTab_Tooltip_IncapacitatedWorker>&lt;color=red&gt;\n\nNAME is incapable of {0} because of HIS health condition.&lt;/color&gt;</DD_WorkTab_Tooltip_IncapacitatedWorker>
 
 	<DD_WorkTab_Tooltip_CurrentlyUnassigned>\n\nNAME is not assigned to {0}.</DD_WorkTab_Tooltip_CurrentlyUnassigned>
 
 	<!-- Messages -->
 
-	<DD_WorkTab_Message_IncapablePawn>Cannot assign NAME to {0}. HECAP is incapable of doing it.</DD_WorkTab_Message_IncapablePawn>
+	<DD_WorkTab_Message_IncapablePawn>&lt;color=red&gt;NAME is incapable of {0}.&lt;/color&gt;</DD_WorkTab_Message_IncapablePawn>
 
-	<DD_WorkTab_Message_DraggedIncapableWork>Tried to adjust {0}. Will have no effect because NAME is incapable of doing it.</DD_WorkTab_Message_DraggedIncapableWork>
+	<DD_WorkTab_Message_DraggedIncapableWork>&lt;color=red&gt;Cannot adjust {0} because NAME is incapable of doing it.&lt;/color&gt;</DD_WorkTab_Message_DraggedIncapableWork>
 
 	<DD_WorkTab_Message_WorkEnabled>NAME has been assigned to {0}.</DD_WorkTab_Message_WorkEnabled>
 
@@ -66,11 +66,11 @@
 
 	<!-- DiaNode Contents -->
 
-	<DD_WorkTab_PromptText_AllPawns_EnableWork>All work will be enabled for &lt;color=red&gt;every colonist on this map&lt;/color&gt;.</DD_WorkTab_PromptText_AllPawns_EnableWork>
+	<DD_WorkTab_PromptText_AllPawns_EnableWork>All work will be enabled for every colonist on this map.</DD_WorkTab_PromptText_AllPawns_EnableWork>
 
-	<DD_WorkTab_PromptText_AllPawns_DisableWork>All work will be disabled for &lt;color=red&gt;every colonist on this map&lt;/color&gt;.</DD_WorkTab_PromptText_AllPawns_DisableWork>
+	<DD_WorkTab_PromptText_AllPawns_DisableWork>All work will be disabled for every colonist on this map.</DD_WorkTab_PromptText_AllPawns_DisableWork>
 
-	<DD_WorkTab_PromptText_AllPawns_ResetWork>All work will be reset for &lt;color=red&gt;every colonist on this map&lt;/color&gt;.</DD_WorkTab_PromptText_AllPawns_ResetWork>
+	<DD_WorkTab_PromptText_AllPawns_ResetWork>All work will be reset for every colonist on this map.</DD_WorkTab_PromptText_AllPawns_ResetWork>
 
 	<DD_WorkTab_PromptText_EnableWork>All possible work for NAME will be enabled.</DD_WorkTab_PromptText_EnableWork>
 
@@ -78,7 +78,7 @@
 
 	<DD_WorkTab_PromptText_ResetWork>All possible work for NAME will be enabled and sorted by natural priority.</DD_WorkTab_PromptText_ResetWork>
 
-	<DD_WorkTab_PromptText_DisablePrompt>\n\nIf you disable prompts, you can re-enable them in Options -> Mod Settings.</DD_WorkTab_PromptText_DisablePrompt>
+	<DD_WorkTab_PromptText_DisablePrompt>\n\nIf you disable prompts, you can re-enable them in Options > Mod Settings.</DD_WorkTab_PromptText_DisablePrompt>
 
 	<!-- DiaOptions -->
 

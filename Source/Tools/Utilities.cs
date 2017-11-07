@@ -28,7 +28,7 @@ namespace DD_WorkTab.Tools
 
 		public const float SpaceForScrollBar = 22f;
 
-		public const float SpaceForWorkButtons = 2f * ShortSpacing + DraggableDiameter;
+		public const float SpaceForWorkButton = 2f * ShortSpacing + DraggableDiameter;
 
 		public const float StandardRowHeight = 2f * ShortSpacing + DraggableDiameter;
 
@@ -97,9 +97,9 @@ namespace DD_WorkTab.Tools
 
 		public static DingoUtils ExtraUtilities = new DingoUtils();
 
-		public static float MaxWindowWidth => (float)UI.screenWidth * 0.8f;
+		public static float MaxWindowWidth => UI.screenWidth * 0.8f;
 
-		public static float MaxWindowHeight => (float)UI.screenHeight * 0.8f;
+		public static float MaxWindowHeight => UI.screenHeight * 0.8f;
 
 		static Utilities()
 		{
@@ -181,7 +181,7 @@ namespace DD_WorkTab.Tools
 		/// <summary>
 		/// Provides a Draggable-sized square whose center point is the provided position.
 		/// </summary>
-		public static Rect ToDraggableRect(this Vector2 position, float diameter = DraggableDiameter)
+		public static Rect ToWorkRect(this Vector2 position, float diameter = DraggableDiameter)
 		{
 			float draggableRadius = diameter / 2f;
 
@@ -249,7 +249,7 @@ namespace DD_WorkTab.Tools
 				audio.PlayOneShotOnCamera(null);
 			}
 
-			if (Controller.VerboseMessages && message != "")
+			if (message != "" && Controller.VerboseMessages)
 			{
 				Messages.Message(message, MessageTypeDefOf.SilentInput);
 			}
@@ -347,66 +347,73 @@ namespace DD_WorkTab.Tools
 		}
 
 		/// <summary>
-		/// Builds a context-appropriate WorkType tooltip based on various inputs.
+		/// Builds an appropriate tooltip for a PrimaryWork object.
 		/// </summary>
-		public static string DraggableTooltip(WorkTypeDef def, bool primary, bool statsWindow, bool incapable, bool disabled, Pawn worker)
+		public static string PrimaryTooltip(PrimaryWork primary, bool compareSkillsWindow)
 		{
-			StringBuilder tooltip = new StringBuilder(def.labelShort);
+			StringBuilder tooltip = new StringBuilder(primary.def.labelShort);
 
-			if (primary)
+			tooltip.AppendLine();
+			tooltip.AppendLine();
+			tooltip.Append(primary.def.description);
+
+			if (!compareSkillsWindow)
 			{
-				tooltip.AppendLine();
-				tooltip.AppendLine();
-				tooltip.Append(def.description);
-
-				if (!statsWindow)
-				{
-					tooltip.Append("DD_WorkTab_Tooltip_Primary".CachedTranslation());
-				}
-
-				else
-				{
-					tooltip.Append("ClickToSortByThisColumn".CachedTranslation());
-				}
+				tooltip.Append("DD_WorkTab_Tooltip_Primary".CachedTranslation());
 			}
 
-			//RimWorld.WidgetsWork.TipForPawnWorker
 			else
 			{
-				if (!incapable)
+				tooltip.Append("ClickToSortByThisColumn".CachedTranslation());
+			}
+
+			return tooltip.ToString();
+		}
+
+		/// <summary>
+		/// Builds an appropriate tooltip for a DraggableWork object.
+		/// </summary>
+		public static string DraggableTooltip(DraggableWork draggable, bool compareSkillsWindow)
+		{
+			WorkTypeDef def = draggable.Def;
+			Pawn worker = draggable.parent.pawn;
+
+			StringBuilder tooltip = new StringBuilder(def.labelShort);
+
+			//RimWorld.WidgetsWork.TipForPawnWorker
+			if (!draggable.CompletelyDisabled)
+			{
+				if (def.relevantSkills.Count > 0)
 				{
-					if (def.relevantSkills.Count > 0)
+					tooltip.Append("RelevantSkills".CachedTranslation(new object[]
 					{
-						tooltip.Append("RelevantSkills".CachedTranslation(new object[]
-						{
 						CachedStrings[def],
 						worker.skills.AverageOfRelevantSkillsFor(def).ToString(),
 						SkillRecord.MaxLevel
-						}));
-					}
-
-					if (!statsWindow)
-					{
-						tooltip.Append("DD_WorkTab_Tooltip_DraggableWork".CachedTranslation());
-					}
-
-					if (disabled)
-					{
-						tooltip.Append("DD_WorkTab_Tooltip_CurrentlyUnassigned".CachedTranslation(new string[] { def.labelShort }).AdjustedFor(worker));
-					}
-
-					if (CapacitiesCompromisedForWorkType(worker, def))
-					{
-						tooltip.Append("DD_WorkTab_Tooltip_IncapacitatedWorker".CachedTranslation(new string[] { def.labelShort }).AdjustedFor(worker));
-					}
+					}));
 				}
 
-				else
+				if (!compareSkillsWindow)
 				{
-					tooltip.AppendLine();
-					tooltip.AppendLine();
-					tooltip.Append("DD_WorkTab_Message_IncapablePawn".CachedTranslation(new string[] { def.labelShort }).AdjustedFor(worker));
+					tooltip.Append("DD_WorkTab_Tooltip_DraggableWork".CachedTranslation());
 				}
+
+				if (draggable.Disabled)
+				{
+					tooltip.Append("DD_WorkTab_Tooltip_CurrentlyUnassigned".CachedTranslation(new string[] { def.labelShort }).AdjustedFor(worker));
+				}
+
+				if (CapacitiesCompromisedForWorkType(worker, def))
+				{
+					tooltip.Append("DD_WorkTab_Tooltip_IncapacitatedWorker".CachedTranslation(new string[] { def.labelShort }).AdjustedFor(worker));
+				}
+			}
+
+			else
+			{
+				tooltip.AppendLine();
+				tooltip.AppendLine();
+				tooltip.Append("DD_WorkTab_Message_IncapablePawn".CachedTranslation(new string[] { def.labelShort }).AdjustedFor(worker));
 			}
 
 			return tooltip.ToString();
@@ -502,7 +509,7 @@ namespace DD_WorkTab.Tools
 					{
 						foreach (Pawn p in Find.VisibleMap.mapPawns.FreeColonists)
 						{
-							Controller.GetManager.GetPawnSurface(p).ResetWorkToDefaultState();
+							Controller.GetManager.GetPawnSurface(p).ResetAllPawnWork();
 						}
 					};
 					break;
@@ -524,7 +531,7 @@ namespace DD_WorkTab.Tools
 					title = "DD_WorkTab_Title_ResetWork".CachedTranslation();
 					buttonAction = delegate
 					{
-						surface.ResetWorkToDefaultState();
+						surface.ResetAllPawnWork();
 					};
 					break;
 				case WorkFunction.CopySettings:

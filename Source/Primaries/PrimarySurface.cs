@@ -9,37 +9,24 @@ namespace DD_WorkTab.Primaries
 	{
 		public readonly List<PrimaryWork> PrimaryWorkList = new List<PrimaryWork>(); //Contains all work types
 
+		private PrimaryWork PrimaryOnMousePosition => this.PrimaryWorkList.Find(p => p.drawRect.Contains(Event.current.mousePosition));
+
 		private void OnClicked()
 		{
-			for (int i = 0; i < this.PrimaryWorkList.Count; i++)
-			{
-				PrimaryWork prime = this.PrimaryWorkList[i];
-
-				if (prime.drawRect.Contains(Event.current.mousePosition))
-				{
-					prime.OnClicked();
-
-					return;
-				}
-			}
+			this.PrimaryOnMousePosition?.OnClicked();
 		}
 
 		private void OnHover()
 		{
-			for (int i = 0; i < this.PrimaryWorkList.Count; i++)
+			PrimaryWork primary = this.PrimaryOnMousePosition;
+
+			if (primary != null)
 			{
-				PrimaryWork prime = this.PrimaryWorkList[i];
-
-				if (prime.drawRect.Contains(Event.current.mousePosition))
-				{
-					prime.OnHover();
-
-					return;
-				}
+				primary.OnHover(primary.drawRect, false);
 			}
 		}
 
-		public void DrawPrimaryDraggables(Rect rect)
+		public void DrawSurface(Rect rect)
 		{
 			Vector2 positionSetter = new Vector2(rect.x + 2f * Utilities.ShortSpacing + Utilities.DraggableDiameter / 2f, rect.center.y);
 
@@ -47,7 +34,7 @@ namespace DD_WorkTab.Primaries
 			{
 				PrimaryWork primary = this.PrimaryWorkList[i];
 
-				primary.drawRect = positionSetter.ToDraggableRect();
+				primary.drawRect = positionSetter.ToWorkRect();
 
 				primary.DrawTexture(primary.drawRect);
 
@@ -55,9 +42,9 @@ namespace DD_WorkTab.Primaries
 			}
 		}
 
-		public void DoEventChecks(Rect surfaceRect)
+		public void DoWorkTabEventChecks(Rect rect)
 		{
-			if (surfaceRect.Contains(Event.current.mousePosition))
+			if (rect.Contains(Event.current.mousePosition))
 			{
 				if (Event.current.type == EventType.Repaint)
 				{

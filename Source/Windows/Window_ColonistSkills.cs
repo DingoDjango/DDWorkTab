@@ -21,7 +21,7 @@ namespace DD_WorkTab.Windows
 
 		private Dictionary<WorkTypeDef, float> primariesPositions = new Dictionary<WorkTypeDef, float>();
 
-		private WorkTypeDef sortingDef;
+		private WorkTypeDef sortingDef = null;
 
 		private SortOrder sortingOrder = SortOrder.Undefined;
 
@@ -66,81 +66,91 @@ namespace DD_WorkTab.Windows
 		//Window.SetInitialSizeAndPosition
 		private void SetSizeAndPosition()
 		{
-			this.windowRect = new Rect(((float)UI.screenWidth - this.InitialSize.x) / 2f, ((float)UI.screenHeight - this.InitialSize.y) / 2f, this.InitialSize.x, this.InitialSize.y);
-			this.windowRect = this.windowRect.Rounded();
+			this.windowRect = new Rect((UI.screenWidth - this.InitialSize.x) / 2f, (UI.screenHeight - this.InitialSize.y) / 2f, this.InitialSize.x, this.InitialSize.y);
 		}
 
 		private void DoSortingChecks(WorkTypeDef sortDef)
 		{
-			if (Event.current.type == EventType.MouseDown)
+			bool changedSorting = false;
+
+			if (Event.current.button == 0)
 			{
-				bool changedState = false;
-
-				if (Event.current.button == 0)
+				if (this.sortingDef != sortDef)
 				{
-					if (this.sortingDef != sortDef)
-					{
-						this.sortingDef = sortDef;
-						this.sortingOrder = SortOrder.Descending;
-					}
-
-					else
-					{
-						switch (this.sortingOrder)
-						{
-							case SortOrder.Descending:
-								this.sortingOrder = SortOrder.Ascending;
-								break;
-							case SortOrder.Ascending:
-								this.sortingOrder = SortOrder.Undefined;
-								break;
-							default:
-								this.sortingOrder = SortOrder.Descending;
-								break;
-						}
-					}
-
-					changedState = true;
+					this.sortingDef = sortDef;
+					this.sortingOrder = SortOrder.Descending;
 				}
 
-				if (Event.current.button == 1)
+				else
 				{
-					if (this.sortingDef != sortDef)
+					switch (this.sortingOrder)
 					{
-						this.sortingDef = sortDef;
-						this.sortingOrder = SortOrder.Ascending;
+						case SortOrder.Descending:
+							this.sortingOrder = SortOrder.Ascending;
+							break;
+						case SortOrder.Ascending:
+							this.sortingOrder = SortOrder.Undefined;
+							break;
+						default:
+							this.sortingOrder = SortOrder.Descending;
+							break;
 					}
-
-					else
-					{
-						switch (this.sortingOrder)
-						{
-							case SortOrder.Descending:
-								this.sortingOrder = SortOrder.Undefined;
-								break;
-							case SortOrder.Ascending:
-								this.sortingOrder = SortOrder.Descending;
-								break;
-							default:
-								this.sortingOrder = SortOrder.Ascending;
-								break;
-						}
-					}
-
-					changedState = true;
 				}
 
-				if (changedState)
-				{
-					WorkSound sound = this.sortingOrder != SortOrder.Undefined ? WorkSound.SortedSkills : WorkSound.UnsortedSkills;
-
-					Utilities.UserFeedbackChain(sound);
-
-					this.mustRecacheColonists = true;
-				}
-
-				Event.current.Use();
+				changedSorting = true;
 			}
+
+			if (Event.current.button == 1)
+			{
+				if (this.sortingDef != sortDef)
+				{
+					this.sortingDef = sortDef;
+					this.sortingOrder = SortOrder.Ascending;
+				}
+
+				else
+				{
+					switch (this.sortingOrder)
+					{
+						case SortOrder.Descending:
+							this.sortingOrder = SortOrder.Undefined;
+							break;
+						case SortOrder.Ascending:
+							this.sortingOrder = SortOrder.Descending;
+							break;
+						default:
+							this.sortingOrder = SortOrder.Ascending;
+							break;
+					}
+				}
+
+				changedSorting = true;
+			}
+
+			if (changedSorting)
+			{
+				WorkSound sound = this.sortingOrder != SortOrder.Undefined ? WorkSound.SortedSkills : WorkSound.UnsortedSkills;
+
+				Utilities.UserFeedbackChain(sound);
+
+				this.mustRecacheColonists = true;
+			}
+
+			Event.current.Use();
+		}
+
+		private void DrawWindowTitle(Rect rect)
+		{
+			GUI.color = Utilities.Orange;
+			Text.Anchor = TextAnchor.UpperCenter;
+			Text.Font = GameFont.Tiny;
+
+			Widgets.Label(rect, "DD_WorkTab_ColonistSkills_Title".CachedTranslation());
+
+			//Reset
+			GUI.color = Color.white;
+			Text.Anchor = TextAnchor.UpperLeft;
+			Text.Font = GameFont.Small;
 		}
 
 		public override void DoWindowContents(Rect inRect)
@@ -150,10 +160,10 @@ namespace DD_WorkTab.Windows
 			List<PrimaryWork> primariesList = Controller.GetPrimaries.PrimaryWorkList;
 
 			//Build rects
-			Rect toggleMapRect = new Rect(inRect.x - this.horizontalOffset, inRect.y + Utilities.TinyTextLineHeight, Utilities.ShortSpacing + Utilities.SpaceForPawnLabel, Utilities.SmallRowHeight);
-			Rect primaryTypesRect = new Rect(toggleMapRect.xMax, toggleMapRect.y, inRect.width - toggleMapRect.width, Utilities.SmallRowHeight);
+			Rect toggleButtonRect = new Rect(inRect.x - this.horizontalOffset, inRect.y + Utilities.TinyTextLineHeight, Utilities.ShortSpacing + Utilities.SpaceForPawnLabel, Utilities.SmallRowHeight);
+			Rect primariesRect = new Rect(toggleButtonRect.xMax, toggleButtonRect.y, inRect.width - toggleButtonRect.width, Utilities.SmallRowHeight);
 
-			Rect scrollViewBox = new Rect(inRect.x, primaryTypesRect.yMax, inRect.width, inRect.height - Utilities.SmallRowHeight - Utilities.TinyTextLineHeight);
+			Rect scrollViewBox = new Rect(inRect.x, primariesRect.yMax, inRect.width, inRect.height - Utilities.SmallRowHeight - Utilities.TinyTextLineHeight);
 			Rect scrollViewOuterRect = scrollViewBox.ContractedBy(Utilities.ShortSpacing);
 			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, Utilities.SpaceForPawnLabel + Utilities.SmallSurfaceWidth, this.cachedPawnSurfaces.Count * Utilities.SmallRowHeight);
 
@@ -165,22 +175,13 @@ namespace DD_WorkTab.Windows
 			//Draw window title and list outline
 			if (Event.current.type == EventType.Repaint)
 			{
-				GUI.color = Utilities.Orange;
-				Text.Anchor = TextAnchor.UpperCenter;
-				Text.Font = GameFont.Tiny;
-
-				Widgets.Label(inRect, "DD_WorkTab_ColonistSkills_Title".CachedTranslation());
-
-				Text.Font = GameFont.Small; //Reset
-				Text.Anchor = TextAnchor.UpperLeft; //Reset
+				this.DrawWindowTitle(inRect);
 
 				Utilities.BoxOutline(scrollViewBox);
 			}
 
 			//Toggle Displayed Pawns button
-			Text.Font = GameFont.Small;
-
-			if (Widgets.ButtonText(toggleMapRect.ContractedBy(Utilities.ShortSpacing), this.ToggleButtonText, true, false, true))
+			if (Widgets.ButtonText(toggleButtonRect.ContractedBy(Utilities.ShortSpacing), this.ToggleButtonText, true, false, true))
 			{
 				Controller.ColonistSkillsVisibleMap = !Controller.ColonistSkillsVisibleMap;
 
@@ -190,83 +191,86 @@ namespace DD_WorkTab.Windows
 			}
 
 			//Draw primaries
-			Vector2 primaryPositions = new Vector2(primaryTypesRect.x + Utilities.ShortSpacing + (Utilities.SmallDraggableDiameter / 2f), primaryTypesRect.center.y);
+			Vector2 positionSetter = new Vector2(primariesRect.x + Utilities.ShortSpacing + Utilities.SmallDraggableDiameter / 2f, primariesRect.center.y);
 
-			for (int j = 0; j < primariesList.Count; j++)
+			for (int i = 0; i < primariesList.Count; i++)
 			{
-				PrimaryWork primary = primariesList[j];
-				WorkTypeDef primaryDef = primary.def;
+				PrimaryWork primary = primariesList[i];
 
-				this.primariesPositions[primaryDef] = primaryPositions.x;
+				this.primariesPositions[primary.def] = positionSetter.x;
 
-				Rect primeRect = primaryPositions.ToDraggableRect(Utilities.SmallDraggableDiameter);
+				Rect drawRect = positionSetter.ToWorkRect(Utilities.SmallDraggableDiameter);
 
-				primary.DrawTexture(primeRect);
-
-				if (primeRect.Contains(Event.current.mousePosition))
+				if (Event.current.type == EventType.Repaint)
 				{
-					Widgets.DrawHighlight(primeRect);
+					primary.DrawTexture(drawRect);
 
-					TooltipHandler.TipRegion(primeRect, Utilities.DraggableTooltip(primaryDef, true, true, false, false, null));
+					if (drawRect.Contains(Event.current.mousePosition))
+					{
+						primary.OnHover(drawRect, true);
+					}
 
-					this.DoSortingChecks(primaryDef);
+					//Draw little arrow indicator below work type
+					if (this.sortingOrder != SortOrder.Undefined && this.sortingDef == primary.def)
+					{
+						Texture2D icon = this.sortingOrder == SortOrder.Descending ? Utilities.SortingDescendingIcon : Utilities.SortingAscendingIcon;
+						Rect iconRect = new Rect(drawRect.xMax - icon.width, drawRect.yMax + 1f, icon.width, icon.height);
+						Rect highlightRect = new Rect(drawRect.xMin - 3f, drawRect.yMin - 3f, drawRect.width + 6f, drawRect.height + 6f);
+
+						GUI.DrawTexture(iconRect, icon);
+
+						Widgets.DrawHighlight(highlightRect);
+					}
 				}
 
-				//Draw little arrow indicator below work type
-				if (this.sortingOrder != SortOrder.Undefined && this.sortingDef == primaryDef)
+				else if (Event.current.type == EventType.MouseDown && drawRect.Contains(Event.current.mousePosition))
 				{
-					Texture2D icon = this.sortingOrder == SortOrder.Descending ? Utilities.SortingDescendingIcon : Utilities.SortingAscendingIcon;
-					Rect iconRect = new Rect(primeRect.xMax - (float)icon.width, primeRect.yMax + 1f, icon.width, icon.height);
-
-					GUI.DrawTexture(iconRect, icon);
-
-					Widgets.DrawHighlight(new Rect(primeRect.xMin - 3f, primeRect.yMin - 3f, primeRect.width + 6f, primeRect.height + 6f));
+					this.DoSortingChecks(primary.def);
 				}
 
-				primaryPositions.x += Utilities.ShortSpacing + Utilities.SmallDraggableDiameter;
+				positionSetter.x += Utilities.SmallDraggableDiameter + Utilities.ShortSpacing;
 			}
 
 			Widgets.BeginScrollView(scrollViewOuterRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
 			//Determine which surfaces will actually be seen
-			Utilities.ExtraUtilities.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.SmallRowHeight, this.cachedPawnSurfaces.Count, out int FirstIndex, out int LastIndex);
+			Utilities.ExtraUtilities.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.SmallRowHeight, this.cachedPawnSurfaces.Count, out int FirstRenderedIndex, out int LastRenderedIndex);
 
-			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstIndex * Utilities.SmallRowHeight; //The .y value of the first rendered surface
+			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstRenderedIndex * Utilities.SmallRowHeight; //The .y value of the first rendered surface
 
-			for (int k = FirstIndex; k < LastIndex; k++)
+			for (int j = FirstRenderedIndex; j < LastRenderedIndex; j++)
 			{
-				PawnSurface surface = this.cachedPawnSurfaces[k];
-
-				Pawn pawn = surface.pawn;
-
-				if (k != 0)
-				{
-					Utilities.ListSeparator(scrollViewInnerRect, dynamicVerticalY);
-				}
+				PawnSurface surface = this.cachedPawnSurfaces[j];
 
 				Rect nameRect = new Rect(scrollViewInnerRect.x, dynamicVerticalY, Utilities.SpaceForPawnLabel, Utilities.SmallRowHeight);
 				Rect surfaceRect = new Rect(nameRect.xMax, dynamicVerticalY, Utilities.SmallSurfaceWidth, Utilities.SmallRowHeight);
 				float surfaceRectCenterY = surfaceRect.center.y;
 
-				Utilities.PawnLabel(nameRect, pawn);
-
-				for (int p = 0; p < primariesList.Count; p++)
+				if (Event.current.type == EventType.Repaint)
 				{
-					WorkTypeDef def = primariesList[p].def;
-					DraggableWork matchingDraggable = surface.childByDef[def];
-					Rect drawRect = new Vector2(this.primariesPositions[def], surfaceRectCenterY).ToDraggableRect(Utilities.SmallDraggableDiameter);
-
-					matchingDraggable.DrawTexture(drawRect);
-
-					if (drawRect.Contains(Event.current.mousePosition))
+					if (j != 0)
 					{
-						string tipString = Utilities.DraggableTooltip(def, false, true, matchingDraggable.CompletelyDisabled, matchingDraggable.Disabled, pawn);
+						Utilities.ListSeparator(scrollViewInnerRect, dynamicVerticalY);
+					}
 
-						Widgets.DrawHighlight(drawRect);
+					//Draw surface
+					for (int p = 0; p < primariesList.Count; p++)
+					{
+						WorkTypeDef def = primariesList[p].def;
+						DraggableWork draggable = surface.childByDef[def];
+						Vector2 draggablePosition = new Vector2(this.primariesPositions[def], surfaceRectCenterY);
+						Rect drawRect = draggablePosition.ToWorkRect(Utilities.SmallDraggableDiameter);
 
-						TooltipHandler.TipRegion(drawRect, tipString);
+						draggable.DrawTexture(drawRect);
+
+						if (drawRect.Contains(Event.current.mousePosition))
+						{
+							draggable.OnHover(drawRect, true);
+						}
 					}
 				}
+
+				Utilities.PawnLabel(nameRect, surface.pawn);
 
 				dynamicVerticalY += Utilities.SmallRowHeight;
 			}

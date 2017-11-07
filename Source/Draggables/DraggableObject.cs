@@ -23,6 +23,6 @@ namespace DD_WorkTab.Draggables
 
 		public abstract void OnDrop();
 
-		public abstract void OnHover();
+		public abstract void OnHover(Rect rect, bool compareSkillsWindow);
 	}
 }

@@ -1,13 +1,13 @@
 ﻿namespace DD_WorkTab.Miscellaneous
 {
-	public enum SortOrder : byte
+	public enum SortOrder
 	{
 		Undefined,
 		Descending,
 		Ascending
 	}
 
-	public enum WorkSound : byte
+	public enum WorkSound
 	{
 		TaskCompleted,
 		TaskFailed,
@@ -18,7 +18,7 @@
 		CompareSkillsMapChanged
 	}
 
-	public enum WorkFunction : byte
+	public enum WorkFunction
 	{
 		AllPawns_EnableWork,
 		AllPawns_DisableWork,

@@ -2,6 +2,7 @@
 using System.Linq;
 using DD_WorkTab.Base;
 using DD_WorkTab.Miscellaneous;
+using DD_WorkTab.Primaries;
 using DD_WorkTab.Tools;
 using RimWorld;
 using UnityEngine;
@@ -17,132 +18,7 @@ namespace DD_WorkTab.Draggables
 
 		public Pawn pawn;
 
-		private void OnClicked()
-		{
-			for (int i = 0; i < this.children.Count; i++)
-			{
-				DraggableWork child = this.children[i];
-
-				if (child.dragRect.Contains(Event.current.mousePosition))
-				{
-					child.OnClicked();
-
-					return;
-				}
-			}
-		}
-
-		private void OnDrop()
-		{
-			this.OrderChildrenByPosition();
-
-			this.UpdatePawnPriorities();
-		}
-
-		private void OnHover()
-		{
-			for (int h = 0; h < this.children.Count; h++)
-			{
-				DraggableWork child = this.children[h];
-
-				if (child.dragRect.Contains(Event.current.mousePosition))
-				{
-					child.OnHover();
-
-					return;
-				}
-			}
-		}
-
-		private void DrawDynamicPosition(Rect listRect, DraggableWork nomad)
-		{
-			GUI.color = !this.pawn.story.WorkTypeIsDisabled(nomad.Def) ? Color.white : Color.red;
-			int childrenCount = this.children.Count;
-			float xPosition = 0f;
-
-			if (childrenCount > 0)
-			{
-				for (int i = childrenCount - 1; i >= 0; i--)
-				{
-					DraggableWork child = this.children[i];
-
-					if (child != nomad && child.position.x < nomad.position.x)
-					{
-						xPosition = child.position.x + Utilities.DraggableDiameter / 2f + Utilities.ShortSpacing / 2f - 1f;
-
-						break;
-					}
-				}
-			}
-
-			if (xPosition == 0f)
-			{
-				xPosition = listRect.xMin + Utilities.ShortSpacing / 2f - 1f;
-			}
-
-			Rect lineRect = new Rect(xPosition, listRect.yMin + (Utilities.ShortSpacing / 2f), 2f, Utilities.DraggableDiameter + Utilities.ShortSpacing);
-
-			GUI.DrawTexture(lineRect, BaseContent.WhiteTex);
-
-			GUI.color = Color.white; //Reset
-		}
-
-		private void ConformWorkToPrimaries()
-		{
-			for (int i = 0; i < Controller.GetPrimaries.PrimaryWorkList.Count; i++)
-			{
-				DraggableWork work = this.childByDef[Controller.GetPrimaries.PrimaryWorkList[i].def];
-
-				work.position.x = i;
-			}
-
-			this.OrderChildrenByPosition();
-
-			this.UpdatePawnPriorities();
-		}
-
-		private void ConformWorkToList(List<DraggableWork> copiedList)
-		{
-			for (int i = 0; i < copiedList.Count; i++)
-			{
-				DraggableWork copiedWork = copiedList[i];
-				DraggableWork child = this.childByDef[copiedWork.Def];
-
-				if (!copiedWork.CompletelyDisabled && !child.CompletelyDisabled)
-				{
-					child.Disabled = copiedWork.Disabled;
-				}
-
-				child.position.x = i;
-			}
-
-			this.OrderChildrenByPosition();
-
-			this.UpdatePawnPriorities();
-		}
-
-		private void UpdatePawnPriorities()
-		{
-			for (int i = 0; i < this.children.Count; i++)
-			{
-				DraggableWork current = this.children[i];
-
-				if (!current.Disabled)
-				{
-					this.pawn.workSettings.SetPriority(current.Def, i + 1);
-				}
-
-				else
-				{
-					this.pawn.workSettings.Disable(current.Def);
-				}
-			}
-		}
-
-		private void OrderChildrenByPosition()
-		{
-			this.children = this.children.OrderByDescending(child => !child.CompletelyDisabled).ThenBy(child => child.position.x).ToList();
-		}
+		private DraggableWork ChildOnMousePosition => this.children.Find(c => c.dragRect.Contains(Event.current.mousePosition));
 
 		private void RefreshChildrenDictionary()
 		{
@@ -154,9 +30,81 @@ namespace DD_WorkTab.Draggables
 			}
 		}
 
-		public void DrawSurface(Rect surfaceRect)
+		private void OrderChildrenByPosition()
 		{
-			Vector2 positionSetter = new Vector2(surfaceRect.x + 2f * Utilities.ShortSpacing + Utilities.DraggableDiameter / 2f, surfaceRect.center.y);
+			this.children = this.children.OrderByDescending(child => !child.CompletelyDisabled).ThenBy(child => child.position.x).ToList();
+		}
+
+		private void UpdatePawnPriorities()
+		{
+			for (int i = 0; i < this.children.Count; i++)
+			{
+				DraggableWork current = this.children[i];
+
+				int priority = current.Disabled ? 0 : i + 1;
+
+				this.pawn.workSettings.SetPriority(current.Def, priority);
+			}
+		}
+
+		private void OrderAndUpdatePriorities()
+		{
+			this.OrderChildrenByPosition();
+
+			this.UpdatePawnPriorities();
+		}
+
+		private void ConformWorkToList(List<DraggableWork> copiedList)
+		{
+			for (int i = 0; i < copiedList.Count; i++)
+			{
+				DraggableWork copiedChild = copiedList[i];
+				DraggableWork affectedChild = this.childByDef[copiedChild.Def];
+
+				if (!copiedChild.CompletelyDisabled && !affectedChild.CompletelyDisabled)
+				{
+					affectedChild.Disabled = copiedChild.Disabled;
+				}
+
+				affectedChild.position.x = i;
+			}
+
+			this.OrderAndUpdatePriorities();
+		}
+
+		private void DrawPotentialPosition(Rect rect, DraggableWork nomad)
+		{
+			DraggableWork child = this.children.FindLast(c => c != nomad && c.position.x < nomad.position.x);
+
+			float xPosition = child != null ? child.dragRect.xMax : rect.xMin;
+
+			Rect lineRect = new Rect(xPosition + Utilities.ShortSpacing / 2f - 1f, rect.yMin + Utilities.ShortSpacing / 2f, 2f, Utilities.DraggableDiameter + Utilities.ShortSpacing);
+
+			GUI.color = !nomad.CompletelyDisabled ? Color.white : Color.red;
+
+			GUI.DrawTexture(lineRect, BaseContent.WhiteTex);
+
+			GUI.color = Color.white; //Reset
+		}
+
+		private void OnClicked()
+		{
+			this.ChildOnMousePosition?.OnClicked();
+		}
+
+		private void OnHover()
+		{
+			DraggableWork child = this.ChildOnMousePosition;
+
+			if (child != null)
+			{
+				child.OnHover(child.dragRect, false);
+			}
+		}
+
+		public void DrawSurface(Rect rect)
+		{
+			Vector2 positionSetter = new Vector2(rect.x + 2f * Utilities.ShortSpacing + Utilities.DraggableDiameter / 2f, rect.center.y);
 
 			for (int i = 0; i < this.children.Count; i++)
 			{
@@ -166,21 +114,21 @@ namespace DD_WorkTab.Draggables
 				{
 					draggable.position = positionSetter;
 
-					draggable.dragRect = positionSetter.ToDraggableRect();
+					draggable.dragRect = positionSetter.ToWorkRect();
 
 					draggable.DrawTexture(draggable.dragRect);
 				}
 
-				else if (surfaceRect.Contains(draggable.position))
+				else if (rect.Contains(draggable.position))
 				{
-					this.DrawDynamicPosition(surfaceRect, draggable);
+					this.DrawPotentialPosition(rect, draggable);
 				}
 
 				positionSetter.x += Utilities.DraggableDiameter + Utilities.ShortSpacing;
 			}
 		}
 
-		public void DoEventChecks(Rect surfaceRect)
+		public void DoWorkTabEventChecks(Rect rect)
 		{
 			DraggableWork nomad = Controller.CurrentDraggable;
 
@@ -190,20 +138,19 @@ namespace DD_WorkTab.Draggables
 				{
 					nomad.OnDrop();
 
-					if (surfaceRect.Contains(nomad.position))
+					if (rect.Contains(nomad.position))
 					{
-						this.OnDrop();
+						this.OrderAndUpdatePriorities();
 
 						string badDrag = !nomad.CompletelyDisabled ? "" : "DD_WorkTab_Message_DraggedIncapableWork".CachedTranslation(new string[] { nomad.Def.labelShort }).AdjustedFor(this.pawn);
 						WorkSound sound = !nomad.CompletelyDisabled ? WorkSound.TaskCompleted : WorkSound.TaskFailed;
 
 						Utilities.UserFeedbackChain(sound, badDrag);
 					}
-
 				}
 			}
 
-			else if (surfaceRect.Contains(Event.current.mousePosition))
+			else if (rect.Contains(Event.current.mousePosition))
 			{
 				if (Event.current.type == EventType.Repaint)
 				{
@@ -223,8 +170,15 @@ namespace DD_WorkTab.Draggables
 
 			int postChange = this.children.FindIndex(c => c == affectedWork) + change;
 
+			int firstIncapableWork = this.children.FindIndex(c => c.CompletelyDisabled);
+
 			if (postChange >= 0 && postChange < this.children.Count)
 			{
+				if (firstIncapableWork >= 0 && postChange > firstIncapableWork)
+				{
+					return; //Don't move the draggable past the incapable-of area
+				}
+
 				this.children.Remove(affectedWork);
 
 				this.children.Insert(postChange, affectedWork);
@@ -233,50 +187,50 @@ namespace DD_WorkTab.Draggables
 			}
 		}
 
-		public void OnPrimaryCtrlClick(bool state, WorkTypeDef def)
+		public void OnPrimaryCtrlClick(bool enable, WorkTypeDef def)
 		{
-			DraggableWork work = this.childByDef[def];
+			DraggableWork affectedWork = this.childByDef[def];
 
-			if (!work.CompletelyDisabled)
+			if (!affectedWork.CompletelyDisabled)
 			{
-				if (state)
+				if (enable)
 				{
-					this.EnableWorkType(work, true);
+					this.EnableWorkType(affectedWork, true);
 				}
 
 				else
 				{
-					this.DisableWorkType(work, true);
+					this.DisableWorkType(affectedWork, true);
 				}
 			}
 		}
 
-		public void EnableWorkType(DraggableWork draggable, bool suppressVerbosity = false)
+		public void EnableWorkType(DraggableWork work, bool noFeedback = false)
 		{
-			draggable.Disabled = false; //Will stop and notify the user if they're trying to enable a CompletelyDisabled type
+			work.Disabled = false; //Will stop and notify the user if they're trying to enable a CompletelyDisabled type
 
-			if (!draggable.Disabled) //Check state post-change
+			if (!work.Disabled) //Check state post-change
 			{
 				this.UpdatePawnPriorities();
 
-				if (!suppressVerbosity)
+				if (!noFeedback)
 				{
-					string workEnabled = "DD_WorkTab_Message_WorkEnabled".CachedTranslation(new string[] { draggable.Def.labelShort }).AdjustedFor(this.pawn);
+					string workEnabled = "DD_WorkTab_Message_WorkEnabled".CachedTranslation(new string[] { work.Def.labelShort }).AdjustedFor(this.pawn);
 
 					Utilities.UserFeedbackChain(WorkSound.WorkEnabled, workEnabled);
 				}
 			}
 		}
 
-		public void DisableWorkType(DraggableWork draggable, bool suppressVerbosity = false)
+		public void DisableWorkType(DraggableWork work, bool noFeedback = false)
 		{
-			draggable.Disabled = true;
+			work.Disabled = true;
 
 			this.UpdatePawnPriorities();
 
-			if (!suppressVerbosity)
+			if (!noFeedback)
 			{
-				string workDisabled = "DD_WorkTab_Message_WorkDisabled".CachedTranslation(new string[] { draggable.Def.labelShort }).AdjustedFor(this.pawn);
+				string workDisabled = "DD_WorkTab_Message_WorkDisabled".CachedTranslation(new string[] { work.Def.labelShort }).AdjustedFor(this.pawn);
 
 				Utilities.UserFeedbackChain(WorkSound.WorkDisabled, workDisabled);
 			}
@@ -307,19 +261,23 @@ namespace DD_WorkTab.Draggables
 			this.UpdatePawnPriorities();
 		}
 
-		public void ResetWorkToDefaultState()
+		public void ResetAllPawnWork()
 		{
-			for (int i = 0; i < this.children.Count; i++)
+			List<PrimaryWork> primaries = Controller.GetPrimaries.PrimaryWorkList;
+
+			for (int i = 0; i < primaries.Count; i++)
 			{
-				DraggableWork current = this.children[i];
+				DraggableWork current = this.childByDef[primaries[i].def];
 
 				if (!current.CompletelyDisabled)
 				{
 					current.Disabled = false;
 				}
+
+				current.position.x = i;
 			}
 
-			this.ConformWorkToPrimaries();
+			this.OrderAndUpdatePriorities();
 		}
 
 		public void CopyPriorities()

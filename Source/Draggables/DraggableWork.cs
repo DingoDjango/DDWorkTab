@@ -154,6 +154,15 @@ namespace DD_WorkTab.Draggables
 			Event.current.Use();
 		}
 
+		public override void OnHover(Rect rect, bool compareSkillsWindow)
+		{
+			Widgets.DrawHighlight(rect);
+
+			string tooltip = Utilities.DraggableTooltip(this, compareSkillsWindow);
+
+			TooltipHandler.TipRegion(rect, tooltip);
+		}
+
 		public override void OnDrag()
 		{
 			this.position = Event.current.mousePosition - this.dragOffsetFromMouse;
@@ -164,13 +173,6 @@ namespace DD_WorkTab.Draggables
 			this.draggingNow = false;
 
 			Controller.CurrentDraggable = null;
-		}
-
-		public override void OnHover()
-		{
-			Widgets.DrawHighlight(this.dragRect);
-
-			TooltipHandler.TipRegion(this.dragRect, Utilities.DraggableTooltip(this.def, false, false, this.completelyIncapable, this.disabled, this.parent.pawn));
 		}
 
 		public DraggableWork(PawnSurface surface)

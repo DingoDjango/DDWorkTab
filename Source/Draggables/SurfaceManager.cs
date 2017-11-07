@@ -7,29 +7,21 @@ namespace DD_WorkTab.Draggables
 	{
 		private List<PawnSurface> allPawnSurfaces = new List<PawnSurface>();
 
-		public Dictionary<Pawn, PawnSurface> PawnSurfaceLookup = new Dictionary<Pawn, PawnSurface>(); //Rebuilt on save load
+		private Dictionary<Pawn, PawnSurface> PawnSurfaceLookup = new Dictionary<Pawn, PawnSurface>(); //Rebuilt on save load
 
 		public PawnSurface GetPawnSurface(Pawn pawn)
 		{
 			if (!this.PawnSurfaceLookup.TryGetValue(pawn, out PawnSurface surface))
 			{
-				bool foundPawn = false;
+				PawnSurface listSurface = this.allPawnSurfaces.Find(s => s.pawn == pawn);
 
-				for (int i = 0; i < this.allPawnSurfaces.Count; i++)
+				if (listSurface != null)
 				{
-					PawnSurface listSurface = this.allPawnSurfaces[i];
-
-					if (listSurface.pawn == pawn)
-					{
-						surface = listSurface;
-						this.PawnSurfaceLookup[pawn] = listSurface;
-						foundPawn = true;
-
-						break;
-					}
+					surface = listSurface;
+					this.PawnSurfaceLookup[pawn] = listSurface;
 				}
 
-				if (!foundPawn)
+				else
 				{
 					surface = new PawnSurface(pawn);
 					this.PawnSurfaceLookup[pawn] = surface;

@@ -2,6 +2,7 @@
 using System.Linq;
 using DD_WorkTab.Base;
 using DD_WorkTab.Draggables;
+using DD_WorkTab.Miscellaneous;
 using DD_WorkTab.Tools;
 using UnityEngine;
 using Verse;
@@ -10,7 +11,7 @@ namespace DD_WorkTab.Windows
 {
 	public class Window_WorkTab : MainTabWindow_DD
 	{
-		protected override float NaturalWindowWidth() => 2f * StandardMargin + 2f * Utilities.ShortSpacing + Utilities.SpaceForPawnLabel + Utilities.SpaceForWorkButtons + Utilities.PawnSurfaceWidth + Utilities.SpaceForScrollBar;
+		protected override float NaturalWindowWidth() => 2f * StandardMargin + 2f * Utilities.ShortSpacing + Utilities.SpaceForPawnLabel + Utilities.SpaceForWorkButton + Utilities.PawnSurfaceWidth + Utilities.SpaceForScrollBar;
 
 		protected override float NaturalWindowHeight() => 2f * StandardMargin + 2f * Utilities.ShortSpacing + Utilities.TinyTextLineHeight + Utilities.StandardRowHeight * (this.cachedPawnSurfaces.Count + 1f);
 
@@ -39,9 +40,9 @@ namespace DD_WorkTab.Windows
 			Widgets.Label(rect, "LowerPriority".CachedTranslation() + " =>");
 
 			//Reset
-			Text.Anchor = TextAnchor.UpperLeft;
-			GUI.color = Color.white;
 			Text.Font = GameFont.Small;
+			GUI.color = Color.white;
+			Text.Anchor = TextAnchor.UpperLeft;
 		}
 
 		public override void WindowUpdate()
@@ -58,7 +59,7 @@ namespace DD_WorkTab.Windows
 			base.DoWindowContents(inRect);
 
 			//Build rects
-			Rect indicatorsRect = new Rect(inRect.xMax - Utilities.PawnSurfaceWidth - Utilities.SpaceForScrollBar, inRect.y, Utilities.PawnSurfaceWidth - Utilities.ShortSpacing, Utilities.TinyTextLineHeight);
+			Rect indicatorsRect = new Rect(inRect.xMax - Utilities.PawnSurfaceWidth - Utilities.SpaceForScrollBar + 2f * Utilities.ShortSpacing, inRect.y, Utilities.PawnSurfaceWidth - 3f * Utilities.ShortSpacing, Utilities.TinyTextLineHeight);
 
 			float topControlsY = indicatorsRect.yMax + Utilities.ShortSpacing;
 
@@ -68,7 +69,7 @@ namespace DD_WorkTab.Windows
 
 			Rect scrollViewBox = new Rect(inRect.x, indicatorsRect.yMax + Utilities.StandardRowHeight, inRect.width, inRect.height - indicatorsRect.height - Utilities.StandardRowHeight);
 			Rect scrollViewOuterRect = scrollViewBox.ContractedBy(Utilities.ShortSpacing);
-			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, Utilities.SpaceForPawnLabel + Utilities.SpaceForWorkButtons + Utilities.PawnSurfaceWidth, this.cachedPawnSurfaces.Count * Utilities.StandardRowHeight);
+			Rect scrollViewInnerRect = new Rect(scrollViewOuterRect.x, scrollViewOuterRect.y, Utilities.SpaceForPawnLabel + Utilities.SpaceForWorkButton + Utilities.PawnSurfaceWidth, this.cachedPawnSurfaces.Count * Utilities.StandardRowHeight);
 
 			if (scrollViewInnerRect.width > scrollViewOuterRect.width)
 			{
@@ -80,42 +81,41 @@ namespace DD_WorkTab.Windows
 			{
 				this.DrawPriorityIndicators(indicatorsRect);
 
-				Controller.GetPrimaries.DrawPrimaryDraggables(primariesRect);
+				Controller.GetPrimaries.DrawSurface(primariesRect);
 
 				Utilities.BoxOutline(scrollViewBox);
 			}
 
 			//Compare Skills button
-			Text.Font = GameFont.Small;
-
 			if (Widgets.ButtonText(compareSkillsButtonRect, "DD_WorkTab_Work_CompareSkills".CachedTranslation(), true, false, true))
 			{
 				Find.WindowStack.Add(new Window_ColonistSkills());
+
+				Utilities.UserFeedbackChain(WorkSound.CompareSkillsMapChanged);
 			}
 
 			//Float menu button
 			Utilities.WorkButton(primaryWorkButtonRect, null);
 
 			//Check for primary-related GUI triggers
-			Controller.GetPrimaries.DoEventChecks(primariesRect);
+			Controller.GetPrimaries.DoWorkTabEventChecks(primariesRect);
 
 			Widgets.BeginScrollView(scrollViewOuterRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
 			Controller.CurrentDraggable?.OnDrag(); //Update draggable position within the list
 
 			//Determine which surfaces will actually be seen
-			Utilities.ExtraUtilities.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.StandardRowHeight, this.cachedPawnSurfaces.Count, out int FirstIndex, out int LastIndex);
+			Utilities.ExtraUtilities.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.StandardRowHeight, this.cachedPawnSurfaces.Count, out int FirstRenderedIndex, out int LastRenderedIndex);
 
-			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstIndex * Utilities.StandardRowHeight; //The .y value of the first rendered surface
+			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstRenderedIndex * Utilities.StandardRowHeight; //The .y value of the first rendered surface
 
-			for (int i = FirstIndex; i < LastIndex; i++)
+			for (int i = FirstRenderedIndex; i < LastRenderedIndex; i++)
 			{
 				PawnSurface surface = this.cachedPawnSurfaces[i];
-				Pawn pawn = surface.pawn;
 
-				Rect pawnLabelRect = new Rect(scrollViewInnerRect.x, dynamicVerticalY, Utilities.SpaceForPawnLabel, Utilities.StandardRowHeight);
-				Rect workButtonRect = new Rect(pawnLabelRect.xMax + 2f * Utilities.ShortSpacing, dynamicVerticalY + Utilities.ShortSpacing, Utilities.DraggableDiameter, Utilities.DraggableDiameter);
-				Rect surfaceRect = new Rect(workButtonRect.xMax, dynamicVerticalY, Utilities.PawnSurfaceWidth, Utilities.StandardRowHeight);
+				Rect labelRect = new Rect(scrollViewInnerRect.x, dynamicVerticalY, Utilities.SpaceForPawnLabel, Utilities.StandardRowHeight);
+				Rect buttonRect = new Rect(labelRect.xMax + 2f * Utilities.ShortSpacing, dynamicVerticalY + Utilities.ShortSpacing, Utilities.DraggableDiameter, Utilities.DraggableDiameter);
+				Rect surfaceRect = new Rect(buttonRect.xMax, dynamicVerticalY, Utilities.PawnSurfaceWidth, Utilities.StandardRowHeight);
 
 				if (Event.current.type == EventType.Repaint)
 				{
@@ -127,11 +127,11 @@ namespace DD_WorkTab.Windows
 					surface.DrawSurface(surfaceRect);
 				}
 
-				Utilities.PawnLabel(pawnLabelRect, pawn);
+				Utilities.PawnLabel(labelRect, surface.pawn);
 
-				Utilities.WorkButton(workButtonRect, surface);
+				Utilities.WorkButton(buttonRect, surface);
 
-				surface.DoEventChecks(surfaceRect);
+				surface.DoWorkTabEventChecks(surfaceRect);
 
 				dynamicVerticalY += Utilities.StandardRowHeight;
 			}
@@ -141,9 +141,9 @@ namespace DD_WorkTab.Windows
 
 			if (Event.current.type == EventType.Repaint && currentDraggable != null)
 			{
-				Rect dragRect = currentDraggable.position.ToDraggableRect();
+				Rect drawRect = currentDraggable.position.ToWorkRect();
 
-				currentDraggable.DrawTexture(dragRect);
+				currentDraggable.DrawTexture(drawRect);
 			}
 
 			Widgets.EndScrollView();
@@ -154,11 +154,8 @@ namespace DD_WorkTab.Windows
 			base.PostClose();
 
 			//Make sure drag gets reset
-			if (Controller.CurrentDraggable != null)
-			{
-				Controller.CurrentDraggable.OnDrop();
-				Controller.CurrentDraggable = null;
-			}
+			Controller.CurrentDraggable?.OnDrop();
+			Controller.CurrentDraggable = null;
 
 			Controller.CopyPrioritiesReference = null;
 		}

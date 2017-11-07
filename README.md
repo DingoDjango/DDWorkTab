@@ -2,6 +2,7 @@
 Replaces the Work tab with an overhauled version incorporating a drag-and-drop interface.
 
 ## Features
+* Improved late-game performance (tested up to 30FPS faster with >60 colonists on the same map).
 * Enable/disable work with ctrl-click.
 * Prioritise work by dragging and dropping.
 * Mass-prioritise by shift-clicking a work type from the top row.
