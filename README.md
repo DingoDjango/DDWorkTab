@@ -11,4 +11,4 @@ Replaces the Work tab with an overhauled version incorporating a drag-and-drop i
 * Colour-coded interface allows you to estimate colonist skill at a glance.
 * Compare Skills window lets you sort colonists by skill for more convenient comparison.
 * Familiar tooltips for nearly everything in the interface including descriptions, skill level, disability warning etc.
-* Mod options for extra user experience adjustments (Options -> Mod Settings).
+* Mod options for extra user experience adjustments (Options > Mod Settings).

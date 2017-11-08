@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-	<name>Drag and Drop Work Tab</name>
+	<name>DD Work Tab</name>
 	<author>Dingo</author>
 	<url>https://ludeon.com/forums/index.php?topic=26077</url>
 	<targetVersion>0.18.0</targetVersion>
@@ -26,5 +26,5 @@ Replaces the Work tab with an overhauled version incorporating a drag-and-drop i
 
 • Familiar tooltips for nearly everything in the interface including descriptions, skill level, disability warning etc.
 
-• Mod options for extra user experience adjustments (Options -> Mod Settings).</description>
+• Mod options for extra user experience adjustments (Options > Mod Settings).</description>
 </ModMetaData>

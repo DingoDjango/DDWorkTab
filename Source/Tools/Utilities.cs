@@ -42,9 +42,7 @@ namespace DD_WorkTab.Tools
 
 		public static readonly Texture2D DraggableOutlineTexture;
 
-		public static readonly Texture2D DisableWorkTexture;
-
-		public static readonly Texture2D ResetWorkTexture;
+		public static readonly Texture2D WorkButtonTexture;
 
 		public static readonly Texture2D SortingDescendingIcon;
 
@@ -113,8 +111,7 @@ namespace DD_WorkTab.Tools
 			CachedStrings["ClickToJumpTo"] = "ClickToJumpTo".Translate() + "\n\n";
 
 			DraggableOutlineTexture = ExtraUtilities.GetHQTexture("DraggableOutline");
-			DisableWorkTexture = ExtraUtilities.GetHQTexture("DisableWork");
-			ResetWorkTexture = ExtraUtilities.GetHQTexture("ResetWork");
+			WorkButtonTexture = ExtraUtilities.GetHQTexture("Cog");
 			SortingDescendingIcon = ExtraUtilities.GetHQTexture("SortingDescending");
 			SortingAscendingIcon = ExtraUtilities.GetHQTexture("Sorting");
 			PassionMinorIcon = ExtraUtilities.GetHQTexture("PassionMinor");
@@ -428,7 +425,7 @@ namespace DD_WorkTab.Tools
 			{
 				DraggableOutline(buttonRect, MediumSkillColour);
 
-				GUI.DrawTexture(buttonRect.ContractedBy(2f), ResetWorkTexture);
+				GUI.DrawTexture(buttonRect.ContractedBy(2f), WorkButtonTexture);
 			}
 
 			if (buttonRect.Contains(Event.current.mousePosition))

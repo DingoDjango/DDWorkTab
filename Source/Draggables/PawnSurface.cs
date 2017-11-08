@@ -174,7 +174,7 @@ namespace DD_WorkTab.Draggables
 
 			if (postChange >= 0 && postChange < this.children.Count)
 			{
-				if (firstIncapableWork >= 0 && postChange > firstIncapableWork)
+				if (firstIncapableWork >= 0 && postChange >= firstIncapableWork)
 				{
 					return; //Don't move the draggable past the incapable-of area
 				}
