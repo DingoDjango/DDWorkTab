@@ -93,8 +93,6 @@ namespace DD_WorkTab.Tools
 		//CachedStrings[Pawn] => pawn label
 		public static Dictionary<object, string> CachedStrings = new Dictionary<object, string>();
 
-		public static DingoUtils ExtraUtilities = new DingoUtils();
-
 		public static float MaxWindowWidth => UI.screenWidth * 0.8f;
 
 		public static float MaxWindowHeight => UI.screenHeight * 0.8f;
@@ -110,13 +108,13 @@ namespace DD_WorkTab.Tools
 			CachedStrings["RelevantSkills"] = "\n\n" + "RelevantSkills".Translate();
 			CachedStrings["ClickToJumpTo"] = "ClickToJumpTo".Translate() + "\n\n";
 
-			DraggableOutlineTexture = ExtraUtilities.GetHQTexture("DraggableOutline");
-			WorkButtonTexture = ExtraUtilities.GetHQTexture("Cog");
-			SortingDescendingIcon = ExtraUtilities.GetHQTexture("SortingDescending");
-			SortingAscendingIcon = ExtraUtilities.GetHQTexture("Sorting");
-			PassionMinorIcon = ExtraUtilities.GetHQTexture("PassionMinor");
-			PassionMajorIcon = ExtraUtilities.GetHQTexture("PassionMajor");
-			IncapableWorkerX = ExtraUtilities.GetHQTexture("IncapableWorkerX");
+			DraggableOutlineTexture = DingoUtils.GetHQTexture("DraggableOutline");
+			WorkButtonTexture = DingoUtils.GetHQTexture("Cog");
+			SortingDescendingIcon = DingoUtils.GetHQTexture("SortingDescending");
+			SortingAscendingIcon = DingoUtils.GetHQTexture("Sorting");
+			PassionMinorIcon = DingoUtils.GetHQTexture("PassionMinor");
+			PassionMajorIcon = DingoUtils.GetHQTexture("PassionMajor");
+			IncapableWorkerX = DingoUtils.GetHQTexture("IncapableWorkerX");
 
 			foreach (WorkTypeDef def in WorkTypeDefsUtility.WorkTypeDefsInPriorityOrder)
 			{
@@ -132,9 +130,9 @@ namespace DD_WorkTab.Tools
 					}
 				}
 
-				Texture2D enabledTex = ExtraUtilities.GetHQTexture(def.defName, "Work");
-				Texture2D disabledTex = ExtraUtilities.GetHQTexture(def.defName, "Work_Disabled");
-				Texture2D greyscaleTex = ExtraUtilities.GetHQTexture(def.defName, "Work_Greyscale");
+				Texture2D enabledTex = DingoUtils.GetHQTexture(def.defName, "Work");
+				Texture2D disabledTex = DingoUtils.GetHQTexture(def.defName, "Work_Disabled");
+				Texture2D greyscaleTex = DingoUtils.GetHQTexture(def.defName, "Work_Greyscale");
 
 				WorkDefAttributes[def] = new WorkTypeInfo(enabledTex, disabledTex, greyscaleTex, allRequiredCapacities);
 

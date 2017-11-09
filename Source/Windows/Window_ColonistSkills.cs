@@ -234,7 +234,7 @@ namespace DD_WorkTab.Windows
 			Widgets.BeginScrollView(scrollViewOuterRect, ref this.scrollPosition, scrollViewInnerRect, true);
 
 			//Determine which surfaces will actually be seen
-			Utilities.ExtraUtilities.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.SmallRowHeight, this.cachedPawnSurfaces.Count, out int FirstRenderedIndex, out int LastRenderedIndex);
+			DingoUtils.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.SmallRowHeight, this.cachedPawnSurfaces.Count, out int FirstRenderedIndex, out int LastRenderedIndex);
 
 			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstRenderedIndex * Utilities.SmallRowHeight; //The .y value of the first rendered surface
 

@@ -59,7 +59,7 @@ namespace DD_WorkTab.Windows
 			base.DoWindowContents(inRect);
 
 			//Build rects
-			Rect indicatorsRect = new Rect(inRect.xMax - Utilities.PawnSurfaceWidth - Utilities.SpaceForScrollBar + 2f * Utilities.ShortSpacing, inRect.y, Utilities.PawnSurfaceWidth - 3f * Utilities.ShortSpacing, Utilities.TinyTextLineHeight);
+			Rect indicatorsRect = new Rect(inRect.xMax - Utilities.PawnSurfaceWidth - Utilities.SpaceForScrollBar + Utilities.ShortSpacing, inRect.y, Utilities.PawnSurfaceWidth - 3f * Utilities.ShortSpacing, Utilities.TinyTextLineHeight);
 
 			float topControlsY = indicatorsRect.yMax + Utilities.ShortSpacing;
 
@@ -105,7 +105,7 @@ namespace DD_WorkTab.Windows
 			Controller.CurrentDraggable?.OnDrag(); //Update draggable position within the list
 
 			//Determine which surfaces will actually be seen
-			Utilities.ExtraUtilities.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.StandardRowHeight, this.cachedPawnSurfaces.Count, out int FirstRenderedIndex, out int LastRenderedIndex);
+			DingoUtils.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.StandardRowHeight, this.cachedPawnSurfaces.Count, out int FirstRenderedIndex, out int LastRenderedIndex);
 
 			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstRenderedIndex * Utilities.StandardRowHeight; //The .y value of the first rendered surface
 

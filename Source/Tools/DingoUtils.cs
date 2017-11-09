@@ -4,22 +4,17 @@ using Verse;
 
 namespace DD_WorkTab.Tools
 {
-	public class DingoUtils
+	public static class DingoUtils
 	{
 		/// <summary>
-		/// The alphanumeric name of the mod folder, as defined in RimWorld/Mods.
+		/// The alphanumeric name of the mod defined in its About.xml file.
 		/// </summary>
-		private string ModFolderName = "DD WorkTab";
-
-		/// <summary>
-		/// The numeric folder name of the mod as a Workshop release, as defined in steamapps/workshop/content/294100.
-		/// </summary>
-		private string WorkshopFolderName = "111111";
+		private static string ModName = "DD Work Tab";
 
 		/// <summary>
 		/// Generates a high quality texture from a PNG file.
 		/// </summary>
-		public Texture2D GetHQTexture(string fileName, string folderName = null)
+		public static Texture2D GetHQTexture(string fileName, string folderName = null)
 		{
 			Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, false); //Mipmaps off;
 
@@ -27,7 +22,7 @@ namespace DD_WorkTab.Tools
 
 			foreach (ModContentPack mod in LoadedModManager.RunningMods)
 			{
-				if (mod.Identifier == this.ModFolderName || mod.Identifier == this.WorkshopFolderName)
+				if (mod.Name == ModName)
 				{
 					content = mod;
 				}
@@ -35,7 +30,7 @@ namespace DD_WorkTab.Tools
 
 			if (content == null)
 			{
-				Log.Error("Could not find specific mod :: " + this.ModFolderName);
+				Log.Error("Could not find specific mod :: " + ModName);
 
 				return texture;
 			}
@@ -91,7 +86,7 @@ namespace DD_WorkTab.Tools
 		/// <summary>
 		/// Determines which list indexes to render when using a Unity scroll view and fixed item height.
 		/// </summary>
-		public void VisibleScrollviewIndexes(float scrolledY, float outRectHeight, float itemHeight, int totalItems, out int FirstRenderedIndex, out int LastRenderedIndex)
+		public static void VisibleScrollviewIndexes(float scrolledY, float outRectHeight, float itemHeight, int totalItems, out int FirstRenderedIndex, out int LastRenderedIndex)
 		{
 			int totalRenderedIndexes = (int)(outRectHeight / itemHeight) + 2; //Account for partly rendered surfaces on top/bottom of the Rect
 
