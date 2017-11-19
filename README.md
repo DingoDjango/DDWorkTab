@@ -1,4 +1,7 @@
 # Drag and Drop Work Tab for RimWorld
+
+**Requires HugsLib**
+
 Replaces the Work tab with an overhauled version incorporating a drag-and-drop interface.
 
 ## Features

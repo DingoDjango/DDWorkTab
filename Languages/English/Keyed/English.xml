@@ -4,15 +4,18 @@
 	<!-- Mod Settings -->
 
 	<DD_WorkTab_UseSounds_Label>Mod Sounds</DD_WorkTab_UseSounds_Label>
-	<DD_WorkTab_UseSounds_Desc>Play sounds on various triggers, such as assigning work or displaying messages.</DD_WorkTab_UseSounds_Desc>
 
 	<DD_WorkTab_ShowPrompt_Label>Show Prompts</DD_WorkTab_ShowPrompt_Label>
-	<DD_WorkTab_ShowPrompt_Desc>Open an 'Are you sure?' dialogue window when using Enable/Disable/Reset Work functions.</DD_WorkTab_ShowPrompt_Desc>
 
 	<DD_WorkTab_VerboseMessages_Label>Show Messages</DD_WorkTab_VerboseMessages_Label>
-	<DD_WorkTab_VerboseMessages_Desc>Display various messages such as "Jenny has been assigned to Cook".</DD_WorkTab_VerboseMessages_Desc>
 
 	<!-- Tooltips -->
+
+	<DD_WorkTab_UseSounds_Desc>Play sounds on various triggers, such as assigning work or displaying messages.</DD_WorkTab_UseSounds_Desc>
+
+	<DD_WorkTab_ShowPrompt_Desc>Open an 'Are you sure?' dialogue window when using Enable/Disable/Reset Work functions.</DD_WorkTab_ShowPrompt_Desc>
+
+	<DD_WorkTab_VerboseMessages_Desc>Display various messages such as "Jenny has been assigned to Cook".</DD_WorkTab_VerboseMessages_Desc>
 
 	<DD_WorkTab_Tooltip_WorkButton>Work Functions\n\nClick: open the functions menu.</DD_WorkTab_Tooltip_WorkButton>
 
