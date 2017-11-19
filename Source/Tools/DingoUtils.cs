@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using Verse;
 
@@ -10,6 +11,31 @@ namespace DD_WorkTab.Tools
 		/// The alphanumeric name of the mod defined in its About.xml file.
 		/// </summary>
 		private static string ModName = "DD Work Tab";
+
+		/// <summary>
+		/// Provides string caching (for translations).
+		/// </summary>
+		public static Dictionary<object, string> CachedStrings = new Dictionary<object, string>();
+
+		/// <summary>
+		/// Provides quick storage and access to translations. Prevents calling the .Translate() chain multiple times.
+		/// </summary>
+		public static string CachedTranslation(this string inputText, object[] args = null)
+		{
+			if (!CachedStrings.TryGetValue(inputText, out string finalString))
+			{
+				finalString = inputText.Translate();
+
+				CachedStrings[inputText] = finalString;
+			}
+
+			if (args != null)
+			{
+				return string.Format(finalString, args);
+			}
+
+			return finalString;
+		}
 
 		/// <summary>
 		/// Generates a high quality texture from a PNG file.
@@ -60,9 +86,18 @@ namespace DD_WorkTab.Tools
 
 			if (image == null)
 			{
-				Log.Error("Could not find specific file name :: " + fileName);
+				Log.Message("Could not find specific file name :: " + fileName + ". Using empty texture instead.");
 
-				return texture;
+				Texture2D emptyTexture = ContentFinder<Texture2D>.Get("EmptyTexture");
+
+				if (emptyTexture == null)
+				{
+					Log.Error("Could not default to empty texture. Please verify mod installation.");
+
+					return texture;
+				}
+
+				return emptyTexture;
 			}
 
 			byte[] fileData = File.ReadAllBytes(image.FullName);
@@ -86,13 +121,27 @@ namespace DD_WorkTab.Tools
 		/// <summary>
 		/// Determines which list indexes to render when using a Unity scroll view and fixed item height.
 		/// </summary>
-		public static void VisibleScrollviewIndexes(float scrolledY, float outRectHeight, float itemHeight, int totalItems, out int FirstRenderedIndex, out int LastRenderedIndex)
+		public static void CacheScrollview(bool reverse, float scrolledY, float outerHeight, float itemHeight, int itemCount, ref float renderY, out int firstItem, out int lastItem)
 		{
-			int totalRenderedIndexes = (int)(outRectHeight / itemHeight) + 2; //Account for partly rendered surfaces on top/bottom of the Rect
+			int totalRenderedIndexes = (int)(outerHeight / itemHeight) + 2; //Account for partly rendered surfaces on top/bottom of the Rect
 
-			FirstRenderedIndex = (int)(scrolledY / itemHeight); //Get the first list item that should be at least partly visible
+			firstItem = (int)(scrolledY / itemHeight); //Get the first list item that should be at least partly visible
 
-			LastRenderedIndex = Mathf.Min(FirstRenderedIndex + totalRenderedIndexes, totalItems); //Get the last item to render, don't go over list.Count
+			renderY += firstItem * itemHeight; //The .y value of the first rendered archive
+
+			//Used when iterating forwards through a list (i++)
+			if (!reverse)
+			{
+				lastItem = Mathf.Min(firstItem + totalRenderedIndexes, itemCount - 1); //Get the last item to render, don't go over list.Count
+			}
+
+			//Used when iterating backwards through a list (i--)
+			else
+			{
+				firstItem = itemCount - 1 - firstItem;
+
+				lastItem = Mathf.Max(firstItem - totalRenderedIndexes, -1); //Make sure to not >=LastIndex in the iteration
+			}
 		}
 	}
 }

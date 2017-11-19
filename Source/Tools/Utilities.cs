@@ -88,10 +88,9 @@ namespace DD_WorkTab.Tools
 
 		public static readonly Dictionary<WorkTypeDef, WorkTypeInfo> WorkDefAttributes = new Dictionary<WorkTypeDef, WorkTypeInfo>();
 
-		//CachedStrings[string] => cached translation
-		//CachedStrings[WorkTypeDef] => relevant skills for def
-		//CachedStrings[Pawn] => pawn label
-		public static Dictionary<object, string> CachedStrings = new Dictionary<object, string>();
+		//DingoUtils.CachedStrings[string] => cached translation
+		//DingoUtils.CachedStrings[WorkTypeDef] => relevant skills for def
+		//DingoUtils.CachedStrings[Pawn] => pawn label
 
 		public static float MaxWindowWidth => UI.screenWidth * 0.8f;
 
@@ -104,9 +103,9 @@ namespace DD_WorkTab.Tools
 			Text.Font = GameFont.Small; //Reset
 
 			//Modify vanilla translations for better tooltip building
-			CachedStrings["ClickToSortByThisColumn"] = "\n\n" + "ClickToSortByThisColumn".Translate();
-			CachedStrings["RelevantSkills"] = "\n\n" + "RelevantSkills".Translate();
-			CachedStrings["ClickToJumpTo"] = "ClickToJumpTo".Translate() + "\n\n";
+			DingoUtils.CachedStrings["ClickToSortByThisColumn"] = "\n\n" + "ClickToSortByThisColumn".Translate();
+			DingoUtils.CachedStrings["RelevantSkills"] = "\n\n" + "RelevantSkills".Translate();
+			DingoUtils.CachedStrings["ClickToJumpTo"] = "ClickToJumpTo".Translate() + "\n\n";
 
 			DraggableOutlineTexture = DingoUtils.GetHQTexture("DraggableOutline");
 			WorkButtonTexture = DingoUtils.GetHQTexture("Cog");
@@ -146,31 +145,11 @@ namespace DD_WorkTab.Tools
 						relevantSkills += def.relevantSkills[k].skillLabel + ", ";
 					}
 
-					CachedStrings[def] = relevantSkills.Substring(0, relevantSkills.Length - 2);
+					DingoUtils.CachedStrings[def] = relevantSkills.Substring(0, relevantSkills.Length - 2);
 				}
 			}
 
 			Controller.GetPrimaries = new PrimarySurface();
-		}
-
-		/// <summary>
-		/// Provides quick storage and access to translations. Circumvents calling the .Translate() chain more than once.
-		/// </summary>
-		public static string CachedTranslation(this string inputText, object[] args = null)
-		{
-			if (!CachedStrings.TryGetValue(inputText, out string finalString))
-			{
-				finalString = inputText.Translate();
-
-				CachedStrings[inputText] = finalString;
-			}
-
-			if (args != null)
-			{
-				return string.Format(finalString, args);
-			}
-
-			return finalString;
 		}
 
 		/// <summary>
@@ -188,7 +167,7 @@ namespace DD_WorkTab.Tools
 		/// </summary>
 		public static string CachedPawnLabel(this Pawn pawn)
 		{
-			if (!CachedStrings.TryGetValue(pawn, out string pawnLabel))
+			if (!DingoUtils.CachedStrings.TryGetValue(pawn, out string pawnLabel))
 			{
 				//RimWorld.PawnColumnWorker_Label.DoCell
 				if (!pawn.RaceProps.Humanlike && pawn.Name != null && !pawn.Name.Numerical)
@@ -201,7 +180,7 @@ namespace DD_WorkTab.Tools
 					pawnLabel = pawn.LabelCap;
 				}
 
-				CachedStrings[pawn] = pawnLabel;
+				DingoUtils.CachedStrings[pawn] = pawnLabel;
 			}
 
 			return pawnLabel;
@@ -382,7 +361,7 @@ namespace DD_WorkTab.Tools
 				{
 					tooltip.Append("RelevantSkills".CachedTranslation(new object[]
 					{
-						CachedStrings[def],
+						DingoUtils.CachedStrings[def],
 						worker.skills.AverageOfRelevantSkillsFor(def).ToString(),
 						SkillRecord.MaxLevel
 					}));

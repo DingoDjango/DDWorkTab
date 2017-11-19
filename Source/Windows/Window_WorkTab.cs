@@ -104,12 +104,12 @@ namespace DD_WorkTab.Windows
 
 			Controller.CurrentDraggable?.OnDrag(); //Update draggable position within the list
 
+			float dynamicVerticalY = scrollViewInnerRect.yMin;
+
 			//Determine which surfaces will actually be seen
-			DingoUtils.VisibleScrollviewIndexes(this.scrollPosition.y, scrollViewOuterRect.height, Utilities.StandardRowHeight, this.cachedPawnSurfaces.Count, out int FirstRenderedIndex, out int LastRenderedIndex);
+			DingoUtils.CacheScrollview(false, this.scrollPosition.y, scrollViewOuterRect.height, Utilities.StandardRowHeight, this.cachedPawnSurfaces.Count, ref dynamicVerticalY, out int firstItem, out int lastItem);
 
-			float dynamicVerticalY = scrollViewInnerRect.yMin + FirstRenderedIndex * Utilities.StandardRowHeight; //The .y value of the first rendered surface
-
-			for (int i = FirstRenderedIndex; i < LastRenderedIndex; i++)
+			for (int i = firstItem; i <= lastItem; i++)
 			{
 				PawnSurface surface = this.cachedPawnSurfaces[i];
 
