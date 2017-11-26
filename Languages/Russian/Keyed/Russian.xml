@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+	<!-- Mod Settings -->
+
+	<DD_WorkTab_UseSounds_Label>Звуки мода</DD_WorkTab_UseSounds_Label>
+
+	<DD_WorkTab_ShowPrompt_Label>Показать подсказки</DD_WorkTab_ShowPrompt_Label>
+
+	<DD_WorkTab_VerboseMessages_Label>Показать сообщения</DD_WorkTab_VerboseMessages_Label>
+
+	<!-- Tooltips -->
+
+	<DD_WorkTab_UseSounds_Desc>Воспроизведение звуков на различных триггерах, таких как назначение работы или отображение сообщений.</DD_WorkTab_UseSounds_Desc>
+
+	<DD_WorkTab_ShowPrompt_Desc>Открыть «Вы уверены»? диалоговое окно при использовании функций «Включить / Отключить / Сбросить работу».</DD_WorkTab_ShowPrompt_Desc>
+
+	<DD_WorkTab_VerboseMessages_Desc>Отображать различные сообщения, такие как «Дженни была назначена поваром».</DD_WorkTab_VerboseMessages_Desc>
+
+	<DD_WorkTab_Tooltip_WorkButton>Рабочие функции\n\nКликните: чтобы открыть меню функций.</DD_WorkTab_Tooltip_WorkButton>
+
+	<DD_WorkTab_Tooltip_Primary>\n\nShift-клик: настроить приоритет для всех.\n\nCtrl-клик: назначить / убрать всех с работы.</DD_WorkTab_Tooltip_Primary>
+
+	<DD_WorkTab_Tooltip_DraggableWork>\n\nПеретяните: чтобы настроить приоритет.\n\nCtrl-клик: назначить / убрать работу.</DD_WorkTab_Tooltip_DraggableWork>
+
+	<DD_WorkTab_Tooltip_IncapacitatedWorker>&lt;color=red&gt;\n\nNAME не может {0} из-за HIS состояния здоровья.&lt;/color&gt;</DD_WorkTab_Tooltip_IncapacitatedWorker>
+
+	<DD_WorkTab_Tooltip_CurrentlyUnassigned>\n\nNAME не назначен(а) на {0}.</DD_WorkTab_Tooltip_CurrentlyUnassigned>
+
+	<!-- Messages -->
+
+	<DD_WorkTab_Message_IncapablePawn>&lt;color=red&gt;NAME не может быть {0}.&lt;/color&gt;</DD_WorkTab_Message_IncapablePawn>
+
+	<DD_WorkTab_Message_DraggedIncapableWork>&lt;color=red&gt;Невозможно настроить {0}, потому что NAME не может это делать.&lt;/color&gt;</DD_WorkTab_Message_DraggedIncapableWork>
+
+	<DD_WorkTab_Message_WorkEnabled>NAME был(а) назначен(а) на {0}.</DD_WorkTab_Message_WorkEnabled>
+
+	<DD_WorkTab_Message_WorkDisabled>NAME не назначен(а) на {0}.</DD_WorkTab_Message_WorkDisabled>
+
+	<DD_WorkTab_Message_CopiedPriorities>Скопированы приоритеты работы от NAME.</DD_WorkTab_Message_CopiedPriorities>
+
+	<DD_WorkTab_Message_PastedPriorities>Скорректированны приоритеты работы NAME в соответствии с {0}.</DD_WorkTab_Message_PastedPriorities>
+
+	<DD_WorkTab_Message_NoCopyPasteReference>В памяти нет приоритетов. Сначала скопируйте приоритеты.</DD_WorkTab_Message_NoCopyPasteReference>
+
+	<DD_WorkTab_Message_PrimaryShiftClick>{0} настроен для всех колонистов на этой карте.</DD_WorkTab_Message_PrimaryShiftClick>
+
+	<DD_WorkTab_Message_PrimaryCtrlEnabledAll>Включена вся возможная работа {0}.</DD_WorkTab_Message_PrimaryCtrlEnabledAll>
+
+	<DD_WorkTab_Message_PrimaryCtrlDisabledAll>Отключена вся работа {0}.</DD_WorkTab_Message_PrimaryCtrlDisabledAll>
+
+	<!-- FloatMenuOption / DiaNode Titles -->
+
+	<DD_WorkTab_Title_AllPawns_EnableWork>Включить всю работу (все колонисты)</DD_WorkTab_Title_AllPawns_EnableWork>
+
+	<DD_WorkTab_Title_AllPawns_DisableWork>Отключить всю работу (все колонисты)</DD_WorkTab_Title_AllPawns_DisableWork>
+
+	<DD_WorkTab_Title_AllPawns_ResetWork>Сбросить работу (все колонисты)</DD_WorkTab_Title_AllPawns_ResetWork>
+
+	<DD_WorkTab_Title_EnableWork>Включить всю работу</DD_WorkTab_Title_EnableWork>
+
+	<DD_WorkTab_Title_DisableWork>Отключить все работы</DD_WorkTab_Title_DisableWork>
+
+	<DD_WorkTab_Title_ResetWork>Сбросить работу</DD_WorkTab_Title_ResetWork>
+
+	<DD_WorkTab_Title_CopyWorkPriorities>Копировать приоритеты</DD_WorkTab_Title_CopyWorkPriorities>
+
+	<DD_WorkTab_Title_PasteWorkPriorities>Вставить приоритеты</DD_WorkTab_Title_PasteWorkPriorities>
+
+	<!-- DiaNode Contents -->
+
+	<DD_WorkTab_PromptText_AllPawns_EnableWork>Вся работа будет включена для каждого колониста на этой карте.</DD_WorkTab_PromptText_AllPawns_EnableWork>
+
+	<DD_WorkTab_PromptText_AllPawns_DisableWork>Все работы будут отключены для каждого колониста на этой карте.</DD_WorkTab_PromptText_AllPawns_DisableWork>
+
+	<DD_WorkTab_PromptText_AllPawns_ResetWork>Все работы будут сброшены для каждого колониста на этой карте.</DD_WorkTab_PromptText_AllPawns_ResetWork>
+
+	<DD_WorkTab_PromptText_EnableWork>Все возможные действия для NAME будут включены.</DD_WorkTab_PromptText_EnableWork>
+
+	<DD_WorkTab_PromptText_DisableWork>Вся активная работа для NAME будет отключена.\n\nNAME станет бездействовать, если вы не назначили новую работу для него(неё).</DD_WorkTab_PromptText_DisableWork>
+
+	<DD_WorkTab_PromptText_ResetWork>Вся возможная работа для NAME будет включена и отсортирована по естественному приоритету.</DD_WorkTab_PromptText_ResetWork>
+
+	<DD_WorkTab_PromptText_DisablePrompt>\n\nЕсли вы отключите подсказки, вы можете повторно включить их в настройках &gt; Настройки модов.</DD_WorkTab_PromptText_DisablePrompt>
+
+	<!-- DiaOptions -->
+
+	<DD_WorkTab_PromptOption_Accept>Принять</DD_WorkTab_PromptOption_Accept>
+
+	<DD_WorkTab_PromptOption_Cancel>Отмена</DD_WorkTab_PromptOption_Cancel>
+
+	<DD_WorkTab_PromptOption_AcceptDisablePrompt>Принять (Отключить подсказки)</DD_WorkTab_PromptOption_AcceptDisablePrompt>
+
+	<!-- Work -->
+
+	<DD_WorkTab_Work_CompareSkills>Сравнить навыки</DD_WorkTab_Work_CompareSkills>
+
+	<!-- Compare Skills -->
+
+	<DD_WorkTab_ColonistSkills_Title>Сравнить навыки колонистов</DD_WorkTab_ColonistSkills_Title>
+
+	<DD_WorkTab_ColonistSkills_VisibleMap>Текущая карта</DD_WorkTab_ColonistSkills_VisibleMap>
+
+	<DD_WorkTab_ColonistSkills_AllMaps>Все карты</DD_WorkTab_ColonistSkills_AllMaps>
+
+</LanguageData>
