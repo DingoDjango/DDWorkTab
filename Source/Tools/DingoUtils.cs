@@ -44,19 +44,11 @@ namespace DD_WorkTab.Tools
 		{
 			Texture2D texture = new Texture2D(2, 2, TextureFormat.ARGB32, false); //Mipmaps off;
 
-			ModContentPack content = null;
-
-			foreach (ModContentPack mod in LoadedModManager.RunningMods)
-			{
-				if (mod.Name == ModName)
-				{
-					content = mod;
-				}
-			}
+			ModContentPack content = LoadedModManager.RunningModsListForReading.Find(mod => mod.Name == ModName);
 
 			if (content == null)
 			{
-				Log.Error("Could not find specific mod :: " + ModName);
+				Log.Error($"Could not find '{ModName}' in the mod list.");
 
 				return texture;
 			}
@@ -81,23 +73,24 @@ namespace DD_WorkTab.Tools
 				if (Path.GetFileNameWithoutExtension(f.Name) == fileName)
 				{
 					image = f;
+					break;
 				}
 			}
 
 			if (image == null)
 			{
-				Log.Message("Could not find specific file name :: " + fileName + ". Using empty texture instead.");
+				Log.Message($"Could not find texture for WorkType {fileName}. Using default for modded work.");
 
-				Texture2D emptyTexture = ContentFinder<Texture2D>.Get("EmptyTexture");
+				Texture2D moddedWorkTexture = GetHQTexture("ModdedWork", folderName);
 
-				if (emptyTexture == null)
+				if (moddedWorkTexture == null)
 				{
-					Log.Error("Could not default to empty texture. Please verify mod installation.");
+					Log.Error("Could not load default texture. Please verify mod installation.");
 
 					return texture;
 				}
 
-				return emptyTexture;
+				return moddedWorkTexture;
 			}
 
 			byte[] fileData = File.ReadAllBytes(image.FullName);
